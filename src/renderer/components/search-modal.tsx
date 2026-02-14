@@ -2,15 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, FileText, BookOpen, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/stores/useAppStore'
-
-interface SearchResult {
-  type: 'work' | 'chapter'
-  workId: string
-  workTitle: string
-  chapterId: string | null
-  chapterTitle: string | null
-  snippet: string
-}
+import type { SearchResult } from '@/lib/electron'
 
 export function SearchModal() {
   const { searchModalOpen, setSearchModalOpen, setActiveDocument } = useAppStore()
@@ -42,8 +34,8 @@ export function SearchModal() {
       const res = await window.api.search.query(q.trim())
       setResults(res)
       setSelectedIndex(0)
-    } catch (err) {
-      console.error('Search error:', err)
+    } catch {
+      // search failed
     } finally {
       setLoading(false)
     }

@@ -16,8 +16,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     try {
       const settings = await window.api.settings.getAll()
       set({ ...settings, loaded: true })
-    } catch (err) {
-      console.error('[SettingsStore] loadSettings error:', err)
+    } catch {
       set({ loaded: true })
     }
   },
@@ -26,8 +25,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set({ [key]: value } as any)
     try {
       await window.api.settings.set(key, value)
-    } catch (err) {
-      console.error('[SettingsStore] setSetting error:', err)
+    } catch {
+      // save failed
     }
   },
 }))

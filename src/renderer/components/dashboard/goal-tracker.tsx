@@ -232,7 +232,7 @@ export function GoalTracker() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
 
   const reload = () => {
-    window.api.goals.getAll().then(setGoals).catch(console.error)
+    window.api.goals.getAll().then(setGoals).catch(() => {})
   }
 
   useEffect(() => {

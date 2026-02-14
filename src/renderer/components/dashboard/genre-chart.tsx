@@ -100,7 +100,7 @@ export function GenreChart() {
         }))
       setGenres(mapped)
       setTotal(data.reduce((s, d) => s + d.count, 0))
-    }).catch(console.error)
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {

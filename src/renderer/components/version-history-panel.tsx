@@ -4,15 +4,7 @@ import { cn } from '@/lib/utils'
 import { useAppStore } from '@/stores/useAppStore'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { toast } from '@/hooks/use-toast'
-
-interface Version {
-  id: string
-  chapterId: string
-  content: string
-  charCount: number
-  label: string | null
-  createdAt: string
-}
+import type { Version } from '@/lib/electron'
 
 function formatVersionDate(iso: string): string {
   const d = new Date(iso)
@@ -52,8 +44,8 @@ export function VersionHistoryPanel({ open, onClose, chapterId, onContentRestore
     try {
       const result = await window.api.versions.list(chapterId)
       setVersions(result)
-    } catch (err) {
-      console.error('Failed to load versions:', err)
+    } catch {
+      // load failed silently
     } finally {
       setLoading(false)
     }

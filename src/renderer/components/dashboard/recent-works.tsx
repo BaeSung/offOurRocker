@@ -66,7 +66,7 @@ export function RecentWorks() {
   const setActiveDocument = useAppStore((s) => s.setActiveDocument)
 
   useEffect(() => {
-    window.api.stats.recentWorks().then(setWorks).catch(console.error)
+    window.api.stats.recentWorks().then(setWorks).catch(() => {})
   }, [])
 
   const handleContinue = (work: Work) => {

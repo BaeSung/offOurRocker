@@ -43,8 +43,8 @@ export const useWorkStore = create<WorkState>((set) => ({
     try {
       const data = await window.api.works.getAll()
       set({ series: data.series, standaloneWorks: data.standaloneWorks })
-    } catch (err) {
-      console.error('[WorkStore] loadAll error:', err)
+    } catch {
+      // load failed
     } finally {
       set({ loading: false })
     }

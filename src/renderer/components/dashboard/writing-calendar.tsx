@@ -40,7 +40,7 @@ export function WritingCalendar() {
         }
         setDailyCounts(map)
       })
-      .catch(console.error)
+      .catch(() => {})
   }, [year, month])
 
   const firstDay = new Date(year, month - 1, 1).getDay()

@@ -199,8 +199,8 @@ export function AISettings() {
         if (oai.exists) setOpenaiMasked(oai.masked)
         if (ant.exists) setAnthropicMasked(ant.masked)
         if (img.exists) setImageMasked(img.masked)
-      } catch (err) {
-        console.error('Failed to load API keys:', err)
+      } catch {
+        // load failed
       }
     }
     loadKeys()
@@ -223,8 +223,8 @@ export function AISettings() {
           setImageMasked(info.masked)
           setImageKey("")
         }
-      } catch (err) {
-        console.error('Failed to store key:', err)
+      } catch {
+        // store failed
       }
     },
     []
@@ -236,8 +236,8 @@ export function AISettings() {
       if (keyName === 'openai') { setOpenaiMasked(""); setOpenaiKey("") }
       else if (keyName === 'anthropic') { setAnthropicMasked(""); setAnthropicKey("") }
       else if (keyName === 'openai_image') { setImageMasked(""); setImageKey("") }
-    } catch (err) {
-      console.error('Failed to delete key:', err)
+    } catch {
+      // delete failed
     }
   }, [])
 

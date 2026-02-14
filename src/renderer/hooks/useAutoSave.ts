@@ -25,8 +25,8 @@ export function useAutoSave() {
           await window.api.works.saveContent(activeDocument.workId, content)
         }
         markClean()
-      } catch (err) {
-        console.error('[AutoSave] Error:', err)
+      } catch {
+        // auto-save failed
       } finally {
         savingRef.current = false
       }
@@ -43,9 +43,9 @@ export function useAutoSave() {
       if (!isDirty || !doc) return
 
       if (doc.chapterId) {
-        window.api.chapters.save(doc.chapterId, content).catch(console.error)
+        window.api.chapters.save(doc.chapterId, content).catch(() => {})
       } else {
-        window.api.works.saveContent(doc.workId, content).catch(console.error)
+        window.api.works.saveContent(doc.workId, content).catch(() => {})
       }
     }
   }, [])

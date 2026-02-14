@@ -83,7 +83,7 @@ interface GoalsAPI {
   delete(id: string): Promise<{ success: boolean }>
 }
 
-interface SearchResult {
+export interface SearchResult {
   type: 'work' | 'chapter'
   workId: string
   workTitle: string
@@ -108,7 +108,7 @@ interface BackupAPI {
   now(customDir?: string): Promise<{ success: boolean; path?: string; error?: string }>
 }
 
-interface Version {
+export interface Version {
   id: string
   chapterId: string
   content: string
@@ -124,7 +124,7 @@ interface VersionsAPI {
   delete(versionId: string): Promise<{ success: boolean }>
 }
 
-interface TrashItem {
+export interface TrashItem {
   id: string
   title: string
   type: string
@@ -140,7 +140,7 @@ interface TrashAPI {
   empty(): Promise<{ success: boolean; count?: number }>
 }
 
-interface SpellCorrection {
+export interface SpellCorrection {
   original: string
   corrected: string
   explanation: string

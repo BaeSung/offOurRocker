@@ -238,8 +238,8 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
         ed.commands.setContent(content, { emitUpdate: false })
       }
       useEditorStore.getState().setContent(content)
-    } catch (err) {
-      console.error('[VersionRestore] Failed to reload content:', err)
+    } catch {
+      // version restore reload failed silently
     }
   }, [])
 

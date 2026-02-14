@@ -5,15 +5,7 @@ import { GENRE_CONFIG } from '../../shared/types'
 import type { Genre } from '../../shared/types'
 import { useWorkStore } from '@/stores/useWorkStore'
 import { toast } from '@/hooks/use-toast'
-
-interface TrashItem {
-  id: string
-  title: string
-  type: string
-  genre: string
-  deletedAt: string | null
-  charCount: number
-}
+import type { TrashItem } from '@/lib/electron'
 
 function formatDeletedDate(iso: string | null): string {
   if (!iso) return ''
@@ -38,8 +30,8 @@ export function TrashPage() {
     try {
       const result = await window.api.trash.list()
       setItems(result)
-    } catch (err) {
-      console.error('Failed to load trash:', err)
+    } catch {
+      // load failed silently
     } finally {
       setLoading(false)
     }

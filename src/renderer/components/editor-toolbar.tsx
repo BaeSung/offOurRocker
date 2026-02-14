@@ -36,6 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { toast } from '@/hooks/use-toast'
 
 type EditorMode = 'normal' | 'focus' | 'preview'
 
@@ -254,10 +255,12 @@ function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersi
     try {
       const result = await window.api.export.work(workId, format)
       if (result.success) {
-        console.log(`[Export] Saved to: ${result.path}`)
+        toast({ description: '내보내기가 완료되었습니다.' })
+      } else {
+        toast({ description: result.error || '내보내기에 실패했습니다.', variant: 'destructive' })
       }
-    } catch (err) {
-      console.error('Export error:', err)
+    } catch {
+      toast({ description: '내보내기에 실패했습니다.', variant: 'destructive' })
     }
   }
 

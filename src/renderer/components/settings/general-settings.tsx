@@ -92,8 +92,8 @@ export function GeneralSettings() {
       if (dir) {
         setSetting(key, dir)
       }
-    } catch (err) {
-      console.error('Failed to select directory:', err)
+    } catch {
+      // directory selection failed
     }
   }
 

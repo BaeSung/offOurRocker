@@ -83,7 +83,7 @@ export function SummaryCards() {
   } | null>(null)
 
   useEffect(() => {
-    window.api.stats.summary().then(setData).catch(console.error)
+    window.api.stats.summary().then(setData).catch(() => {})
   }, [])
 
   if (!data) {

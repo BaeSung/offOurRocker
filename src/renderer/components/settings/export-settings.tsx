@@ -28,8 +28,8 @@ export function ExportSettings() {
       if (dir) {
         setSetting('exportDirectory', dir)
       }
-    } catch (err) {
-      console.error('Failed to select directory:', err)
+    } catch {
+      // directory selection failed
     }
   }
 

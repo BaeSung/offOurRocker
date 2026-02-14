@@ -48,8 +48,7 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
           setLoadedContent(content)
           setLoading(false)
         }
-      } catch (err) {
-        console.error('[EditorContent] Load error:', err)
+      } catch {
         if (!cancelled) setLoading(false)
       }
     }
