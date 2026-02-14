@@ -1,0 +1,28 @@
+import { registerWorksHandlers } from './works'
+import { registerChaptersHandlers } from './chapters'
+import { registerSeriesHandlers } from './series'
+import { registerSettingsHandlers } from './settings'
+import { registerSystemHandlers } from './system'
+import { registerStatsHandlers } from './stats'
+import { registerGoalsHandlers } from './goals'
+import { registerSearchHandlers } from './search'
+import { registerExportHandlers } from './export'
+import { registerAiHandlers } from './ai'
+import { registerVersionsHandlers } from './versions'
+import { registerTrashHandlers } from './trash'
+
+export function registerAllIpcHandlers(): void {
+  registerWorksHandlers()
+  registerChaptersHandlers()
+  registerSeriesHandlers()
+  registerSettingsHandlers()
+  registerSystemHandlers()
+  registerStatsHandlers()
+  registerGoalsHandlers()
+  registerSearchHandlers()
+  registerExportHandlers()
+  registerAiHandlers()
+  registerVersionsHandlers()
+  registerTrashHandlers()
+  console.log('[IPC] All handlers registered')
+}
