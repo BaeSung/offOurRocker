@@ -87,7 +87,7 @@ export function RecentWorks() {
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-sans text-lg font-semibold text-foreground">최근 작업</h2>
       </div>
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {works.map((work, i) => {
           const genreConf = GENRE_CONFIG[work.genre] || GENRE_CONFIG.other
           const statusConf = STATUS_LABELS[work.status] || STATUS_LABELS.writing

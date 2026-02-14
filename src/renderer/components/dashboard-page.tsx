@@ -26,7 +26,7 @@ export function DashboardPage() {
 
   return (
     <ScrollArea className="flex-1">
-      <div className="mx-auto max-w-[960px] px-12 py-10">
+      <div className="mx-auto max-w-[960px] px-6 md:px-12 py-10">
         {/* Welcome section */}
         <div
           className="mb-10 flex items-end justify-between"
@@ -55,7 +55,7 @@ export function DashboardPage() {
         </div>
 
         {/* Genre chart + Writing calendar (side by side) */}
-        <div className="mb-10 grid grid-cols-2 gap-5">
+        <div className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5">
           <GenreChart />
           <WritingCalendar />
         </div>

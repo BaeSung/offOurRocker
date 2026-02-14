@@ -16,7 +16,6 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-  TooltipProvider,
 } from "@/components/ui/tooltip"
 
 interface AppSidebarProps {
@@ -98,7 +97,6 @@ function SidebarButton({
 
 export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive, onDashboardOpen, dashboardActive, onTrashOpen, trashActive, onEditorOpen, onNewWork, onNewSeries }: AppSidebarProps) {
   return (
-    <TooltipProvider delayDuration={300}>
       <aside
         className={cn(
           "flex h-full flex-col border-r border-border bg-card transition-[width] duration-300 ease-in-out",
@@ -191,27 +189,26 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
             <SidebarButton
               icon={LayoutDashboard}
               label="대시보드"
-              collapsed
+              collapsed={collapsed}
               variant={dashboardActive ? "secondary" : "ghost"}
               onClick={onDashboardOpen}
             />
             <SidebarButton
               icon={Settings}
               label="설정"
-              collapsed
+              collapsed={collapsed}
               variant={settingsActive ? "secondary" : "ghost"}
               onClick={onSettingsOpen}
             />
             <SidebarButton
               icon={Trash2}
               label="휴지통"
-              collapsed
+              collapsed={collapsed}
               variant={trashActive ? "secondary" : "ghost"}
               onClick={onTrashOpen}
             />
           </div>
         </div>
       </aside>
-    </TooltipProvider>
   )
 }

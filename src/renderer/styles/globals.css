@@ -133,6 +133,9 @@
   from {
     width: 0%;
   }
+  to {
+    width: var(--tw-progress, 100%);
+  }
 }
 
 @keyframes shake {

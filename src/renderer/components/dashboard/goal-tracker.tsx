@@ -310,7 +310,7 @@ export function GoalTracker() {
           <p className="text-sm text-muted-foreground">설정된 목표가 없습니다.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {goals.map((goal, i) =>
             editingGoal?.id === goal.id ? (
               <GoalForm

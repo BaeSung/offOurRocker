@@ -27,13 +27,13 @@ export function PreviewMode() {
   const title = activeChapter?.title || activeWork?.title || ''
 
   return (
-    <div className="flex flex-1 justify-center overflow-hidden" style={{ background: '#faf8f5' }}>
+    <div className="flex flex-1 justify-center overflow-hidden bg-amber-50 dark:bg-stone-900">
       <ScrollArea className="flex-1">
         <article className="mx-auto max-w-[680px] px-12 py-16">
           {title && (
             <h1
               className="mb-8 text-center font-serif text-3xl font-bold leading-tight"
-              style={{ color: '#1a1a1a' }}
+              style={{ color: 'hsl(var(--foreground))' }}
             >
               {title}
             </h1>
@@ -43,7 +43,7 @@ export function PreviewMode() {
               font-family: 'Noto Serif KR', serif;
               font-size: 17px;
               line-height: 2.0;
-              color: #2a2a2a;
+              color: hsl(var(--foreground));
             }
             .preview-content p {
               text-indent: 1em;
@@ -51,7 +51,7 @@ export function PreviewMode() {
             }
             .preview-content h1, .preview-content h2, .preview-content h3 {
               text-indent: 0;
-              color: #1a1a1a;
+              color: hsl(var(--foreground));
               margin-top: 1.5em;
               margin-bottom: 0.5em;
             }

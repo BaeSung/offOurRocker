@@ -88,7 +88,7 @@ export function SummaryCards() {
 
   if (!data) {
     return (
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="h-[140px] rounded-xl border border-border bg-card animate-pulse" />
         ))}
@@ -100,7 +100,7 @@ export function SummaryCards() {
   const manuscriptPages = Math.round(data.totalChars / 200)
 
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <SummaryCard
         icon={BookOpen}
         label="전체 작품"
