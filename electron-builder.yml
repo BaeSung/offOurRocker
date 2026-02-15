@@ -15,14 +15,17 @@ asarUnpack:
   - node_modules/better-sqlite3/**/*
 win:
   target:
-    - target: nsis
+    - target: appx
       arch: [x64]
   icon: resources/icon.ico
-nsis:
-  oneClick: false
-  perMachine: false
-  allowToChangeInstallationDirectory: true
-  artifactName: "${productName}-Setup-${version}.${ext}"
+appx:
+  identityName: "offMyRocker.offOurRocker-koreanwritingapp"
+  publisher: "CN=04523EE6-BC05-437D-ABA9-ECB4BFEFFF90"
+  publisherDisplayName: "offMyRocker"
+  applicationId: "OffOurRocker"
+  displayName: "Off Our Rocker"
+  languages:
+    - ko-KR
 publish:
   provider: github
   owner: BaeSung

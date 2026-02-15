@@ -12,6 +12,7 @@ import { registerVersionsHandlers } from './versions'
 import { registerTrashHandlers } from './trash'
 import { registerCharactersHandlers } from './characters'
 import { registerWorldNotesHandlers } from './world-notes'
+import { registerDatabaseHandlers } from './database'
 
 export function registerAllIpcHandlers(): void {
   registerWorksHandlers()
@@ -28,5 +29,6 @@ export function registerAllIpcHandlers(): void {
   registerTrashHandlers()
   registerCharactersHandlers()
   registerWorldNotesHandlers()
+  registerDatabaseHandlers()
   console.log('[IPC] All handlers registered')
 }

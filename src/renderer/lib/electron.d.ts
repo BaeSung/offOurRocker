@@ -26,6 +26,7 @@ interface WorksAPI {
       goalChars: number
       deadline: string
       tags: string[]
+      coverImage: string | null
     }>
   ): Promise<{ success: boolean }>
   delete(id: string): Promise<{ success: boolean }>
@@ -167,6 +168,11 @@ interface AIAPI {
   ): Promise<{ success: boolean; url?: string; error?: string }>
 }
 
+interface DatabaseAPI {
+  export(): Promise<{ success: boolean; path?: string; canceled?: boolean; error?: string }>
+  import(): Promise<{ success: boolean; needsReload?: boolean; canceled?: boolean; error?: string }>
+}
+
 interface SystemAPI {
   selectDirectory(): Promise<string | null>
   getAppVersion(): Promise<string>
@@ -220,6 +226,7 @@ interface ElectronAPI {
   ai: AIAPI
   characters: CharactersAPI
   worldNotes: WorldNotesAPI
+  database: DatabaseAPI
   system: SystemAPI
 }
 

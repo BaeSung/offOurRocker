@@ -1,4 +1,5 @@
-import { Check, FolderOpen } from "lucide-react"
+import { useState } from "react"
+import { Check, FolderOpen, Upload, Download, Loader2 } from "lucide-react"
 import { toast } from '@/hooks/use-toast'
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
@@ -321,6 +322,11 @@ export function GeneralSettings() {
 
       <Separator className="bg-border/60" />
 
+      {/* DB Export / Import */}
+      <DataTransferSection />
+
+      <Separator className="bg-border/60" />
+
       {/* Startup */}
       <section>
         <h3 className="text-sm font-semibold text-foreground">시작 설정</h3>
@@ -346,5 +352,82 @@ export function GeneralSettings() {
         </div>
       </section>
     </div>
+  )
+}
+
+function DataTransferSection() {
+  const [loading, setLoading] = useState<'export' | 'import' | null>(null)
+
+  const handleExport = async () => {
+    setLoading('export')
+    try {
+      const result = await window.api.database.export()
+      if (result.canceled) return
+      if (result.success) {
+        toast({ description: `데이터를 내보냈습니다: ${result.path}` })
+      } else {
+        toast({ description: result.error || '내보내기에 실패했습니다.', variant: 'destructive' })
+      }
+    } catch {
+      toast({ description: '내보내기에 실패했습니다.', variant: 'destructive' })
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const handleImport = async () => {
+    setLoading('import')
+    try {
+      const result = await window.api.database.import()
+      if (result.canceled) return
+      if (result.success) {
+        // app.relaunch() + app.exit() handles restart from main process
+        return
+      } else {
+        toast({ description: result.error || '가져오기에 실패했습니다.', variant: 'destructive' })
+      }
+    } catch {
+      toast({ description: '가져오기에 실패했습니다.', variant: 'destructive' })
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  return (
+    <section>
+      <h3 className="text-sm font-semibold text-foreground">데이터 이동</h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        PC를 바꾸거나 데이터를 옮길 때 사용합니다. 모든 작품, 챕터, 인물, 세계관 데이터가 포함됩니다.
+      </p>
+      <div className="mt-4 flex gap-3">
+        <button
+          onClick={handleExport}
+          disabled={loading !== null}
+          className="flex h-9 items-center gap-2 rounded-md border border-border px-4 text-xs text-secondary-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+        >
+          {loading === 'export' ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Upload className="h-3.5 w-3.5" />
+          )}
+          데이터 내보내기
+        </button>
+        <button
+          onClick={handleImport}
+          disabled={loading !== null}
+          className="flex h-9 items-center gap-2 rounded-md border border-border px-4 text-xs text-secondary-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+        >
+          {loading === 'import' ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Download className="h-3.5 w-3.5" />
+          )}
+          데이터 가져오기
+        </button>
+      </div>
+      <p className="mt-2 text-[10px] text-muted-foreground">
+        가져오기 시 현재 데이터가 덮어씌워집니다. 먼저 내보내기로 백업해두세요.
+      </p>
+    </section>
   )
 }

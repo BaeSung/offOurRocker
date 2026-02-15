@@ -4,6 +4,7 @@ import { is } from '@electron-toolkit/utils'
 import { autoUpdater } from 'electron-updater'
 import { initDatabase, closeDatabase } from './db/connection'
 import { registerAllIpcHandlers } from './ipc'
+import { runAutoBackupIfNeeded } from './utils/auto-backup'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -42,6 +43,9 @@ app.whenReady().then(() => {
   registerAllIpcHandlers()
 
   createWindow()
+
+  // Run auto backup check after startup
+  runAutoBackupIfNeeded()
 
   if (!is.dev) {
     autoUpdater.checkForUpdatesAndNotify()

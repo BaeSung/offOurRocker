@@ -86,6 +86,10 @@ export const IPC = {
   WORLD_NOTES_DELETE: 'worldNotes:delete',
   WORLD_NOTES_REORDER: 'worldNotes:reorder',
 
+  // Database
+  DB_EXPORT: 'db:export',
+  DB_IMPORT: 'db:import',
+
   // System
   SYSTEM_SELECT_DIRECTORY: 'system:selectDirectory',
   SYSTEM_GET_APP_VERSION: 'system:getAppVersion',

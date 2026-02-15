@@ -110,6 +110,10 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke(IPC.WORLD_NOTES_DELETE, id),
     reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.WORLD_NOTES_REORDER, orderedIds),
   },
+  database: {
+    export: () => ipcRenderer.invoke(IPC.DB_EXPORT),
+    import: () => ipcRenderer.invoke(IPC.DB_IMPORT),
+  },
   system: {
     selectDirectory: () => ipcRenderer.invoke(IPC.SYSTEM_SELECT_DIRECTORY),
     getAppVersion: () => ipcRenderer.invoke(IPC.SYSTEM_GET_APP_VERSION),

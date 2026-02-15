@@ -19,6 +19,7 @@ export const works = sqliteTable('works', {
   deadline: text('deadline'),
   tags: text('tags').notNull().default('[]'), // JSON array
   sortOrder: integer('sort_order').notNull().default(0),
+  coverImage: text('cover_image'), // base64 data URL
   deleted: integer('deleted').notNull().default(0), // soft delete
   deletedAt: text('deleted_at'), // timestamp of soft-delete
   createdAt: text('created_at').notNull(),

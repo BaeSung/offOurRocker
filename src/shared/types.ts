@@ -23,6 +23,7 @@ export interface Work {
   goalChars: number | null
   deadline: string | null
   tags: string[]
+  coverImage: string | null
   sortOrder: number
   createdAt: string
   updatedAt: string

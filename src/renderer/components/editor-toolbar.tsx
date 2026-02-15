@@ -256,6 +256,8 @@ function StatusBadge({
 }
 
 function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersionHistoryToggle?: () => void }) {
+  const coverInputRef = useRef<HTMLInputElement>(null)
+
   const handleExport = async (format: 'markdown' | 'txt') => {
     if (!workId) return
     try {
@@ -270,44 +272,93 @@ function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersi
     }
   }
 
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !workId) return
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const dataUrl = reader.result as string
+      // Resize to max 400px width to keep DB size reasonable
+      const img = new Image()
+      img.onload = async () => {
+        const maxW = 400
+        const scale = Math.min(1, maxW / img.width)
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width * scale
+        canvas.height = img.height * scale
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+        const resized = canvas.toDataURL('image/jpeg', 0.8)
+        await window.api.works.update(workId, { coverImage: resized })
+        toast({ description: '표지가 설정되었습니다.' })
+      }
+      img.src = dataUrl
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  const handleRemoveCover = async () => {
+    if (!workId) return
+    await window.api.works.update(workId, { coverImage: null })
+    toast({ description: '표지가 제거되었습니다.' })
+  }
+
   return (
-    <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors duration-150 hover:bg-secondary/50 hover:text-primary"
-              aria-label="더보기"
-            >
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">
-          {'더보기'}
-        </TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="end" className="min-w-[160px]">
-        <DropdownMenuItem onClick={() => handleExport('markdown')}>
-          <Download className="mr-2 h-3.5 w-3.5" />
-          {'마크다운으로 내보내기'}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport('txt')}>
-          <FileText className="mr-2 h-3.5 w-3.5" />
-          {'텍스트로 내보내기'}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => window.print()}>
-          <Printer className="mr-2 h-3.5 w-3.5" />
-          {'인쇄'}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onVersionHistoryToggle}>
-          <History className="mr-2 h-3.5 w-3.5" />
-          {'버전 히스토리'}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <input
+        ref={coverInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleCoverUpload}
+      />
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors duration-150 hover:bg-secondary/50 hover:text-primary"
+                aria-label="더보기"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            {'더보기'}
+          </TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent align="end" className="min-w-[160px]">
+          <DropdownMenuItem onClick={() => coverInputRef.current?.click()}>
+            <ImageIcon className="mr-2 h-3.5 w-3.5" />
+            {'표지 업로드'}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleRemoveCover}>
+            <X className="mr-2 h-3.5 w-3.5" />
+            {'표지 제거'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => handleExport('markdown')}>
+            <Download className="mr-2 h-3.5 w-3.5" />
+            {'마크다운으로 내보내기'}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport('txt')}>
+            <FileText className="mr-2 h-3.5 w-3.5" />
+            {'텍스트로 내보내기'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => window.print()}>
+            <Printer className="mr-2 h-3.5 w-3.5" />
+            {'인쇄'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onVersionHistoryToggle}>
+            <History className="mr-2 h-3.5 w-3.5" />
+            {'버전 히스토리'}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   )
 }
 

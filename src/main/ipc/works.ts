@@ -158,7 +158,7 @@ export function registerWorksHandlers(): void {
   // Update work metadata
   ipcMain.handle(
     IPC.WORKS_UPDATE,
-    async (_e, id: string, data: Partial<{ title: string; genre: string; status: string; seriesId: string | null; goalChars: number; deadline: string; tags: string[] }>) => {
+    async (_e, id: string, data: Partial<{ title: string; genre: string; status: string; seriesId: string | null; goalChars: number; deadline: string; tags: string[]; coverImage: string | null }>) => {
       const updateData: Record<string, any> = { updatedAt: new Date().toISOString() }
       if (data.title !== undefined) updateData.title = data.title
       if (data.genre !== undefined) updateData.genre = data.genre
@@ -167,6 +167,7 @@ export function registerWorksHandlers(): void {
       if (data.goalChars !== undefined) updateData.goalChars = data.goalChars
       if (data.deadline !== undefined) updateData.deadline = data.deadline
       if (data.tags !== undefined) updateData.tags = JSON.stringify(data.tags)
+      if (data.coverImage !== undefined) updateData.coverImage = data.coverImage
 
       db.update(schema.works).set(updateData).where(eq(schema.works.id, id)).run()
       return { success: true }

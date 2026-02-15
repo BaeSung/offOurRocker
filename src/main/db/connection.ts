@@ -130,6 +130,10 @@ function runMigrations(): void {
     sqlite.exec('ALTER TABLE works ADD COLUMN deleted_at TEXT')
     console.log('[DB] Migration: added deleted_at to works')
   }
+  if (!worksColumns.some((c) => c.name === 'cover_image')) {
+    sqlite.exec('ALTER TABLE works ADD COLUMN cover_image TEXT')
+    console.log('[DB] Migration: added cover_image to works')
+  }
 }
 
 export function getDb() {
