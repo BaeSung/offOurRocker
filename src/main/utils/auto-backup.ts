@@ -39,11 +39,8 @@ export async function runAutoBackupIfNeeded(): Promise<void> {
     const result = await createBackup(backupDir)
     if (result.success) {
       setSetting('lastAutoBackup', String(now))
-      console.log(`[AutoBackup] Completed: ${result.path}`)
-    } else {
-      console.error(`[AutoBackup] Failed: ${result.error}`)
     }
-  } catch (err) {
-    console.error('[AutoBackup] Error:', err)
+  } catch {
+    // Auto backup failure is non-critical
   }
 }

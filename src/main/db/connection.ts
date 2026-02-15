@@ -27,7 +27,6 @@ export function initDatabase(): void {
   // Run migrations for existing databases
   runMigrations()
 
-  console.log(`[DB] Initialized at ${dbPath}`)
 }
 
 function createTables(): void {
@@ -128,11 +127,9 @@ function runMigrations(): void {
   const worksColumns = sqlite.pragma('table_info(works)') as { name: string }[]
   if (!worksColumns.some((c) => c.name === 'deleted_at')) {
     sqlite.exec('ALTER TABLE works ADD COLUMN deleted_at TEXT')
-    console.log('[DB] Migration: added deleted_at to works')
   }
   if (!worksColumns.some((c) => c.name === 'cover_image')) {
     sqlite.exec('ALTER TABLE works ADD COLUMN cover_image TEXT')
-    console.log('[DB] Migration: added cover_image to works')
   }
 }
 
@@ -147,6 +144,5 @@ export function getSqlite(): Database.Database {
 export function closeDatabase(): void {
   if (sqlite) {
     sqlite.close()
-    console.log('[DB] Closed')
   }
 }

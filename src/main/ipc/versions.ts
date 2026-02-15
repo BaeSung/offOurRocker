@@ -67,7 +67,6 @@ export function registerVersionsHandlers(): void {
         }
       }
 
-      console.log(`[Versions] Created snapshot for chapter ${chapterId}`)
       return { success: true, id }
     }
   )

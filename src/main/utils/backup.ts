@@ -23,7 +23,6 @@ export async function createBackup(customDir?: string): Promise<{ success: boole
     const backupDir = customDir || getDefaultBackupDir()
     await mkdir(backupDir, { recursive: true })
 
-    // Use SQLite's backup API for consistent backup
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
     const backupFileName = `off-our-rocker_${timestamp}.db`
     const backupPath = join(backupDir, backupFileName)
@@ -31,18 +30,14 @@ export async function createBackup(customDir?: string): Promise<{ success: boole
     // Checkpoint WAL before backup
     sqlite.pragma('wal_checkpoint(TRUNCATE)')
 
-    // Copy the database file
     const dbPath = getDbPath()
     await copyFile(dbPath, backupPath)
 
-    // Cleanup old backups (keep MAX_BACKUPS most recent)
     await pruneOldBackups(backupDir)
 
-    console.log(`[Backup] Created: ${backupPath}`)
     return { success: true, path: backupPath }
-  } catch (err: any) {
-    console.error('[Backup] Error:', err)
-    return { success: false, error: err.message }
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -53,7 +48,6 @@ async function pruneOldBackups(dir: string): Promise<void> {
 
     if (backups.length <= MAX_BACKUPS) return
 
-    // Get file stats and sort by modified time
     const withStats = await Promise.all(
       backups.map(async (name) => {
         const filePath = join(dir, name)
@@ -62,15 +56,13 @@ async function pruneOldBackups(dir: string): Promise<void> {
       })
     )
 
-    withStats.sort((a, b) => b.mtime - a.mtime) // newest first
+    withStats.sort((a, b) => b.mtime - a.mtime)
 
-    // Delete oldest files beyond MAX_BACKUPS
     const toDelete = withStats.slice(MAX_BACKUPS)
     for (const f of toDelete) {
       await unlink(f.path)
-      console.log(`[Backup] Pruned: ${f.name}`)
     }
-  } catch (err) {
-    console.error('[Backup] Prune error:', err)
+  } catch {
+    // Prune failure is non-critical
   }
 }

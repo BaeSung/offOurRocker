@@ -53,7 +53,7 @@ interface SeriesAPI {
 
 interface SettingsAPI {
   getAll(): Promise<AppSettings>
-  set(key: string, value: any): Promise<{ success: boolean }>
+  set(key: string, value: unknown): Promise<{ success: boolean }>
 }
 
 interface StatsAPI {

@@ -25,8 +25,8 @@ export function registerDatabaseHandlers(): void {
       const dbPath = getDbPath()
       copyFileSync(dbPath, filePath)
       return { success: true, path: filePath }
-    } catch (err: any) {
-      return { success: false, error: err.message }
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   })
 
@@ -56,8 +56,8 @@ export function registerDatabaseHandlers(): void {
       app.exit(0)
 
       return { success: true }
-    } catch (err: any) {
-      return { success: false, error: err.message }
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   })
 }

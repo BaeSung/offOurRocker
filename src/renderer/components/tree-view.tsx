@@ -5,13 +5,16 @@ import { useWorkStore } from '@/stores/useWorkStore'
 import { useAppStore } from '@/stores/useAppStore'
 import { WorkItem } from '@/components/tree-item'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import type { Work } from '../../shared/types'
+
+type WorkWithChapters = Work & { chapters?: { id: string; title: string; sortOrder: number }[]; charCount?: number }
 
 function SeriesFolder({
   series,
   selectedId,
   onSelect,
 }: {
-  series: { id: string; title: string; works: any[] }
+  series: { id: string; title: string; works: WorkWithChapters[] }
   selectedId: string | null
   onSelect: (id: string, type: 'work' | 'chapter', workId?: string) => void
 }) {
@@ -39,7 +42,7 @@ function SeriesFolder({
         )}
       >
         <div className="ml-3 border-l border-border/50 pl-1" role="group">
-          {series.works.map((work: any) => (
+          {series.works.map((work) => (
             <WorkItem
               key={work.id}
               work={work}
@@ -59,7 +62,7 @@ function StandaloneSection({
   selectedId,
   onSelect,
 }: {
-  works: any[]
+  works: WorkWithChapters[]
   selectedId: string | null
   onSelect: (id: string, type: 'work' | 'chapter', workId?: string) => void
 }) {
@@ -89,7 +92,7 @@ function StandaloneSection({
         )}
       >
         <div className="ml-3 border-l border-border/50 pl-1" role="group">
-          {works.map((work: any) => (
+          {works.map((work) => (
             <WorkItem
               key={work.id}
               work={work}

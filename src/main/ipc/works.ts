@@ -108,7 +108,7 @@ export function registerWorksHandlers(): void {
           seriesId: data.seriesId || null,
           title: data.title,
           type: data.type,
-          genre: data.genre as any,
+          genre: data.genre,
           status: 'writing',
           goalChars: data.goalChars || null,
           deadline: data.deadline || null,
@@ -159,7 +159,7 @@ export function registerWorksHandlers(): void {
   ipcMain.handle(
     IPC.WORKS_UPDATE,
     async (_e, id: string, data: Partial<{ title: string; genre: string; status: string; seriesId: string | null; goalChars: number; deadline: string; tags: string[]; coverImage: string | null }>) => {
-      const updateData: Record<string, any> = { updatedAt: new Date().toISOString() }
+      const updateData: Record<string, unknown> = { updatedAt: new Date().toISOString() }
       if (data.title !== undefined) updateData.title = data.title
       if (data.genre !== undefined) updateData.genre = data.genre
       if (data.status !== undefined) updateData.status = data.status

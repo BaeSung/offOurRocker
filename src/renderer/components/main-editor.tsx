@@ -15,6 +15,7 @@ import { VersionHistoryPanel } from '@/components/version-history-panel'
 import { ReferencePanel } from '@/components/reference-panel'
 
 import type { WorkStatus } from '../../shared/types'
+import type { Editor } from '@tiptap/react'
 
 export type EditorMode = 'normal' | 'focus' | 'preview'
 
@@ -27,7 +28,7 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
   const [miniToolbarVisible, setMiniToolbarVisible] = useState(false)
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false)
   const [referencePanelOpen, setReferencePanelOpen] = useState(false)
-  const editorRef = useRef<any>(null)
+  const editorRef = useRef<Editor | null>(null)
 
   const activeDocument = useAppStore((s) => s.activeDocument)
   const { charCountNoSpaces, cursorLine, cursorCol } = useEditorStore()

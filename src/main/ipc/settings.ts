@@ -17,10 +17,10 @@ export function registerSettingsHandlers(): void {
     }
 
     // Merge with defaults
-    const result: Record<string, any> = { ...DEFAULT_SETTINGS }
+    const result: Record<string, unknown> = { ...DEFAULT_SETTINGS }
     for (const [key, value] of Object.entries(stored)) {
       if (key in DEFAULT_SETTINGS) {
-        const defaultVal = (DEFAULT_SETTINGS as any)[key]
+        const defaultVal = (DEFAULT_SETTINGS as Record<string, unknown>)[key]
         if (typeof defaultVal === 'number') {
           result[key] = Number(value)
         } else if (typeof defaultVal === 'boolean') {
@@ -34,7 +34,7 @@ export function registerSettingsHandlers(): void {
   })
 
   // Set a single setting
-  ipcMain.handle(IPC.SETTINGS_SET, async (_e, key: string, value: any) => {
+  ipcMain.handle(IPC.SETTINGS_SET, async (_e, key: string, value: unknown) => {
     const strValue = String(value)
     const existing = db.select().from(schema.settings).where(eq(schema.settings.key, key)).get()
     if (existing) {

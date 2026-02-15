@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ChevronRight, BookOpen, FileText, PenLine, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { STATUS_CONFIG, GENRE_CONFIG } from '../../shared/types'
-import type { WorkStatus, Genre } from '../../shared/types'
+import type { Work, WorkStatus, Genre } from '../../shared/types'
 import { useWorkStore } from '@/stores/useWorkStore'
 import { toast } from '@/hooks/use-toast'
 import {
@@ -252,13 +252,15 @@ export function ChapterItem({
 }
 
 // Work item (can have children if it's a novel with chapters)
+type TreeWork = Work & { chapters?: { id: string; title: string; sortOrder: number }[]; charCount?: number }
+
 export function WorkItem({
   work,
   selectedId,
   onSelect,
   depth = 0,
 }: {
-  work: any
+  work: TreeWork
   selectedId: string | null
   onSelect: (id: string, type: 'work' | 'chapter', workId?: string) => void
   depth?: number
@@ -268,7 +270,7 @@ export function WorkItem({
   const createChapter = useWorkStore((s) => s.createChapter)
   const updateWork = useWorkStore((s) => s.updateWork)
 
-  const chapters = work.chapters?.filter((c: any) => c.title !== '__body__') || []
+  const chapters = work.chapters?.filter((c) => c.title !== '__body__') || []
   const hasChapters = chapters.length > 0
   const isSelected = selectedId === work.id
   const Icon = work.type === 'novel' ? BookOpen : PenLine
@@ -354,7 +356,7 @@ export function WorkItem({
           )}
         >
           <div className="ml-4 border-l border-border/50 pl-2" role="group">
-            {chapters.map((chapter: any) => (
+            {chapters.map((chapter) => (
               <ChapterItem
                 key={chapter.id}
                 chapter={chapter}

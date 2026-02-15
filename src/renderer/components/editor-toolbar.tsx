@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { STATUS_CONFIG } from '../../shared/types'
 import type { WorkStatus } from '../../shared/types'
+import type { Editor } from '@tiptap/react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { SpellCheckPanel } from '@/components/spell-check-panel'
 import {
@@ -62,7 +63,7 @@ interface EditorToolbarProps {
   onChapterTitleChange: (title: string) => void
   formatState: FormatState
   onFormatToggle: (format: keyof FormatState) => void
-  editor?: any // TipTap editor instance
+  editor?: Editor | null
   onVersionHistoryToggle?: () => void
   versionHistoryOpen?: boolean
   onReferencePanelToggle?: () => void
@@ -174,7 +175,7 @@ function InlineEdit({
   )
 }
 
-function HeadingDropdown({ editor }: { editor?: any }) {
+function HeadingDropdown({ editor }: { editor?: Editor | null }) {
   return (
     <DropdownMenu>
       <Tooltip>
@@ -362,7 +363,7 @@ function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersi
   )
 }
 
-function SpellCheckButton({ editor }: { editor?: any }) {
+function SpellCheckButton({ editor }: { editor?: Editor | null }) {
   const [panelOpen, setPanelOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [corrections, setCorrections] = useState<{ original: string; corrected: string; explanation: string }[]>([])
@@ -402,8 +403,8 @@ function SpellCheckButton({ editor }: { editor?: any }) {
       } else {
         setError(result.error || '맞춤법 검사에 실패했습니다.')
       }
-    } catch (err: any) {
-      setError(err.message || '맞춤법 검사에 실패했습니다.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '맞춤법 검사에 실패했습니다.')
     } finally {
       setLoading(false)
     }
@@ -421,7 +422,7 @@ function SpellCheckButton({ editor }: { editor?: any }) {
     // Find the position in the document
     let pos = 0
     let found = false
-    doc.descendants((node: any, nodePos: number) => {
+    doc.descendants((node, nodePos) => {
       if (found) return false
       if (node.isText) {
         const nodeText = node.text || ''
@@ -473,7 +474,7 @@ function SpellCheckButton({ editor }: { editor?: any }) {
   )
 }
 
-function ImageInsertButton({ editor }: { editor?: any }) {
+function ImageInsertButton({ editor }: { editor?: Editor | null }) {
   const [panelOpen, setPanelOpen] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
@@ -504,8 +505,8 @@ function ImageInsertButton({ editor }: { editor?: any }) {
       } else {
         setError(result.error || '이미지 생성에 실패했습니다.')
       }
-    } catch (err: any) {
-      setError(err.message || '이미지 생성에 실패했습니다.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '이미지 생성에 실패했습니다.')
     } finally {
       setLoading(false)
     }

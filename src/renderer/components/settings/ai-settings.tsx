@@ -266,9 +266,9 @@ export function AISettings() {
           setStatus("error")
           setErrorMsg(result.error || "연결 실패")
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         setStatus("error")
-        setErrorMsg(err.message || "연결 실패")
+        setErrorMsg(err instanceof Error ? err.message : "연결 실패")
       }
     },
     [openaiKey, anthropicKey, openaiMasked, anthropicMasked, handleSaveKey]

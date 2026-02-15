@@ -105,8 +105,8 @@ export function registerAiHandlers(): void {
     try {
       storeApiKey(keyName, plainKey)
       return { success: true }
-    } catch (err: any) {
-      return { success: false, error: err.message }
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   })
 
@@ -121,8 +121,8 @@ export function registerAiHandlers(): void {
           ? key.slice(0, 7) + '•'.repeat(Math.min(key.length - 11, 20)) + key.slice(-4)
           : '•'.repeat(key.length)
       return { exists: true, masked }
-    } catch (err: any) {
-      return { exists: false, masked: '', error: err.message }
+    } catch (err: unknown) {
+      return { exists: false, masked: '', error: err instanceof Error ? err.message : String(err) }
     }
   })
 
@@ -131,8 +131,8 @@ export function registerAiHandlers(): void {
     try {
       deleteApiKey(keyName)
       return { success: true }
-    } catch (err: any) {
-      return { success: false, error: err.message }
+    } catch (err: unknown) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) }
     }
   })
 
@@ -168,8 +168,8 @@ export function registerAiHandlers(): void {
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           return { success: true }
         }
-      } catch (err: any) {
-        return { success: false, error: err.message }
+      } catch (err: unknown) {
+        return { success: false, error: err instanceof Error ? err.message : String(err) }
       }
     }
   )
@@ -207,9 +207,8 @@ export function registerAiHandlers(): void {
 
         const corrections: SpellCorrection[] = JSON.parse(arrMatch[0])
         return { success: true, corrections }
-      } catch (err: any) {
-        console.error('[AI] Spell check error:', err)
-        return { success: false, error: err.message }
+      } catch (err: unknown) {
+        return { success: false, error: err instanceof Error ? err.message : String(err) }
       }
     }
   )
@@ -251,9 +250,8 @@ export function registerAiHandlers(): void {
 
         const data = await res.json()
         return { success: true, url: data.data[0].url }
-      } catch (err: any) {
-        console.error('[AI] Image generation error:', err)
-        return { success: false, error: err.message }
+      } catch (err: unknown) {
+        return { success: false, error: err instanceof Error ? err.message : String(err) }
       }
     }
   )

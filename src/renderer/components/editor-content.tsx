@@ -5,10 +5,11 @@ import { useEditorStore } from '@/stores/useEditorStore'
 import { useAppStore } from '@/stores/useAppStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { cn } from '@/lib/utils'
+import type { Editor } from '@tiptap/react'
 
 interface EditorContentProps {
   focusMode: boolean
-  editorRef?: React.MutableRefObject<any>
+  editorRef?: React.MutableRefObject<Editor | null>
 }
 
 export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
@@ -58,7 +59,7 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
   }, [activeDocument?.workId, activeDocument?.chapterId])
 
   const handleEditorReady = useCallback(
-    (editor: any) => {
+    (editor: Editor) => {
       if (editorRef) editorRef.current = editor
     },
     [editorRef]

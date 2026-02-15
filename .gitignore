@@ -9,3 +9,7 @@ dist/
 *.db
 *.db-journal
 *.db-wal
+.wrangler/
+*.png
+*.jpg
+*.log

@@ -30,5 +30,4 @@ export function registerAllIpcHandlers(): void {
   registerCharactersHandlers()
   registerWorldNotesHandlers()
   registerDatabaseHandlers()
-  console.log('[IPC] All handlers registered')
 }
