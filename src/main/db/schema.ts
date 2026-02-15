@@ -66,3 +66,25 @@ export const goals = sqliteTable('goals', {
   deadline: text('deadline'),
   createdAt: text('created_at').notNull()
 })
+
+export const characters = sqliteTable('characters', {
+  id: text('id').primaryKey(),
+  workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  role: text('role').notNull().$type<'주인공' | '조연' | '악역' | '기타'>(),
+  description: text('description'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+})
+
+export const worldNotes = sqliteTable('world_notes', {
+  id: text('id').primaryKey(),
+  workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),
+  category: text('category').notNull().$type<'장소' | '세력' | '설정' | '역사' | '기타'>(),
+  title: text('title').notNull(),
+  content: text('content'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+})

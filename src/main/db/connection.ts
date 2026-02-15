@@ -98,6 +98,28 @@ function createTables(): void {
       deadline TEXT,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS characters (
+      id TEXT PRIMARY KEY,
+      work_id TEXT NOT NULL REFERENCES works(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      role TEXT NOT NULL,
+      description TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS world_notes (
+      id TEXT PRIMARY KEY,
+      work_id TEXT NOT NULL REFERENCES works(id) ON DELETE CASCADE,
+      category TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `)
 }
 

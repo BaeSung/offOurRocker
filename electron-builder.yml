@@ -1,0 +1,29 @@
+appId: com.offourrocker.app
+productName: Off Our Rocker
+copyright: Copyright © 2026 BaeSung
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**/*
+  - "!node_modules/**/*"
+  - node_modules/better-sqlite3/**/*
+  - node_modules/bindings/**/*
+  - node_modules/file-uri-to-path/**/*
+  - node_modules/drizzle-orm/**/*
+asarUnpack:
+  - node_modules/better-sqlite3/**/*
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: resources/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  artifactName: "${productName}-Setup-${version}.${ext}"
+publish:
+  provider: github
+  owner: BaeSung
+  repo: offOurRocker

@@ -583,6 +583,7 @@ export function CreateSeriesModal({
   const [nameError, setNameError] = useState(false)
   const [nameErrorMsg, setNameErrorMsg] = useState('')
   const [desc, setDesc] = useState('')
+  const [creating, setCreating] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
   const { createSeries } = useWorkStore()
 
@@ -592,6 +593,7 @@ export function CreateSeriesModal({
       setNameError(false)
       setNameErrorMsg('')
       setDesc('')
+      setCreating(false)
     }
   }, [open])
 
@@ -602,6 +604,8 @@ export function CreateSeriesModal({
       nameRef.current?.focus()
       return
     }
+    if (creating) return
+    setCreating(true)
     try {
       await createSeries({
         title: name.trim(),
@@ -611,8 +615,10 @@ export function CreateSeriesModal({
       toast({ description: `'${name.trim()}' 시리즈가 생성되었습니다.` })
     } catch {
       toast({ description: '시리즈 생성에 실패했습니다.', variant: 'destructive' })
+    } finally {
+      setCreating(false)
     }
-  }, [name, desc, onClose, createSeries])
+  }, [name, desc, onClose, createSeries, creating])
 
   return (
     <ModalOverlay open={open} onClose={onClose}>
@@ -680,12 +686,13 @@ export function CreateSeriesModal({
           </button>
           <button
             onClick={handleCreate}
+            disabled={creating || !name.trim()}
             className={cn(
               'h-9 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98]',
-              !name.trim() && 'opacity-60'
+              (creating || !name.trim()) && 'opacity-60'
             )}
           >
-            {'만들기'}
+            {creating ? '생성 중...' : '만들기'}
           </button>
         </div>
       </div>

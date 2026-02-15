@@ -84,6 +84,32 @@ const api = {
     generateImage: (prompt: string, keyName: string, options?: any) =>
       ipcRenderer.invoke(IPC.AI_GENERATE_IMAGE, prompt, keyName, options),
   },
+  characters: {
+    getByWork: (workId: string) => ipcRenderer.invoke(IPC.CHARACTERS_GET_BY_WORK, workId),
+    create: (data: {
+      workId: string
+      name: string
+      role: string
+      description?: string
+    }) => ipcRenderer.invoke(IPC.CHARACTERS_CREATE, data),
+    update: (id: string, data: Partial<{ name: string; role: string; description: string }>) =>
+      ipcRenderer.invoke(IPC.CHARACTERS_UPDATE, id, data),
+    delete: (id: string) => ipcRenderer.invoke(IPC.CHARACTERS_DELETE, id),
+    reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.CHARACTERS_REORDER, orderedIds),
+  },
+  worldNotes: {
+    getByWork: (workId: string) => ipcRenderer.invoke(IPC.WORLD_NOTES_GET_BY_WORK, workId),
+    create: (data: {
+      workId: string
+      category: string
+      title: string
+      content?: string
+    }) => ipcRenderer.invoke(IPC.WORLD_NOTES_CREATE, data),
+    update: (id: string, data: Partial<{ category: string; title: string; content: string }>) =>
+      ipcRenderer.invoke(IPC.WORLD_NOTES_UPDATE, id, data),
+    delete: (id: string) => ipcRenderer.invoke(IPC.WORLD_NOTES_DELETE, id),
+    reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.WORLD_NOTES_REORDER, orderedIds),
+  },
   system: {
     selectDirectory: () => ipcRenderer.invoke(IPC.SYSTEM_SELECT_DIRECTORY),
     getAppVersion: () => ipcRenderer.invoke(IPC.SYSTEM_GET_APP_VERSION),

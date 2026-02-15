@@ -12,6 +12,7 @@ import { EditorContent } from '@/components/editor-content'
 import { EditorStatusBar, FocusStatusBar } from '@/components/editor-status-bar'
 import { PreviewMode } from '@/components/preview-mode'
 import { VersionHistoryPanel } from '@/components/version-history-panel'
+import { ReferencePanel } from '@/components/reference-panel'
 
 import type { WorkStatus } from '../../shared/types'
 
@@ -25,6 +26,7 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
   const [mode, setMode] = useState<EditorMode>('normal')
   const [miniToolbarVisible, setMiniToolbarVisible] = useState(false)
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false)
+  const [referencePanelOpen, setReferencePanelOpen] = useState(false)
   const editorRef = useRef<any>(null)
 
   const activeDocument = useAppStore((s) => s.activeDocument)
@@ -123,10 +125,10 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
 
   const handleChapterTitleChange = useCallback(
     async (title: string) => {
-      // Chapter title change would need a chapter update IPC - for now just update via works reload
-      // This is a UI-only feature for now
+      if (!activeDocument?.chapterId) return
+      await useWorkStore.getState().updateChapter(activeDocument.chapterId, { title })
     },
-    []
+    [activeDocument]
   )
 
   const handleStatusChange = useCallback(
@@ -167,6 +169,38 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
     []
   )
 
+  const handleVersionHistoryToggle = useCallback(() => {
+    setReferencePanelOpen(false)
+    setVersionHistoryOpen((prev) => !prev)
+  }, [])
+
+  const handleReferencePanelToggle = useCallback(() => {
+    setVersionHistoryOpen(false)
+    setReferencePanelOpen((prev) => !prev)
+  }, [])
+
+  const handleContentRestored = useCallback(async () => {
+    // Reload the chapter content into the editor after a version restore
+    const doc = useAppStore.getState().activeDocument
+    if (!doc) return
+    try {
+      let content: string
+      if (doc.chapterId) {
+        const ch = await window.api.chapters.getById(doc.chapterId)
+        content = ch?.content || ''
+      } else {
+        content = await window.api.works.getContent(doc.workId)
+      }
+      const ed = editorRef.current
+      if (ed) {
+        ed.commands.setContent(content, { emitUpdate: false })
+      }
+      useEditorStore.getState().setContent(content)
+    } catch {
+      // version restore reload failed silently
+    }
+  }, [])
+
   // Preview mode
   if (mode === 'preview') {
     return (
@@ -205,9 +239,10 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
           visible={miniToolbarVisible}
           formatState={formatState}
           onFormatToggle={handleFormatToggle}
+          onExit={() => setMode('normal')}
         />
         <div
-          className="relative z-0 flex flex-1 flex-col"
+          className="relative z-0 flex flex-1 flex-col overflow-hidden"
           style={{ background: 'hsl(var(--background))' }}
         >
           <EditorContent focusMode editorRef={editorRef} />
@@ -216,32 +251,6 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
       </main>
     )
   }
-
-  const handleVersionHistoryToggle = useCallback(() => {
-    setVersionHistoryOpen((prev) => !prev)
-  }, [])
-
-  const handleContentRestored = useCallback(async () => {
-    // Reload the chapter content into the editor after a version restore
-    const doc = useAppStore.getState().activeDocument
-    if (!doc) return
-    try {
-      let content: string
-      if (doc.chapterId) {
-        const ch = await window.api.chapters.getById(doc.chapterId)
-        content = ch?.content || ''
-      } else {
-        content = await window.api.works.getContent(doc.workId)
-      }
-      const ed = editorRef.current
-      if (ed) {
-        ed.commands.setContent(content, { emitUpdate: false })
-      }
-      useEditorStore.getState().setContent(content)
-    } catch {
-      // version restore reload failed silently
-    }
-  }, [])
 
   // Normal mode
   return (
@@ -265,6 +274,8 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
           editor={getEditor()}
           onVersionHistoryToggle={handleVersionHistoryToggle}
           versionHistoryOpen={versionHistoryOpen}
+          onReferencePanelToggle={handleReferencePanelToggle}
+          referencePanelOpen={referencePanelOpen}
         />
         <EditorContent focusMode={false} editorRef={editorRef} />
         <EditorStatusBar />
@@ -274,6 +285,11 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
         onClose={() => setVersionHistoryOpen(false)}
         chapterId={activeDocument?.chapterId ?? null}
         onContentRestored={handleContentRestored}
+      />
+      <ReferencePanel
+        open={referencePanelOpen}
+        onClose={() => setReferencePanelOpen(false)}
+        workId={activeDocument?.workId ?? null}
       />
     </main>
   )

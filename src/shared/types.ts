@@ -59,6 +59,31 @@ export interface Goal {
   createdAt: string
 }
 
+export type CharacterRole = '주인공' | '조연' | '악역' | '기타'
+export type WorldNoteCategory = '장소' | '세력' | '설정' | '역사' | '기타'
+
+export interface Character {
+  id: string
+  workId: string
+  name: string
+  role: CharacterRole
+  description: string | null
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WorldNote {
+  id: string
+  workId: string
+  category: WorldNoteCategory
+  title: string
+  content: string | null
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AppSettings {
   // General
   theme: 'dark' | 'light' | 'system'

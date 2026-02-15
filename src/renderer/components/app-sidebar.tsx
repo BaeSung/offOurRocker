@@ -46,7 +46,7 @@ function SidebarButton({
   onClick?: () => void
 }) {
   const baseClasses =
-    "flex items-center gap-2 rounded-md text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    "flex items-center gap-1.5 rounded-md text-[11px] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 
   const variantClasses = {
     primary:
@@ -86,11 +86,11 @@ function SidebarButton({
       className={cn(
         baseClasses,
         variantClasses[variant],
-        "h-8 w-full justify-start px-3"
+        "h-7 w-full justify-start px-2"
       )}
     >
-      <Icon className="h-4 w-4 shrink-0" />
-      <span>{label}</span>
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+      <span className="truncate">{label}</span>
     </button>
   )
 }

@@ -1,13 +1,18 @@
 {
   "name": "off-our-rocker",
   "version": "0.1.0",
+  "description": "한국어 집필 앱 Off Our Rocker",
+  "author": "BaeSung",
   "private": true,
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "postinstall": "electron-vite build"
+    "postinstall": "electron-vite build",
+    "build:win": "electron-vite build && electron-builder --win --config",
+    "build:appx": "electron-vite build && electron-builder --win appx --config",
+    "build:dir": "electron-vite build && electron-builder --win --dir --config"
   },
   "dependencies": {
     "@fontsource/noto-sans-kr": "^5.1.1",
@@ -39,6 +44,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
+    "electron-updater": "^6.7.3",
     "lucide-react": "^0.544.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -61,8 +67,10 @@
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.9",
     "electron": "^33.3.1",
+    "electron-builder": "^26.7.0",
     "electron-vite": "^2.3.0",
     "postcss": "^8.5",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.17",
     "typescript": "5.7.3",
     "vite": "^6.1.0"
@@ -71,7 +79,8 @@
     "onlyBuiltDependencies": [
       "electron",
       "esbuild",
-      "better-sqlite3"
+      "better-sqlite3",
+      "sharp"
     ],
     "overrides": {
       "@types/react": "19.2.7",

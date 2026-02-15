@@ -4,7 +4,6 @@ import { useAppStore } from '@/stores/useAppStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 
 export function useAutoSave() {
-  const { isDirty, content, markClean } = useEditorStore()
   const activeDocument = useAppStore((s) => s.activeDocument)
   const autoSaveInterval = useSettingsStore((s) => s.autoSaveInterval)
   const savingRef = useRef(false)
@@ -15,6 +14,7 @@ export function useAutoSave() {
     const intervalMs = autoSaveInterval * 1000
 
     const timer = setInterval(async () => {
+      const { isDirty, content, markClean } = useEditorStore.getState()
       if (!isDirty || savingRef.current) return
       savingRef.current = true
 
@@ -33,7 +33,7 @@ export function useAutoSave() {
     }, intervalMs)
 
     return () => clearInterval(timer)
-  }, [activeDocument, autoSaveInterval, isDirty, content, markClean])
+  }, [activeDocument, autoSaveInterval])
 
   // Also save on unmount if dirty
   useEffect(() => {

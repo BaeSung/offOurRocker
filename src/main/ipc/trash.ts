@@ -40,7 +40,7 @@ export function registerTrashHandlers(): void {
       .where(eq(schema.works.id, workId))
       .run()
 
-    console.log(`[Trash] Restored work ${workId}`)
+
     return { success: true }
   })
 
@@ -51,7 +51,7 @@ export function registerTrashHandlers(): void {
       .where(eq(schema.works.id, workId))
       .run()
 
-    console.log(`[Trash] Permanently deleted work ${workId}`)
+
     return { success: true }
   })
 
@@ -69,7 +69,7 @@ export function registerTrashHandlers(): void {
         .run()
     }
 
-    console.log(`[Trash] Emptied ${deletedWorks.length} works`)
+
     return { success: true, count: deletedWorks.length }
   })
 }

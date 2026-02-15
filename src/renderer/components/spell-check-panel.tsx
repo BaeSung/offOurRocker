@@ -52,7 +52,7 @@ export function SpellCheckPanel({
       </div>
 
       {/* Content */}
-      <div className="max-h-[300px] overflow-y-auto">
+      <div className="max-h-[300px] overflow-y-auto scrollbar-thin">
         {loading && (
           <div className="flex items-center justify-center gap-2 py-8">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />

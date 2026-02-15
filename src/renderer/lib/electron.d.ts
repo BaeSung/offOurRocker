@@ -1,4 +1,4 @@
-import type { Work, Chapter, Series, AppSettings, WritingLog, Goal } from '../../shared/types'
+import type { Work, Chapter, Series, AppSettings, WritingLog, Goal, Character, CharacterRole, WorldNote, WorldNoteCategory } from '../../shared/types'
 
 interface WorksAPI {
   getAll(): Promise<{
@@ -172,6 +172,38 @@ interface SystemAPI {
   getAppVersion(): Promise<string>
 }
 
+interface CharactersAPI {
+  getByWork(workId: string): Promise<Character[]>
+  create(data: {
+    workId: string
+    name: string
+    role: CharacterRole
+    description?: string
+  }): Promise<{ id: string }>
+  update(
+    id: string,
+    data: Partial<{ name: string; role: string; description: string }>
+  ): Promise<{ success: boolean }>
+  delete(id: string): Promise<{ success: boolean }>
+  reorder(orderedIds: string[]): Promise<{ success: boolean }>
+}
+
+interface WorldNotesAPI {
+  getByWork(workId: string): Promise<WorldNote[]>
+  create(data: {
+    workId: string
+    category: WorldNoteCategory
+    title: string
+    content?: string
+  }): Promise<{ id: string }>
+  update(
+    id: string,
+    data: Partial<{ category: string; title: string; content: string }>
+  ): Promise<{ success: boolean }>
+  delete(id: string): Promise<{ success: boolean }>
+  reorder(orderedIds: string[]): Promise<{ success: boolean }>
+}
+
 interface ElectronAPI {
   works: WorksAPI
   chapters: ChaptersAPI
@@ -186,6 +218,8 @@ interface ElectronAPI {
   versions: VersionsAPI
   trash: TrashAPI
   ai: AIAPI
+  characters: CharactersAPI
+  worldNotes: WorldNotesAPI
   system: SystemAPI
 }
 

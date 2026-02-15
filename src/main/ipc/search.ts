@@ -51,6 +51,7 @@ export function registerSearchHandlers(): void {
         chapterTitle: schema.chapters.title,
         content: schema.chapters.content,
         workId: schema.chapters.workId,
+        workTitle: schema.works.title,
       })
       .from(schema.chapters)
       .innerJoin(schema.works, eq(schema.chapters.workId, schema.works.id))
@@ -67,12 +68,6 @@ export function registerSearchHandlers(): void {
       .all()
 
     for (const c of chapterMatches) {
-      // Get work title
-      const work = db
-        .select({ title: schema.works.title })
-        .from(schema.works)
-        .where(eq(schema.works.id, c.workId))
-        .get()
 
       // Extract snippet around the match
       let snippet = ''
@@ -93,7 +88,7 @@ export function registerSearchHandlers(): void {
       results.push({
         type: 'chapter',
         workId: c.workId,
-        workTitle: work?.title || '',
+        workTitle: c.workTitle || '',
         chapterId: c.chapterId,
         chapterTitle: displayTitle,
         snippet,

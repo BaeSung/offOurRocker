@@ -72,6 +72,20 @@ export const IPC = {
   AI_SPELL_CHECK: 'ai:spellCheck',
   AI_GENERATE_IMAGE: 'ai:generateImage',
 
+  // Characters
+  CHARACTERS_GET_BY_WORK: 'characters:getByWork',
+  CHARACTERS_CREATE: 'characters:create',
+  CHARACTERS_UPDATE: 'characters:update',
+  CHARACTERS_DELETE: 'characters:delete',
+  CHARACTERS_REORDER: 'characters:reorder',
+
+  // World Notes
+  WORLD_NOTES_GET_BY_WORK: 'worldNotes:getByWork',
+  WORLD_NOTES_CREATE: 'worldNotes:create',
+  WORLD_NOTES_UPDATE: 'worldNotes:update',
+  WORLD_NOTES_DELETE: 'worldNotes:delete',
+  WORLD_NOTES_REORDER: 'worldNotes:reorder',
+
   // System
   SYSTEM_SELECT_DIRECTORY: 'system:selectDirectory',
   SYSTEM_GET_APP_VERSION: 'system:getAppVersion',

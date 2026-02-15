@@ -241,11 +241,36 @@ export function registerWorksHandlers(): void {
   // Save content for short story
   ipcMain.handle(IPC.WORKS_SAVE_CONTENT, async (_e, workId: string, content: string) => {
     const now = new Date().toISOString()
+
+    // Get old content to compute diff for writing log
+    const old = db
+      .select({ content: schema.chapters.content })
+      .from(schema.chapters)
+      .where(and(eq(schema.chapters.workId, workId), eq(schema.chapters.title, '__body__')))
+      .get()
+
     db.update(schema.chapters)
       .set({ content, updatedAt: now })
       .where(and(eq(schema.chapters.workId, workId), eq(schema.chapters.title, '__body__')))
       .run()
     db.update(schema.works).set({ updatedAt: now }).where(eq(schema.works.id, workId)).run()
+
+    // Record writing log
+    const newCount = content.replace(/\s/g, '').length
+    const oldCount = ((old?.content) || '').replace(/\s/g, '').length
+    const diff = newCount - oldCount
+    if (diff > 0) {
+      const today = now.slice(0, 10)
+      db.insert(schema.writingLog)
+        .values({
+          id: uuid(),
+          date: today,
+          workId,
+          charCount: diff,
+        })
+        .run()
+    }
+
     return { success: true }
   })
 }

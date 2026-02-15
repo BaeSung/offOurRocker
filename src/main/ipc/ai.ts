@@ -62,10 +62,10 @@ async function callAnthropic(
     body: JSON.stringify({
       model,
       max_tokens: 4096,
-      messages: messages.map((m) => ({
-        role: m.role === 'system' ? 'user' : m.role,
-        content: m.content,
-      })),
+      system: messages.find((m) => m.role === 'system')?.content,
+      messages: messages
+        .filter((m) => m.role !== 'system')
+        .map((m) => ({ role: m.role, content: m.content })),
     }),
   })
 
@@ -195,13 +195,17 @@ export function registerAiHandlers(): void {
 
         const result = await callLLM(provider, apiKey, model, systemPrompt, text)
 
-        // Parse JSON from response (handle markdown code fences)
+        // Extract JSON array from response (handle code fences, extra text)
         let jsonStr = result.trim()
-        if (jsonStr.startsWith('```')) {
-          jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+        // Remove markdown code fences
+        jsonStr = jsonStr.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
+        // Extract the JSON array portion
+        const arrMatch = jsonStr.match(/\[[\s\S]*\]/)
+        if (!arrMatch) {
+          return { success: true, corrections: [] }
         }
 
-        const corrections: SpellCorrection[] = JSON.parse(jsonStr)
+        const corrections: SpellCorrection[] = JSON.parse(arrMatch[0])
         return { success: true, corrections }
       } catch (err: any) {
         console.error('[AI] Spell check error:', err)
