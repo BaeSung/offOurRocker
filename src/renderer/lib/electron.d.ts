@@ -200,6 +200,7 @@ interface DatabaseAPI {
 interface SystemAPI {
   selectDirectory(): Promise<string | null>
   getAppVersion(): Promise<string>
+  print(): Promise<{ success: boolean; error?: string }>
 }
 
 interface CharactersAPI {

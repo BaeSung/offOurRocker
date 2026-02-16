@@ -17,6 +17,20 @@ export function registerSystemHandlers(): void {
     return app.getVersion()
   })
 
+  ipcMain.handle(IPC.SYSTEM_PRINT, async (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (!win) return { success: false, error: 'No window' }
+    return new Promise<{ success: boolean; error?: string }>((resolve) => {
+      win.webContents.print({ silent: false, printBackground: true }, (success, failureReason) => {
+        if (success) {
+          resolve({ success: true })
+        } else {
+          resolve({ success: false, error: failureReason })
+        }
+      })
+    })
+  })
+
   ipcMain.handle(IPC.BACKUP_NOW, async (_e, customDir?: string) => {
     return createBackup(customDir || undefined)
   })

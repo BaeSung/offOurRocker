@@ -137,6 +137,7 @@ const api = {
   system: {
     selectDirectory: () => ipcRenderer.invoke(IPC.SYSTEM_SELECT_DIRECTORY),
     getAppVersion: () => ipcRenderer.invoke(IPC.SYSTEM_GET_APP_VERSION),
+    print: () => ipcRenderer.invoke(IPC.SYSTEM_PRINT),
   },
 }
 

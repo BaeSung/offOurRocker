@@ -353,7 +353,7 @@ function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersi
             {'EPUB으로 내보내기'}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => window.print()}>
+          <DropdownMenuItem onClick={() => window.api.system.print()}>
             <Printer className="mr-2 h-3.5 w-3.5" />
             {'인쇄'}
           </DropdownMenuItem>
