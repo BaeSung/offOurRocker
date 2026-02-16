@@ -12,7 +12,8 @@
     "postinstall": "electron-vite build",
     "build:win": "electron-vite build && electron-builder --win --config",
     "build:appx": "electron-vite build && electron-builder --win appx --config",
-    "build:dir": "electron-vite build && electron-builder --win --dir --config"
+    "build:dir": "electron-vite build && electron-builder --win --dir --config",
+    "build:nsis": "electron-vite build && electron-builder --win nsis --config"
   },
   "dependencies": {
     "@fontsource/noto-sans-kr": "^5.1.1",
@@ -44,7 +45,6 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
-    "electron-updater": "^6.7.3",
     "epub-gen-memory": "^1.1.2",
     "lucide-react": "^0.544.0",
     "react": "19.2.3",

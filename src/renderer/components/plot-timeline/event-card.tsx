@@ -19,6 +19,20 @@ export function EventCard({ event, onEdit, onDelete, compact }: EventCardProps) 
         <span className="flex-1 truncate text-[11px] text-foreground">
           {event.title}
         </span>
+        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            onClick={() => onEdit(event)}
+            className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-primary/10 hover:text-primary"
+          >
+            <Pencil className="h-2.5 w-2.5" />
+          </button>
+          <button
+            onClick={() => onDelete(event.id)}
+            className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="h-2.5 w-2.5" />
+          </button>
+        </div>
       </div>
     )
   }

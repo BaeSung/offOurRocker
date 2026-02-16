@@ -76,48 +76,48 @@ export function EventFormDialog({
         <DialogHeader>
           <DialogTitle>{event ? '이벤트 편집' : '새 이벤트'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 pt-1">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+            <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
               제목
             </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="플롯 이벤트 제목"
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary/50"
+              className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
               autoFocus
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+            <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
               설명
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="이벤트에 대한 상세 설명"
-              rows={3}
-              className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 text-sm leading-relaxed text-foreground outline-none focus:border-primary/50"
+              rows={4}
+              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm leading-relaxed text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+            <label className="mb-2 block text-[11px] font-medium text-muted-foreground">
               색상
             </label>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {COLORS.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
                   className={
-                    'h-6 w-6 rounded-full transition-all ' +
+                    'h-7 w-7 rounded-full transition-all ' +
                     (color === c
-                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
-                      : 'hover:scale-110')
+                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110'
+                      : 'hover:scale-110 opacity-75 hover:opacity-100')
                   }
                   style={{ background: c }}
                 />
@@ -127,13 +127,13 @@ export function EventFormDialog({
 
           {chapters.length > 0 && (
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
                 연결 챕터
               </label>
               <select
                 value={chapterId}
                 onChange={(e) => setChapterId(e.target.value)}
-                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary/50"
+                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
               >
                 <option value="">없음</option>
                 {chapters.map((ch) => (
@@ -145,18 +145,18 @@ export function EventFormDialog({
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="h-9 rounded-md px-4 text-sm text-muted-foreground hover:text-foreground"
+              className="h-9 rounded-lg px-4 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={!title.trim()}
-              className="h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="h-9 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {event ? '수정' : '추가'}
             </button>

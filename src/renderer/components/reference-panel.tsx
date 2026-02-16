@@ -172,7 +172,7 @@ function CharactersTab({ workId }: { workId: string }) {
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
         {loading && (
           <div className="flex items-center justify-center py-12">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
@@ -228,43 +228,58 @@ function CharactersTab({ workId }: { workId: string }) {
 
       {/* Edit / Create form */}
       {isFormOpen && (
-        <div className="shrink-0 border-t border-border bg-card p-3">
-          <div className="flex flex-col gap-2">
-            <input
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              placeholder="인물 이름"
-              className="h-7 rounded-md border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary/50"
-              autoFocus
-            />
-            <select
-              value={formRole}
-              onChange={(e) => setFormRole(e.target.value as CharacterRole)}
-              className="h-7 rounded-md border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary/50"
-            >
-              {CHARACTER_ROLES.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-            <textarea
-              value={formDesc}
-              onChange={(e) => setFormDesc(e.target.value)}
-              placeholder="외모, 성격, 배경 등 자유 서술"
-              rows={3}
-              className="resize-none rounded-md border border-border bg-background px-2 py-1.5 text-xs leading-relaxed text-foreground outline-none focus:border-primary/50"
-            />
-            <div className="flex items-center justify-end gap-1.5">
+        <div className="shrink-0 border-t border-border bg-card p-4">
+          <div className="flex flex-col gap-3.5">
+            <div>
+              <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+                이름
+              </label>
+              <input
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="인물 이름"
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+                역할
+              </label>
+              <select
+                value={formRole}
+                onChange={(e) => setFormRole(e.target.value as CharacterRole)}
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
+              >
+                {CHARACTER_ROLES.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+                설명
+              </label>
+              <textarea
+                value={formDesc}
+                onChange={(e) => setFormDesc(e.target.value)}
+                placeholder="외모, 성격, 배경 등 자유 서술"
+                rows={4}
+                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm leading-relaxed text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-1">
               <button
                 onClick={resetForm}
-                className="h-6 rounded-md px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
+                className="h-8 rounded-lg px-3.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 취소
               </button>
               <button
                 onClick={handleSave}
-                className="h-6 rounded-md bg-primary/10 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/20"
+                className="h-8 rounded-lg bg-primary px-4 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 저장
               </button>
@@ -383,7 +398,7 @@ function WorldNotesTab({ workId }: { workId: string }) {
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-thin">
         {loading && (
           <div className="flex items-center justify-center py-12">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
@@ -439,43 +454,58 @@ function WorldNotesTab({ workId }: { workId: string }) {
 
       {/* Edit / Create form */}
       {isFormOpen && (
-        <div className="shrink-0 border-t border-border bg-card p-3">
-          <div className="flex flex-col gap-2">
-            <input
-              value={formTitle}
-              onChange={(e) => setFormTitle(e.target.value)}
-              placeholder="항목 제목"
-              className="h-7 rounded-md border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary/50"
-              autoFocus
-            />
-            <select
-              value={formCategory}
-              onChange={(e) => setFormCategory(e.target.value as WorldNoteCategory)}
-              className="h-7 rounded-md border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary/50"
-            >
-              {WORLD_NOTE_CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            <textarea
-              value={formContent}
-              onChange={(e) => setFormContent(e.target.value)}
-              placeholder="상세 내용"
-              rows={4}
-              className="resize-none rounded-md border border-border bg-background px-2 py-1.5 text-xs leading-relaxed text-foreground outline-none focus:border-primary/50"
-            />
-            <div className="flex items-center justify-end gap-1.5">
+        <div className="shrink-0 border-t border-border bg-card p-4">
+          <div className="flex flex-col gap-3.5">
+            <div>
+              <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+                제목
+              </label>
+              <input
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="항목 제목"
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+                분류
+              </label>
+              <select
+                value={formCategory}
+                onChange={(e) => setFormCategory(e.target.value as WorldNoteCategory)}
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
+              >
+                {WORLD_NOTE_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">
+                내용
+              </label>
+              <textarea
+                value={formContent}
+                onChange={(e) => setFormContent(e.target.value)}
+                placeholder="상세 내용"
+                rows={4}
+                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm leading-relaxed text-foreground outline-none transition-colors focus:border-primary/60 focus:ring-1 focus:ring-primary/20"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-1">
               <button
                 onClick={resetForm}
-                className="h-6 rounded-md px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
+                className="h-8 rounded-lg px-3.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 취소
               </button>
               <button
                 onClick={handleSave}
-                className="h-6 rounded-md bg-primary/10 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/20"
+                className="h-8 rounded-lg bg-primary px-4 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 저장
               </button>

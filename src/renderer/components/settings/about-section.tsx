@@ -1,21 +1,8 @@
-import { useState } from "react"
-import { ExternalLink, Loader2, CheckCircle2 } from "lucide-react"
+import { ExternalLink, Clock } from "lucide-react"
 import { RockingChairLogo } from "@/components/rocking-chair-logo"
 import { Separator } from "@/components/ui/separator"
 
 export function AboutSection() {
-  const [checking, setChecking] = useState(false)
-  const [checked, setChecked] = useState(false)
-
-  const handleCheckUpdate = () => {
-    setChecking(true)
-    setChecked(false)
-    setTimeout(() => {
-      setChecking(false)
-      setChecked(true)
-    }, 1500)
-  }
-
   return (
     <div className="flex flex-col items-center gap-6 py-8">
       {/* Logo & title */}
@@ -66,22 +53,10 @@ export function AboutSection() {
 
       <Separator className="w-full max-w-xs bg-border/60" />
 
-      {/* Update check */}
-      <div className="flex flex-col items-center gap-3">
-        <button
-          onClick={handleCheckUpdate}
-          disabled={checking}
-          className="flex h-9 items-center gap-2 rounded-md border border-primary/40 px-5 text-sm text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
-        >
-          {checking && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-          업데이트 확인
-        </button>
-        {checked && !checking && (
-          <span className="flex items-center gap-1.5 text-xs" style={{ color: "hsl(140 60% 50%)" }}>
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            최신 버전입니다
-          </span>
-        )}
+      {/* Update info */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Clock className="h-3.5 w-3.5" />
+        자동 업데이트 준비 중
       </div>
     </div>
   )

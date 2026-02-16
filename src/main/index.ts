@@ -1,7 +1,6 @@
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
-import { autoUpdater } from 'electron-updater'
 import { initDatabase, closeDatabase } from './db/connection'
 import { registerAllIpcHandlers } from './ipc'
 import { runAutoBackupIfNeeded } from './utils/auto-backup'
@@ -46,10 +45,6 @@ app.whenReady().then(() => {
 
   // Run auto backup check after startup
   runAutoBackupIfNeeded()
-
-  if (!is.dev) {
-    autoUpdater.checkForUpdatesAndNotify()
-  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
