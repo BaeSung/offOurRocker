@@ -19,7 +19,7 @@ export function ExportSettings() {
   const formatValue = defaultExportFormat === 'markdown' ? 'md' : defaultExportFormat
 
   const handleFormatChange = (v: string) => {
-    setSetting('defaultExportFormat', v === 'md' ? 'markdown' : v as 'txt' | 'html')
+    setSetting('defaultExportFormat', v === 'md' ? 'markdown' : v as 'txt' | 'html' | 'epub')
   }
 
   const handleSelectExportDir = async () => {
@@ -81,16 +81,22 @@ export function ExportSettings() {
                 </span>
               </div>
             </label>
-            {/* Disabled future formats */}
-            <div className="flex items-center gap-3 rounded-lg border-2 border-border p-3 opacity-40">
-              <div className="h-4 w-4 rounded-full border border-muted-foreground" />
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-foreground">ePub</span>
-                <span className="rounded-full bg-muted-foreground/20 px-2 py-0.5 text-[9px] text-muted-foreground">
-                  준비 중
+            <label
+              className={
+                "flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 transition-all duration-150 " +
+                (formatValue === "epub"
+                  ? "border-primary bg-secondary/50"
+                  : "border-border hover:border-muted-foreground/30")
+              }
+            >
+              <RadioGroupItem value="epub" id="f-epub" />
+              <div>
+                <span className="text-sm text-foreground">EPUB</span>
+                <span className="ml-2 text-xs text-muted-foreground">
+                  .epub
                 </span>
               </div>
-            </div>
+            </label>
             <div className="flex items-center gap-3 rounded-lg border-2 border-border p-3 opacity-40">
               <div className="h-4 w-4 rounded-full border border-muted-foreground" />
               <div className="flex items-center gap-2">

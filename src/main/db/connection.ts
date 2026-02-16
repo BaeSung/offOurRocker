@@ -119,6 +119,18 @@ function createTables(): void {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS plot_events (
+      id TEXT PRIMARY KEY,
+      work_id TEXT NOT NULL REFERENCES works(id) ON DELETE CASCADE,
+      chapter_id TEXT REFERENCES chapters(id) ON DELETE SET NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      color TEXT NOT NULL DEFAULT '#3b82f6',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `)
 }
 

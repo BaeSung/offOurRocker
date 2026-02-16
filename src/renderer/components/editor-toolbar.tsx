@@ -19,6 +19,7 @@ import {
   History,
   FileText,
   BookMarked,
+  BookOpen,
   X,
   Loader2,
   Sparkles,
@@ -259,7 +260,7 @@ function StatusBadge({
 function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersionHistoryToggle?: () => void }) {
   const coverInputRef = useRef<HTMLInputElement>(null)
 
-  const handleExport = async (format: 'markdown' | 'txt') => {
+  const handleExport = async (format: 'markdown' | 'txt' | 'epub') => {
     if (!workId) return
     try {
       const result = await window.api.export.work(workId, format)
@@ -346,6 +347,10 @@ function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersi
           <DropdownMenuItem onClick={() => handleExport('txt')}>
             <FileText className="mr-2 h-3.5 w-3.5" />
             {'텍스트로 내보내기'}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport('epub')}>
+            <BookOpen className="mr-2 h-3.5 w-3.5" />
+            {'EPUB으로 내보내기'}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => window.print()}>

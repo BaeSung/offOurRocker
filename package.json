@@ -45,6 +45,7 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
     "electron-updater": "^6.7.3",
+    "epub-gen-memory": "^1.1.2",
     "lucide-react": "^0.544.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",

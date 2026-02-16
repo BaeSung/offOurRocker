@@ -86,6 +86,19 @@ export const IPC = {
   WORLD_NOTES_DELETE: 'worldNotes:delete',
   WORLD_NOTES_REORDER: 'worldNotes:reorder',
 
+  // Analytics
+  ANALYTICS_WEEKLY_TREND: 'analytics:weeklyTrend',
+  ANALYTICS_MONTHLY_TREND: 'analytics:monthlyTrend',
+  ANALYTICS_STREAK: 'analytics:streak',
+  ANALYTICS_WORK_DISTRIBUTION: 'analytics:workDistribution',
+
+  // Plot Events
+  PLOT_EVENTS_GET_BY_WORK: 'plotEvents:getByWork',
+  PLOT_EVENTS_CREATE: 'plotEvents:create',
+  PLOT_EVENTS_UPDATE: 'plotEvents:update',
+  PLOT_EVENTS_DELETE: 'plotEvents:delete',
+  PLOT_EVENTS_REORDER: 'plotEvents:reorder',
+
   // Database
   DB_EXPORT: 'db:export',
   DB_IMPORT: 'db:import',

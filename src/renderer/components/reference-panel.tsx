@@ -7,12 +7,14 @@ import {
   Users,
   Globe,
   UserCircle,
+  GitBranch,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from '@/hooks/use-toast'
+import { MiniTimeline } from '@/components/plot-timeline/mini-timeline'
 import type { Character, CharacterRole, WorldNote, WorldNoteCategory } from '../../shared/types'
 
-type TabType = 'characters' | 'worldNotes'
+type TabType = 'characters' | 'worldNotes' | 'plotEvents'
 
 interface ReferencePanelProps {
   open: boolean
@@ -521,6 +523,18 @@ export function ReferencePanel({ open, onClose, workId }: ReferencePanelProps) {
             <Globe className="h-3.5 w-3.5" />
             세계관
           </button>
+          <button
+            onClick={() => setActiveTab('plotEvents')}
+            className={cn(
+              'flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors',
+              activeTab === 'plotEvents'
+                ? 'bg-secondary text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <GitBranch className="h-3.5 w-3.5" />
+            플롯
+          </button>
         </div>
         <button
           onClick={onClose}
@@ -534,8 +548,10 @@ export function ReferencePanel({ open, onClose, workId }: ReferencePanelProps) {
       {workId ? (
         activeTab === 'characters' ? (
           <CharactersTab workId={workId} />
-        ) : (
+        ) : activeTab === 'worldNotes' ? (
           <WorldNotesTab workId={workId} />
+        ) : (
+          <MiniTimeline workId={workId} />
         )
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12">

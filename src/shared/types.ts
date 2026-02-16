@@ -85,6 +85,18 @@ export interface WorldNote {
   updatedAt: string
 }
 
+export interface PlotEvent {
+  id: string
+  workId: string
+  chapterId: string | null
+  title: string
+  description: string | null
+  color: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AppSettings {
   // General
   theme: 'dark' | 'light' | 'system'
@@ -119,7 +131,7 @@ export interface AppSettings {
   soundType: string
 
   // Export
-  defaultExportFormat: 'markdown' | 'txt' | 'html'
+  defaultExportFormat: 'markdown' | 'txt' | 'html' | 'epub'
   exportFrontmatter: boolean
   exportIncludeImages: boolean
   exportFootnoteStyle: 'inline' | 'bottom'

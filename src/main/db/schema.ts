@@ -79,6 +79,18 @@ export const characters = sqliteTable('characters', {
   updatedAt: text('updated_at').notNull()
 })
 
+export const plotEvents = sqliteTable('plot_events', {
+  id: text('id').primaryKey(),
+  workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),
+  chapterId: text('chapter_id').references(() => chapters.id, { onDelete: 'set null' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  color: text('color').notNull().default('#3b82f6'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+})
+
 export const worldNotes = sqliteTable('world_notes', {
   id: text('id').primaryKey(),
   workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),

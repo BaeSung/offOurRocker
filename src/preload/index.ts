@@ -110,6 +110,26 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke(IPC.WORLD_NOTES_DELETE, id),
     reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.WORLD_NOTES_REORDER, orderedIds),
   },
+  analytics: {
+    weeklyTrend: () => ipcRenderer.invoke(IPC.ANALYTICS_WEEKLY_TREND),
+    monthlyTrend: () => ipcRenderer.invoke(IPC.ANALYTICS_MONTHLY_TREND),
+    streak: () => ipcRenderer.invoke(IPC.ANALYTICS_STREAK),
+    workDistribution: () => ipcRenderer.invoke(IPC.ANALYTICS_WORK_DISTRIBUTION),
+  },
+  plotEvents: {
+    getByWork: (workId: string) => ipcRenderer.invoke(IPC.PLOT_EVENTS_GET_BY_WORK, workId),
+    create: (data: {
+      workId: string
+      title: string
+      description?: string
+      color?: string
+      chapterId?: string
+    }) => ipcRenderer.invoke(IPC.PLOT_EVENTS_CREATE, data),
+    update: (id: string, data: Record<string, unknown>) =>
+      ipcRenderer.invoke(IPC.PLOT_EVENTS_UPDATE, id, data),
+    delete: (id: string) => ipcRenderer.invoke(IPC.PLOT_EVENTS_DELETE, id),
+    reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.PLOT_EVENTS_REORDER, orderedIds),
+  },
   database: {
     export: () => ipcRenderer.invoke(IPC.DB_EXPORT),
     import: () => ipcRenderer.invoke(IPC.DB_IMPORT),

@@ -5,6 +5,7 @@ import { eq, asc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { generateEpub } from '../utils/epub-generator'
 
 function htmlToPlainText(html: string): string {
   return html
@@ -70,7 +71,7 @@ export function registerExportHandlers(): void {
     async (
       _e,
       workId: string,
-      format: 'markdown' | 'txt',
+      format: 'markdown' | 'txt' | 'epub',
       options?: { frontmatter?: boolean; directory?: string }
     ) => {
       const work = db
@@ -88,10 +89,45 @@ export function registerExportHandlers(): void {
         .orderBy(asc(schema.chapters.sortOrder))
         .all()
 
+      // ── EPUB export ──
+      if (format === 'epub') {
+        const safeTitle = work.title.replace(/[<>:"/\\|?*]/g, '_')
+        let filePath: string | undefined
+
+        if (options?.directory) {
+          filePath = join(options.directory, safeTitle + '.epub')
+        } else {
+          const result = await dialog.showSaveDialog({
+            defaultPath: safeTitle + '.epub',
+            filters: [{ name: 'EPUB', extensions: ['epub'] }],
+          })
+          if (result.canceled || !result.filePath) {
+            return { success: false, error: 'Cancelled' }
+          }
+          filePath = result.filePath
+        }
+
+        const epubBuffer = await generateEpub({
+          title: work.title,
+          genre: work.genre,
+          createdAt: work.createdAt,
+          coverImage: work.coverImage,
+          chapters: chapters.map((ch) => ({
+            title: ch.title,
+            content: ch.content || '',
+          })),
+        })
+
+        await mkdir(dirname(filePath), { recursive: true })
+        await writeFile(filePath, epubBuffer)
+
+        return { success: true, path: filePath }
+      }
+
+      // ── Markdown / Text export ──
       let output = ''
 
       if (format === 'markdown') {
-        // Optional frontmatter
         if (options?.frontmatter !== false) {
           output += '---\n'
           output += `title: "${work.title}"\n`
@@ -111,7 +147,6 @@ export function registerExportHandlers(): void {
           output += htmlToMarkdown(ch.content || '') + '\n\n'
         }
       } else {
-        // Plain text
         output += `${work.title}\n${'='.repeat(work.title.length)}\n\n`
 
         for (const ch of chapters) {
@@ -122,14 +157,12 @@ export function registerExportHandlers(): void {
         }
       }
 
-      // Determine save path
       let filePath: string | undefined
       if (options?.directory) {
         const ext = format === 'markdown' ? '.md' : '.txt'
         const safeTitle = work.title.replace(/[<>:"/\\|?*]/g, '_')
         filePath = join(options.directory, safeTitle + ext)
       } else {
-        // Show save dialog
         const ext = format === 'markdown' ? 'md' : 'txt'
         const filterName = format === 'markdown' ? 'Markdown' : 'Text'
         const safeTitle = work.title.replace(/[<>:"/\\|?*]/g, '_')

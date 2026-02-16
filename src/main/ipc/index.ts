@@ -13,6 +13,8 @@ import { registerTrashHandlers } from './trash'
 import { registerCharactersHandlers } from './characters'
 import { registerWorldNotesHandlers } from './world-notes'
 import { registerDatabaseHandlers } from './database'
+import { registerAnalyticsHandlers } from './analytics'
+import { registerPlotEventsHandlers } from './plot-events'
 
 export function registerAllIpcHandlers(): void {
   registerWorksHandlers()
@@ -30,4 +32,6 @@ export function registerAllIpcHandlers(): void {
   registerCharactersHandlers()
   registerWorldNotesHandlers()
   registerDatabaseHandlers()
+  registerAnalyticsHandlers()
+  registerPlotEventsHandlers()
 }

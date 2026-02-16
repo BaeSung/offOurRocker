@@ -13,6 +13,7 @@ import { DashboardPage } from '@/components/dashboard-page'
 import { CreateWorkModal, CreateSeriesModal } from '@/components/creation-modals'
 import { SearchModal } from '@/components/search-modal'
 import { TrashPage } from '@/components/trash-page'
+import { PlotTimelinePage } from '@/components/plot-timeline-page'
 import {
   Tooltip,
   TooltipContent,
@@ -85,6 +86,8 @@ export function AppShell() {
           dashboardActive={view === 'dashboard'}
           onTrashOpen={() => setView('trash')}
           trashActive={view === 'trash'}
+          onPlotTimelineOpen={() => setView('plotTimeline')}
+          plotTimelineActive={view === 'plotTimeline'}
           onEditorOpen={() => setView('editor')}
           onNewWork={() => setWorkModalOpen(true)}
           onNewSeries={() => setSeriesModalOpen(true)}
@@ -116,6 +119,7 @@ export function AppShell() {
           <div className="flex flex-1 overflow-hidden">
             {view === 'dashboard' && <DashboardPage />}
             {view === 'trash' && <TrashPage />}
+            {view === 'plotTimeline' && <PlotTimelinePage />}
             {view === 'settings' && (
               <SettingsPage onClose={() => setView('editor')} />
             )}

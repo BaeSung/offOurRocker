@@ -5,6 +5,9 @@ import { RecentWorks } from "@/components/dashboard/recent-works"
 import { GenreChart } from "@/components/dashboard/genre-chart"
 import { WritingCalendar } from "@/components/dashboard/writing-calendar"
 import { GoalTracker } from "@/components/dashboard/goal-tracker"
+import { WritingTrends } from "@/components/dashboard/writing-trends"
+import { StreakTracker } from "@/components/dashboard/streak-tracker"
+import { WorkDistribution } from "@/components/dashboard/work-distribution"
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -63,6 +66,16 @@ export function DashboardPage() {
         {/* Goal tracker */}
         <div className="mb-10">
           <GoalTracker />
+        </div>
+
+        {/* 집필 분석 섹션 */}
+        <div className="mb-10">
+          <WritingTrends />
+        </div>
+
+        <div className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <StreakTracker />
+          <WorkDistribution />
         </div>
       </div>
     </ScrollArea>

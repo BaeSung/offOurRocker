@@ -6,6 +6,7 @@ import {
   Settings,
   Trash2,
   LayoutDashboard,
+  GitBranch,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RockingChairLogo } from "@/components/rocking-chair-logo"
@@ -27,6 +28,8 @@ interface AppSidebarProps {
   dashboardActive?: boolean
   onTrashOpen?: () => void
   trashActive?: boolean
+  onPlotTimelineOpen?: () => void
+  plotTimelineActive?: boolean
   onEditorOpen?: () => void
   onNewWork?: () => void
   onNewSeries?: () => void
@@ -95,7 +98,7 @@ function SidebarButton({
   )
 }
 
-export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive, onDashboardOpen, dashboardActive, onTrashOpen, trashActive, onEditorOpen, onNewWork, onNewSeries }: AppSidebarProps) {
+export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive, onDashboardOpen, dashboardActive, onTrashOpen, trashActive, onPlotTimelineOpen, plotTimelineActive, onEditorOpen, onNewWork, onNewSeries }: AppSidebarProps) {
   return (
       <aside
         className={cn(
@@ -192,6 +195,13 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
               collapsed={collapsed}
               variant={dashboardActive ? "secondary" : "ghost"}
               onClick={onDashboardOpen}
+            />
+            <SidebarButton
+              icon={GitBranch}
+              label="플롯"
+              collapsed={collapsed}
+              variant={plotTimelineActive ? "secondary" : "ghost"}
+              onClick={onPlotTimelineOpen}
             />
             <SidebarButton
               icon={Settings}

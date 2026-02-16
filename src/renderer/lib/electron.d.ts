@@ -1,4 +1,4 @@
-import type { Work, Chapter, Series, AppSettings, WritingLog, Goal, Character, CharacterRole, WorldNote, WorldNoteCategory } from '../../shared/types'
+import type { Work, Chapter, Series, AppSettings, WritingLog, Goal, Character, CharacterRole, WorldNote, WorldNoteCategory, PlotEvent } from '../../shared/types'
 
 interface WorksAPI {
   getAll(): Promise<{
@@ -100,7 +100,7 @@ interface SearchAPI {
 interface ExportAPI {
   work(
     workId: string,
-    format: 'markdown' | 'txt',
+    format: 'markdown' | 'txt' | 'epub',
     options?: { frontmatter?: boolean; directory?: string }
   ): Promise<{ success: boolean; path?: string; error?: string }>
 }
@@ -168,6 +168,30 @@ interface AIAPI {
   ): Promise<{ success: boolean; url?: string; error?: string }>
 }
 
+interface AnalyticsAPI {
+  weeklyTrend(): Promise<{ week: string; chars: number }[]>
+  monthlyTrend(): Promise<{ month: string; chars: number }[]>
+  streak(): Promise<{ current: number; longest: number }>
+  workDistribution(): Promise<{ title: string; chars: number }[]>
+}
+
+interface PlotEventsAPI {
+  getByWork(workId: string): Promise<PlotEvent[]>
+  create(data: {
+    workId: string
+    title: string
+    description?: string
+    color?: string
+    chapterId?: string
+  }): Promise<{ id: string }>
+  update(
+    id: string,
+    data: Partial<{ title: string; description: string; color: string; chapterId: string | null }>
+  ): Promise<{ success: boolean }>
+  delete(id: string): Promise<{ success: boolean }>
+  reorder(orderedIds: string[]): Promise<{ success: boolean }>
+}
+
 interface DatabaseAPI {
   export(): Promise<{ success: boolean; path?: string; canceled?: boolean; error?: string }>
   import(): Promise<{ success: boolean; needsReload?: boolean; canceled?: boolean; error?: string }>
@@ -224,6 +248,8 @@ interface ElectronAPI {
   versions: VersionsAPI
   trash: TrashAPI
   ai: AIAPI
+  analytics: AnalyticsAPI
+  plotEvents: PlotEventsAPI
   characters: CharactersAPI
   worldNotes: WorldNotesAPI
   database: DatabaseAPI
