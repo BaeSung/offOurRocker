@@ -23,7 +23,7 @@ export function EditorStatusBar() {
   })()
 
   return (
-    <div className="flex h-8 shrink-0 items-center border-t border-border/50 bg-card/30 px-4 text-[11px] text-muted-foreground">
+    <div className="flex h-8 shrink-0 items-center border-t border-border/50 bg-card/30 px-4 text-[11px] text-muted-foreground print-hide">
       {/* Left */}
       <div className="flex items-center gap-3">
         <button

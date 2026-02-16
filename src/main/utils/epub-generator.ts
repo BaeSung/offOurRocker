@@ -28,7 +28,7 @@ h1 { font-size: 1.6em; }
 h2 { font-size: 1.3em; }
 p {
   margin: 0.5em 0;
-  text-indent: 1em;
+  text-indent: 0;
 }
 blockquote {
   margin: 1em 2em;

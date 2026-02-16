@@ -46,7 +46,7 @@ export function PreviewMode() {
               color: hsl(var(--foreground));
             }
             .preview-content p {
-              text-indent: 1em;
+              text-indent: 0;
               margin-bottom: 0.5em;
             }
             .preview-content h1, .preview-content h2, .preview-content h3 {

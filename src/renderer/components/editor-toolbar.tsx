@@ -638,7 +638,7 @@ export function EditorToolbar({
   referencePanelOpen,
 }: EditorToolbarProps) {
   return (
-    <div className="flex h-11 shrink-0 items-center border-b border-border/50 px-4">
+    <div className="flex h-11 shrink-0 items-center border-b border-border/50 px-4 print-hide">
       {/* Left: Breadcrumb + Status */}
       <div className="flex items-center gap-1.5 overflow-hidden">
         <InlineEdit

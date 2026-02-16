@@ -99,7 +99,7 @@ export function VersionHistoryPanel({ open, onClose, chapterId, onContentRestore
   if (!open) return null
 
   return (
-    <div className="flex h-full w-[320px] shrink-0 flex-col border-l border-border bg-card">
+    <div className="flex h-full w-[320px] shrink-0 flex-col border-l border-border bg-card print-hide">
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">

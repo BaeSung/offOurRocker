@@ -495,7 +495,7 @@ export function ReferencePanel({ open, onClose, workId }: ReferencePanelProps) {
   if (!open) return null
 
   return (
-    <div className="flex h-full w-[300px] shrink-0 flex-col border-l border-border bg-card">
+    <div className="flex h-full w-[300px] shrink-0 flex-col border-l border-border bg-card print-hide">
       {/* Header with tabs */}
       <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-1">

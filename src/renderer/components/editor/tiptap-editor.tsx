@@ -27,7 +27,7 @@ export function TipTapEditor({
   fontSize = 16,
   lineHeight = 1.9,
   fontFamily = 'Noto Serif KR',
-  indent = true,
+  indent = false,
   onReady,
 }: TipTapEditorProps) {
   const { markDirty, setCharCount, setCursor, setContent } = useEditorStore()

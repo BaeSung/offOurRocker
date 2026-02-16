@@ -68,7 +68,7 @@ export function InspectorPanel({ open, onClose }: InspectorPanelProps) {
   return (
     <aside
       className={cn(
-        'flex h-full flex-col border-l border-border bg-card transition-[width,opacity] duration-300 ease-in-out overflow-hidden',
+        'flex h-full flex-col border-l border-border bg-card transition-[width,opacity] duration-300 ease-in-out overflow-hidden print-hide',
         open ? 'w-[240px] opacity-100' : 'w-0 opacity-0'
       )}
       role="complementary"
