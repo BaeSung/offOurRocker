@@ -13,6 +13,7 @@ function createWindow(): void {
     minHeight: 600,
     show: false,
     frame: true,
+    icon: join(__dirname, '../../resources/icon.png'),
     ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset' } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

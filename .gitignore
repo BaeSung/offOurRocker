@@ -11,5 +11,7 @@ dist/
 *.db-wal
 .wrangler/
 *.png
+!resources/appx/*.png
+!resources/icon.png
 *.jpg
 *.log
