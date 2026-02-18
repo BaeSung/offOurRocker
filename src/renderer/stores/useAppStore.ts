@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type AppView = 'dashboard' | 'editor' | 'settings' | 'trash' | 'plotTimeline'
+export type AppView = 'dashboard' | 'editor' | 'settings' | 'trash' | 'plotTimeline' | 'mindMap'
 
 interface ActiveDocument {
   workId: string

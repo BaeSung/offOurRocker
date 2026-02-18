@@ -7,6 +7,7 @@ import {
   Trash2,
   LayoutDashboard,
   GitBranch,
+  Network,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RockingChairLogo } from "@/components/rocking-chair-logo"
@@ -30,6 +31,8 @@ interface AppSidebarProps {
   trashActive?: boolean
   onPlotTimelineOpen?: () => void
   plotTimelineActive?: boolean
+  onMindMapOpen?: () => void
+  mindMapActive?: boolean
   onEditorOpen?: () => void
   onNewWork?: () => void
   onNewSeries?: () => void
@@ -98,7 +101,7 @@ function SidebarButton({
   )
 }
 
-export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive, onDashboardOpen, dashboardActive, onTrashOpen, trashActive, onPlotTimelineOpen, plotTimelineActive, onEditorOpen, onNewWork, onNewSeries }: AppSidebarProps) {
+export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive, onDashboardOpen, dashboardActive, onTrashOpen, trashActive, onPlotTimelineOpen, plotTimelineActive, onMindMapOpen, mindMapActive, onEditorOpen, onNewWork, onNewSeries }: AppSidebarProps) {
   return (
       <aside
         className={cn(
@@ -202,6 +205,13 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
               collapsed={collapsed}
               variant={plotTimelineActive ? "secondary" : "ghost"}
               onClick={onPlotTimelineOpen}
+            />
+            <SidebarButton
+              icon={Network}
+              label="보드"
+              collapsed={collapsed}
+              variant={mindMapActive ? "secondary" : "ghost"}
+              onClick={onMindMapOpen}
             />
             <SidebarButton
               icon={Settings}

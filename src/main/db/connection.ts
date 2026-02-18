@@ -131,6 +131,14 @@ function createTables(): void {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS mind_maps (
+      id TEXT PRIMARY KEY,
+      work_id TEXT NOT NULL REFERENCES works(id) ON DELETE CASCADE,
+      data TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `)
 }
 

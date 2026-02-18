@@ -192,6 +192,14 @@ interface PlotEventsAPI {
   reorder(orderedIds: string[]): Promise<{ success: boolean }>
 }
 
+interface MindMapAPI {
+  get(workId: string): Promise<{ nodes: unknown[]; edges: unknown[]; viewport: { x: number; y: number; zoom: number } }>
+  save(workId: string, data: string): Promise<{ success: boolean }>
+  exportPng(base64: string): Promise<{ success: boolean; path?: string; error?: string }>
+  exportJson(json: string): Promise<{ success: boolean; path?: string; error?: string }>
+  importJson(): Promise<{ success: boolean; data?: { nodes: unknown[]; edges: unknown[] }; error?: string }>
+}
+
 interface DatabaseAPI {
   export(): Promise<{ success: boolean; path?: string; canceled?: boolean; error?: string }>
   import(): Promise<{ success: boolean; needsReload?: boolean; canceled?: boolean; error?: string }>
@@ -253,6 +261,7 @@ interface ElectronAPI {
   plotEvents: PlotEventsAPI
   characters: CharactersAPI
   worldNotes: WorldNotesAPI
+  mindMap: MindMapAPI
   database: DatabaseAPI
   system: SystemAPI
 }

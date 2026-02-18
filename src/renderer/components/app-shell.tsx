@@ -14,6 +14,7 @@ import { CreateWorkModal, CreateSeriesModal } from '@/components/creation-modals
 import { SearchModal } from '@/components/search-modal'
 import { TrashPage } from '@/components/trash-page'
 import { PlotTimelinePage } from '@/components/plot-timeline-page'
+import { MindMapPage } from '@/components/mind-map-page'
 import {
   Tooltip,
   TooltipContent,
@@ -88,6 +89,8 @@ export function AppShell() {
           trashActive={view === 'trash'}
           onPlotTimelineOpen={() => setView('plotTimeline')}
           plotTimelineActive={view === 'plotTimeline'}
+          onMindMapOpen={() => setView('mindMap')}
+          mindMapActive={view === 'mindMap'}
           onEditorOpen={() => setView('editor')}
           onNewWork={() => setWorkModalOpen(true)}
           onNewSeries={() => setSeriesModalOpen(true)}
@@ -120,6 +123,7 @@ export function AppShell() {
             {view === 'dashboard' && <DashboardPage />}
             {view === 'trash' && <TrashPage />}
             {view === 'plotTimeline' && <PlotTimelinePage />}
+            {view === 'mindMap' && <MindMapPage />}
             {view === 'settings' && (
               <SettingsPage onClose={() => setView('editor')} />
             )}

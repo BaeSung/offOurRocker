@@ -15,6 +15,7 @@ import { registerWorldNotesHandlers } from './world-notes'
 import { registerDatabaseHandlers } from './database'
 import { registerAnalyticsHandlers } from './analytics'
 import { registerPlotEventsHandlers } from './plot-events'
+import { registerMindMapHandlers } from './mind-map'
 
 export function registerAllIpcHandlers(): void {
   registerWorksHandlers()
@@ -34,4 +35,5 @@ export function registerAllIpcHandlers(): void {
   registerDatabaseHandlers()
   registerAnalyticsHandlers()
   registerPlotEventsHandlers()
+  registerMindMapHandlers()
 }

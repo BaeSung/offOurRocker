@@ -130,6 +130,13 @@ const api = {
     delete: (id: string) => ipcRenderer.invoke(IPC.PLOT_EVENTS_DELETE, id),
     reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.PLOT_EVENTS_REORDER, orderedIds),
   },
+  mindMap: {
+    get: (workId: string) => ipcRenderer.invoke(IPC.MIND_MAP_GET, workId),
+    save: (workId: string, data: string) => ipcRenderer.invoke(IPC.MIND_MAP_SAVE, workId, data),
+    exportPng: (base64: string) => ipcRenderer.invoke(IPC.MIND_MAP_EXPORT_PNG, base64),
+    exportJson: (json: string) => ipcRenderer.invoke(IPC.MIND_MAP_EXPORT_JSON, json),
+    importJson: () => ipcRenderer.invoke(IPC.MIND_MAP_IMPORT_JSON),
+  },
   database: {
     export: () => ipcRenderer.invoke(IPC.DB_EXPORT),
     import: () => ipcRenderer.invoke(IPC.DB_IMPORT),

@@ -91,6 +91,14 @@ export const plotEvents = sqliteTable('plot_events', {
   updatedAt: text('updated_at').notNull()
 })
 
+export const mindMaps = sqliteTable('mind_maps', {
+  id: text('id').primaryKey(),
+  workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),
+  data: text('data').notNull().default('{}'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+})
+
 export const worldNotes = sqliteTable('world_notes', {
   id: text('id').primaryKey(),
   workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),
