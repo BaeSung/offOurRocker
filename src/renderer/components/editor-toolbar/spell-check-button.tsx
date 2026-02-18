@@ -29,7 +29,7 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
     }
 
     const trimmed = text.length > 3000 ? text.slice(0, 3000) : text
-    const model = aiModel || (aiProvider === 'openai' ? 'gpt-4o-mini' : 'claude-haiku-4-5-20251001')
+    const model = aiModel || (aiProvider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-5-20250929')
 
     setPanelOpen(true)
     setLoading(true)

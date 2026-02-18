@@ -30,7 +30,7 @@ async function callOpenAI(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, messages, temperature: 0.2 }),
+    body: JSON.stringify({ model, messages, temperature: 0 }),
   })
 
   if (!res.ok) {
@@ -57,6 +57,7 @@ async function callAnthropic(
     body: JSON.stringify({
       model,
       max_tokens: 4096,
+      temperature: 0,
       system: messages.find((m) => m.role === 'system')?.content,
       messages: messages
         .filter((m) => m.role !== 'system')
@@ -159,10 +160,24 @@ export function registerAiHandlers(): void {
       const apiKey = getApiKey(keyName)
       if (!apiKey) return { success: false, error: 'API key not found' }
 
-      const systemPrompt = `당신은 한국어 맞춤법 교정 전문가입니다.
-사용자가 보낸 텍스트에서 맞춤법, 띄어쓰기, 문법 오류를 찾아 교정하세요.
-반드시 아래 JSON 배열 형식으로만 응답하세요. 오류가 없으면 빈 배열 []을 반환하세요.
-[{"original":"틀린 부분","corrected":"교정된 부분","explanation":"교정 이유"}]`
+      const systemPrompt = `당신은 한국어 맞춤법·문법 교정 전문가입니다. 국립국어원 표준어 규정과 한글 맞춤법 통일안을 기준으로 검사하세요.
+
+## 규칙
+1. **확실한 오류만** 지적하세요. 애매하거나 문체 선택에 해당하는 것은 건너뛰세요.
+2. 소설·창작 문체(의도적 구어체, 방언, 의성어·의태어, 캐릭터 말투)는 오류로 지적하지 마세요.
+3. 교정 대상: 맞춤법 오류, 띄어쓰기 오류, 조사 오용, 피동/사동 접사 오류, 높임법 불일치.
+4. original에는 오류가 포함된 최소 단위(어절 1~3개)만 포함하세요.
+5. 반드시 아래 JSON 배열 형식으로만 응답하세요. 오류가 없으면 빈 배열 []을 반환하세요.
+
+## 출력 형식
+[{"original":"틀린 부분","corrected":"교정된 부분","explanation":"간결한 교정 이유"}]
+
+## 예시
+입력: "그는 빛이 바랬다고 말했다."
+출력: [{"original":"바랬다고","corrected":"바랐다고","explanation":"'바라다'의 과거형은 '바랐다'입니다 (ㅎ 불규칙 아님)"}]
+
+입력: "나는 학교에 갔다."
+출력: []`
 
       const result = await callLLM(provider, apiKey, model, systemPrompt, text)
 
