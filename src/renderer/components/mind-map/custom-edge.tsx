@@ -88,7 +88,7 @@ export function LabeledEdge({
         path={edgePath}
         style={{
           ...style,
-          ...(selected ? { stroke: 'hsl(30 60% 70%)', strokeWidth: 2.5 } : {}),
+          ...(selected ? { stroke: 'hsl(var(--primary))', strokeWidth: 2.5 } : {}),
         }}
         markerEnd={markerEnd}
         interactionWidth={20}

@@ -234,6 +234,7 @@ function BoardInner({ workId }: BoardProps) {
 
   // Load board data
   useEffect(() => {
+    let cancelled = false
     workIdRef.current = workId
     isLoadedRef.current = false
     historyRef.current = []
@@ -241,7 +242,7 @@ function BoardInner({ workId }: BoardProps) {
     lastSnapshotRef.current = ''
 
     window.api.mindMap.get(workId).then((data) => {
-      if (workIdRef.current !== workId) return
+      if (cancelled || workIdRef.current !== workId) return
       const loadedNodes = (data.nodes || []) as Node[]
       const loadedEdges = (data.edges || []) as Edge[]
 
@@ -255,9 +256,12 @@ function BoardInner({ workId }: BoardProps) {
 
       isLoadedRef.current = true
     }).catch(() => {
+      if (cancelled) return
       isLoadedRef.current = true
       toast({ description: '마인드맵 데이터를 불러오지 못했습니다.', variant: 'destructive' })
     })
+
+    return () => { cancelled = true }
   }, [workId, rfInstance, setNodes, setEdges, toast])
 
   // Auto-save with debounce
@@ -376,8 +380,9 @@ function BoardInner({ workId }: BoardProps) {
     if (!flowEl) return
 
     try {
+      const isLight = document.documentElement.classList.contains('light')
       const dataUrl = await toPng(flowEl, {
-        backgroundColor: 'hsl(240, 20%, 6%)',
+        backgroundColor: isLight ? 'hsl(40, 20%, 96%)' : 'hsl(240, 20%, 6%)',
         quality: 1,
       })
       const result = await window.api.mindMap.exportPng(dataUrl)
@@ -452,7 +457,7 @@ function BoardInner({ workId }: BoardProps) {
           variant={BackgroundVariant.Dots}
           gap={20}
           size={1}
-          color="hsl(240 10% 16%)"
+          color="hsl(var(--border))"
         />
         <MiniMap
           nodeStrokeWidth={3}

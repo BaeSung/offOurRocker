@@ -113,5 +113,6 @@ export const IPC = {
   // System
   SYSTEM_SELECT_DIRECTORY: 'system:selectDirectory',
   SYSTEM_GET_APP_VERSION: 'system:getAppVersion',
+  SYSTEM_GET_DEFAULT_PATHS: 'system:getDefaultPaths',
   SYSTEM_PRINT: 'system:print',
 } as const

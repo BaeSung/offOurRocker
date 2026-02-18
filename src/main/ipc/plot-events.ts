@@ -1,3 +1,4 @@
+import { randomUUID as uuid } from 'crypto'
 import { eq, asc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
@@ -28,7 +29,7 @@ export function registerPlotEventsHandlers(): void {
         chapterId?: string
       }
     ) => {
-      const id = crypto.randomUUID()
+      const id = uuid()
       const ts = now()
       const sortOrder = getNextSortOrder(
         schema.plotEvents.sortOrder,

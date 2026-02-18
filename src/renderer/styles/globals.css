@@ -8,7 +8,7 @@
   }
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(240 10% 20%) transparent;
+    scrollbar-color: hsl(var(--border)) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
@@ -17,11 +17,11 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(240 10% 20%);
+    background: hsl(var(--border));
     border-radius: 9999px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: hsl(240 10% 28%);
+    background: hsl(var(--muted-foreground));
   }
 }
 
@@ -159,46 +159,33 @@
 
 /* ── React Flow (Mind Map) overrides ── */
 .mind-map-flow .react-flow__background {
-  background-color: hsl(240 20% 6%);
-}
-.light .mind-map-flow .react-flow__background {
-  background-color: hsl(40 20% 96%);
+  background-color: hsl(var(--background));
 }
 
 .mind-map-flow .react-flow__edge-path {
-  stroke: hsl(30 8% 50%);
+  stroke: hsl(var(--muted-foreground));
   stroke-width: 1.5;
 }
 .mind-map-flow .react-flow__edge.selected .react-flow__edge-path {
-  stroke: hsl(30 40% 64%);
+  stroke: hsl(var(--primary));
   stroke-width: 2;
 }
 
 .mind-map-flow .react-flow__handle {
-  background: hsl(30 40% 64%);
-  border: 2px solid hsl(240 16% 9%);
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--card));
   width: 10px;
   height: 10px;
 }
-.light .mind-map-flow .react-flow__handle {
-  border-color: hsl(40 15% 93%);
-}
 
 .mind-map-flow .react-flow__minimap {
-  background: hsl(240 16% 9%);
-  border: 1px solid hsl(240 10% 16%);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;
-}
-.light .mind-map-flow .react-flow__minimap {
-  background: hsl(40 15% 93%);
-  border-color: hsl(40 10% 82%);
 }
 
 .mind-map-flow .react-flow__minimap-mask {
-  fill: hsl(240 20% 6% / 0.7);
-}
-.light .mind-map-flow .react-flow__minimap-mask {
-  fill: hsl(40 20% 96% / 0.7);
+  fill: hsl(var(--background) / 0.7);
 }
 
 .mind-map-flow .react-flow__controls {
@@ -206,12 +193,12 @@
 }
 
 .mind-map-flow .react-flow__selection {
-  background: hsl(30 40% 64% / 0.08);
-  border: 1px solid hsl(30 40% 64% / 0.3);
+  background: hsl(var(--primary) / 0.08);
+  border: 1px solid hsl(var(--primary) / 0.3);
 }
 
 .mind-map-flow .react-flow__connection-line {
-  stroke: hsl(30 40% 64%);
+  stroke: hsl(var(--primary));
   stroke-width: 1.5;
 }
 

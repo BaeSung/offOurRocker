@@ -168,6 +168,7 @@ const api = {
   system: {
     selectDirectory: () => ipcRenderer.invoke(IPC.SYSTEM_SELECT_DIRECTORY),
     getAppVersion: () => ipcRenderer.invoke(IPC.SYSTEM_GET_APP_VERSION),
+    getDefaultPaths: () => ipcRenderer.invoke(IPC.SYSTEM_GET_DEFAULT_PATHS) as Promise<{ backup: string; save: string; export: string }>,
     print: () => ipcRenderer.invoke(IPC.SYSTEM_PRINT),
   },
 }

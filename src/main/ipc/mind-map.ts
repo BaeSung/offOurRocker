@@ -1,3 +1,4 @@
+import { randomUUID as uuid } from 'crypto'
 import { dialog } from 'electron'
 import { writeFile, readFile, mkdir } from 'fs/promises'
 import { dirname } from 'path'
@@ -42,7 +43,7 @@ export function registerMindMapHandlers(): void {
         .where(eq(schema.mindMaps.workId, workId))
         .run()
     } else {
-      const id = crypto.randomUUID()
+      const id = uuid()
       db.insert(schema.mindMaps)
         .values({ id, workId, data, createdAt: ts, updatedAt: ts })
         .run()

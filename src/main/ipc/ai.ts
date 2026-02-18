@@ -39,7 +39,9 @@ async function callOpenAI(
   }
 
   const data = await res.json()
-  return data.choices[0].message.content
+  const content = data?.choices?.[0]?.message?.content
+  if (!content) throw new Error('Unexpected OpenAI response format')
+  return content
 }
 
 async function callAnthropic(
@@ -71,7 +73,9 @@ async function callAnthropic(
   }
 
   const data = await res.json()
-  return data.content[0].text
+  const text = data?.content?.[0]?.text
+  if (!text) throw new Error('Unexpected Anthropic response format')
+  return text
 }
 
 async function callLLM(
@@ -227,7 +231,9 @@ export function registerAiHandlers(): void {
       }
 
       const data = await res.json()
-      return { success: true, url: data.data[0].url }
+      const url = data?.data?.[0]?.url
+      if (!url) throw new Error('Unexpected DALL-E response format')
+      return { success: true, url }
     }
   )
 }

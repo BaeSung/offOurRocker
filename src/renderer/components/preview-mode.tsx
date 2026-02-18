@@ -59,10 +59,10 @@ export function PreviewMode() {
             .preview-content h2 { font-size: 1.3em; font-weight: 700; }
             .preview-content h3 { font-size: 1.1em; font-weight: 700; }
             .preview-content blockquote {
-              border-left: 2px solid #d4a574;
+              border-left: 2px solid hsl(var(--primary));
               padding-left: 1.5rem;
               font-style: italic;
-              color: #333;
+              color: hsl(var(--muted-foreground));
               text-indent: 0;
             }
             .preview-content hr {
@@ -73,7 +73,7 @@ export function PreviewMode() {
             .preview-content hr::after {
               content: '* * *';
               letter-spacing: 0.5em;
-              color: #999;
+              color: hsl(var(--muted-foreground));
               font-size: 14px;
             }
             .preview-content strong {
@@ -87,7 +87,7 @@ export function PreviewMode() {
           `}</style>
           <div
             className="preview-content"
-            dangerouslySetInnerHTML={{ __html: content || '<p style="color:#999; text-indent:0;">내용이 없습니다.</p>' }}
+            dangerouslySetInnerHTML={{ __html: content || '<p style="color:hsl(var(--muted-foreground)); text-indent:0;">내용이 없습니다.</p>' }}
           />
         </article>
       </ScrollArea>

@@ -257,7 +257,11 @@ export function RecentWorks() {
   const setActiveDocument = useAppStore((s) => s.setActiveDocument)
 
   useEffect(() => {
-    window.api.stats.recentWorks().then(setWorks).catch(() => {})
+    let cancelled = false
+    window.api.stats.recentWorks()
+      .then((data) => { if (!cancelled) setWorks(data) })
+      .catch(() => {})
+    return () => { cancelled = true }
   }, [])
 
   const handleContinue = (work: Work) => {

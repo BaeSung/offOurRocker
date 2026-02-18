@@ -5,6 +5,15 @@ import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
 import { now, charCountNoSpaces, getNextSortOrder, safeHandle } from './utils'
 
+function safeParseTags(raw: string): string[] {
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 export function registerWorksHandlers(): void {
   const db = getDb()
 
@@ -37,7 +46,7 @@ export function registerWorksHandlers(): void {
         .map((w) => {
           const workChapters = allChapters.filter((c) => c.workId === w.id)
           const charCount = workChapters.reduce((sum, c) => sum + (c.charCount || 0), 0)
-          return { ...w, tags: JSON.parse(w.tags), chapters: workChapters, charCount }
+          return { ...w, tags: safeParseTags(w.tags), chapters: workChapters, charCount }
         })
       return { ...s, works: seriesWorks }
     })
@@ -47,7 +56,7 @@ export function registerWorksHandlers(): void {
       .map((w) => {
         const workChapters = allChapters.filter((c) => c.workId === w.id)
         const charCount = workChapters.reduce((sum, c) => sum + (c.charCount || 0), 0)
-        return { ...w, tags: JSON.parse(w.tags), chapters: workChapters, charCount }
+        return { ...w, tags: safeParseTags(w.tags), chapters: workChapters, charCount }
       })
 
     return { series: seriesResult, standaloneWorks }
@@ -63,7 +72,7 @@ export function registerWorksHandlers(): void {
       .where(eq(schema.chapters.workId, id))
       .orderBy(asc(schema.chapters.sortOrder))
       .all()
-    return { ...work, tags: JSON.parse(work.tags), chapters }
+    return { ...work, tags: safeParseTags(work.tags), chapters }
   })
 
   // Create work

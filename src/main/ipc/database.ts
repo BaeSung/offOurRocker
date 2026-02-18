@@ -14,21 +14,27 @@ function getDbPath(): string {
 export function registerDatabaseHandlers(): void {
   safeHandle(IPC.DB_EXPORT, async () => {
     const win = BrowserWindow.getFocusedWindow()
-    const { canceled, filePath } = await dialog.showSaveDialog(win!, {
+    if (!win) return { success: false, error: 'No active window' }
+    const { canceled, filePath } = await dialog.showSaveDialog(win, {
       title: '데이터 내보내기',
       defaultPath: `off-our-rocker-backup-${new Date().toISOString().slice(0, 10)}.db`,
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
     })
     if (canceled || !filePath) return { success: false, canceled: true }
 
-    const dbPath = getDbPath()
-    copyFileSync(dbPath, filePath)
-    return { success: true, path: filePath }
+    try {
+      const dbPath = getDbPath()
+      copyFileSync(dbPath, filePath)
+      return { success: true, path: filePath }
+    } catch (err) {
+      return { success: false, error: `내보내기 실패: ${err instanceof Error ? err.message : 'Unknown error'}` }
+    }
   })
 
   safeHandle(IPC.DB_IMPORT, async () => {
     const win = BrowserWindow.getFocusedWindow()
-    const { canceled, filePaths } = await dialog.showOpenDialog(win!, {
+    if (!win) return { success: false, error: 'No active window' }
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
       title: '데이터 가져오기',
       filters: [{ name: 'SQLite Database', extensions: ['db'] }],
       properties: ['openFile'],

@@ -63,7 +63,7 @@ export function SpellCheckPanel({
 
         {!loading && !error && corrections.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8">
-            <CheckCircle2 className="h-6 w-6" style={{ color: 'hsl(140 60% 50%)' }} />
+            <CheckCircle2 className="h-6 w-6 text-emerald-500" />
             <span className="text-xs text-muted-foreground">
               맞춤법 오류가 없습니다.
             </span>
@@ -85,7 +85,7 @@ export function SpellCheckPanel({
                     {c.original}
                   </span>
                   <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-                  <span className="rounded px-1.5 py-0.5 font-medium" style={{ color: 'hsl(140 60% 50%)', background: 'hsla(140, 60%, 50%, 0.1)' }}>
+                  <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-600 dark:text-emerald-400">
                     {c.corrected}
                   </span>
                 </div>

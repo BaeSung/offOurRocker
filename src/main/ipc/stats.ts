@@ -75,7 +75,7 @@ export function registerStatsHandlers(): void {
 
       return {
         ...w,
-        tags: JSON.parse(w.tags),
+        tags: (() => { try { const p = JSON.parse(w.tags); return Array.isArray(p) ? p : [] } catch { return [] } })(),
         charCount: chars?.total ?? 0,
       }
     })

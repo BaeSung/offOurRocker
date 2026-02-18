@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Check, FolderOpen, Upload, Download, Loader2 } from "lucide-react"
 import { toast } from '@/hooks/use-toast'
 import { Switch } from "@/components/ui/switch"
@@ -81,6 +81,12 @@ export function GeneralSettings() {
     showStartScreen,
     setSetting,
   } = useSettingsStore()
+
+  const [defaultPaths, setDefaultPaths] = useState({ backup: '', save: '', export: '' })
+
+  useEffect(() => {
+    window.api.system.getDefaultPaths().then(setDefaultPaths).catch(() => {})
+  }, [])
 
   const formatInterval = (val: number) => {
     if (val < 60) return `${val}초`
@@ -211,7 +217,7 @@ export function GeneralSettings() {
             </Label>
             <div className="mt-1.5 flex items-center gap-2">
               <div className="flex-1 truncate rounded-md bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
-                {saveDirectory || "~/Documents/OffOurRocker/works"}
+                {saveDirectory || defaultPaths.save || '기본 경로'}
               </div>
               <button
                 onClick={() => handleSelectDirectory('saveDirectory')}
@@ -286,7 +292,7 @@ export function GeneralSettings() {
               </Label>
               <div className="mt-1.5 flex items-center gap-2">
                 <div className="flex-1 truncate rounded-md bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
-                  {backupDirectory || "~/Documents/OffOurRocker/backups"}
+                  {backupDirectory || defaultPaths.backup || '기본 경로'}
                 </div>
                 <button
                   onClick={() => handleSelectDirectory('backupDirectory')}
