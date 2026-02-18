@@ -131,6 +131,14 @@ function createTables(): void {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS mind_maps (
+      id TEXT PRIMARY KEY,
+      work_id TEXT NOT NULL REFERENCES works(id) ON DELETE CASCADE,
+      data TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `)
 }
 
@@ -143,6 +151,21 @@ function runMigrations(): void {
   if (!worksColumns.some((c) => c.name === 'cover_image')) {
     sqlite.exec('ALTER TABLE works ADD COLUMN cover_image TEXT')
   }
+
+  // Indexes on FK columns and frequently queried columns
+  sqlite.exec(`
+    CREATE INDEX IF NOT EXISTS idx_chapters_work_id ON chapters(work_id);
+    CREATE INDEX IF NOT EXISTS idx_characters_work_id ON characters(work_id);
+    CREATE INDEX IF NOT EXISTS idx_world_notes_work_id ON world_notes(work_id);
+    CREATE INDEX IF NOT EXISTS idx_plot_events_work_id ON plot_events(work_id);
+    CREATE INDEX IF NOT EXISTS idx_plot_events_chapter_id ON plot_events(chapter_id);
+    CREATE INDEX IF NOT EXISTS idx_versions_chapter_id ON versions(chapter_id);
+    CREATE INDEX IF NOT EXISTS idx_writing_log_date ON writing_log(date);
+    CREATE INDEX IF NOT EXISTS idx_writing_log_work_id ON writing_log(work_id);
+    CREATE INDEX IF NOT EXISTS idx_works_deleted ON works(deleted);
+    CREATE INDEX IF NOT EXISTS idx_works_series_id ON works(series_id);
+    CREATE INDEX IF NOT EXISTS idx_mind_maps_work_id ON mind_maps(work_id);
+  `)
 }
 
 export function getDb() {

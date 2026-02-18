@@ -103,8 +103,16 @@ export const IPC = {
   DB_EXPORT: 'db:export',
   DB_IMPORT: 'db:import',
 
+  // Mind Map
+  MIND_MAP_GET: 'mindMap:get',
+  MIND_MAP_SAVE: 'mindMap:save',
+  MIND_MAP_EXPORT_PNG: 'mindMap:exportPng',
+  MIND_MAP_EXPORT_JSON: 'mindMap:exportJson',
+  MIND_MAP_IMPORT_JSON: 'mindMap:importJson',
+
   // System
   SYSTEM_SELECT_DIRECTORY: 'system:selectDirectory',
   SYSTEM_GET_APP_VERSION: 'system:getAppVersion',
+  SYSTEM_GET_DEFAULT_PATHS: 'system:getDefaultPaths',
   SYSTEM_PRINT: 'system:print',
 } as const

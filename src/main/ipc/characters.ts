@@ -1,14 +1,14 @@
-import { ipcMain } from 'electron'
 import { randomUUID as uuid } from 'crypto'
-import { eq, asc, sql } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
-import { getDb, getSqlite } from '../db/connection'
+import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { now, getNextSortOrder, reorderByIds, safeHandle } from './utils'
 
 export function registerCharactersHandlers(): void {
   const db = getDb()
 
-  ipcMain.handle(IPC.CHARACTERS_GET_BY_WORK, async (_e, workId: string) => {
+  safeHandle(IPC.CHARACTERS_GET_BY_WORK, async (_e, workId: string) => {
     return db
       .select()
       .from(schema.characters)
@@ -17,7 +17,7 @@ export function registerCharactersHandlers(): void {
       .all()
   })
 
-  ipcMain.handle(
+  safeHandle(
     IPC.CHARACTERS_CREATE,
     async (
       _e,
@@ -28,14 +28,14 @@ export function registerCharactersHandlers(): void {
         description?: string
       }
     ) => {
-      const now = new Date().toISOString()
+      const ts = now()
       const id = uuid()
-
-      const maxSort = db
-        .select({ max: sql<number>`coalesce(max(${schema.characters.sortOrder}), -1)` })
-        .from(schema.characters)
-        .where(eq(schema.characters.workId, data.workId))
-        .get()
+      const sortOrder = getNextSortOrder(
+        schema.characters.sortOrder,
+        schema.characters,
+        schema.characters.workId,
+        data.workId
+      )
 
       db.insert(schema.characters)
         .values({
@@ -44,16 +44,16 @@ export function registerCharactersHandlers(): void {
           name: data.name,
           role: data.role,
           description: data.description || null,
-          sortOrder: (maxSort?.max ?? -1) + 1,
-          createdAt: now,
-          updatedAt: now,
+          sortOrder,
+          createdAt: ts,
+          updatedAt: ts,
         })
         .run()
       return { id }
     }
   )
 
-  ipcMain.handle(
+  safeHandle(
     IPC.CHARACTERS_UPDATE,
     async (
       _e,
@@ -61,29 +61,20 @@ export function registerCharactersHandlers(): void {
       data: Partial<{ name: string; role: string; description: string }>
     ) => {
       db.update(schema.characters)
-        .set({ ...data, updatedAt: new Date().toISOString() })
+        .set({ ...data, updatedAt: now() })
         .where(eq(schema.characters.id, id))
         .run()
       return { success: true }
     }
   )
 
-  ipcMain.handle(IPC.CHARACTERS_DELETE, async (_e, id: string) => {
+  safeHandle(IPC.CHARACTERS_DELETE, async (_e, id: string) => {
     db.delete(schema.characters).where(eq(schema.characters.id, id)).run()
     return { success: true }
   })
 
-  ipcMain.handle(IPC.CHARACTERS_REORDER, async (_e, orderedIds: string[]) => {
-    const sqlite = getSqlite()
-    const reorder = sqlite.transaction(() => {
-      for (let i = 0; i < orderedIds.length; i++) {
-        db.update(schema.characters)
-          .set({ sortOrder: i })
-          .where(eq(schema.characters.id, orderedIds[i]))
-          .run()
-      }
-    })
-    reorder()
+  safeHandle(IPC.CHARACTERS_REORDER, async (_e, orderedIds: string[]) => {
+    reorderByIds(schema.characters, schema.characters.id, schema.characters.sortOrder, orderedIds)
     return { success: true }
   })
 }

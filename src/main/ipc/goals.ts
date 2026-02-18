@@ -1,18 +1,18 @@
-import { ipcMain } from 'electron'
 import { randomUUID as uuid } from 'crypto'
 import { eq } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { now, safeHandle } from './utils'
 
 export function registerGoalsHandlers(): void {
   const db = getDb()
 
-  ipcMain.handle(IPC.GOALS_GET_ALL, async () => {
+  safeHandle(IPC.GOALS_GET_ALL, async () => {
     return db.select().from(schema.goals).all()
   })
 
-  ipcMain.handle(
+  safeHandle(
     IPC.GOALS_CREATE,
     async (
       _e,
@@ -34,14 +34,14 @@ export function registerGoalsHandlers(): void {
           targetValue: data.targetValue,
           currentValue: 0,
           deadline: data.deadline || null,
-          createdAt: new Date().toISOString(),
+          createdAt: now(),
         })
         .run()
       return { id }
     }
   )
 
-  ipcMain.handle(
+  safeHandle(
     IPC.GOALS_UPDATE,
     async (_e, id: string, data: Partial<{ title: string; currentValue: number; targetValue: number }>) => {
       db.update(schema.goals).set(data).where(eq(schema.goals.id, id)).run()
@@ -49,7 +49,7 @@ export function registerGoalsHandlers(): void {
     }
   )
 
-  ipcMain.handle(IPC.GOALS_DELETE, async (_e, id: string) => {
+  safeHandle(IPC.GOALS_DELETE, async (_e, id: string) => {
     db.delete(schema.goals).where(eq(schema.goals.id, id)).run()
     return { success: true }
   })

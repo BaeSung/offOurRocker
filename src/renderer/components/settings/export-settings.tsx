@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import { FolderOpen } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -14,6 +15,12 @@ export function ExportSettings() {
     exportDirectory,
     setSetting,
   } = useSettingsStore()
+
+  const [defaultExportPath, setDefaultExportPath] = useState('')
+
+  useEffect(() => {
+    window.api.system.getDefaultPaths().then((p) => setDefaultExportPath(p.export)).catch(() => {})
+  }, [])
 
   // Map internal values to UI radio values
   const formatValue = defaultExportFormat === 'markdown' ? 'md' : defaultExportFormat
@@ -187,7 +194,7 @@ export function ExportSettings() {
           </Label>
           <div className="mt-1.5 flex items-center gap-2">
             <div className="flex-1 truncate rounded-md bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
-              {exportDirectory || "~/Documents/OffOurRocker/exports"}
+              {exportDirectory || defaultExportPath || '기본 경로'}
             </div>
             <button
               onClick={handleSelectExportDir}

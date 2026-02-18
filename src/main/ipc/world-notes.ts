@@ -1,14 +1,14 @@
-import { ipcMain } from 'electron'
 import { randomUUID as uuid } from 'crypto'
-import { eq, asc, sql } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
-import { getDb, getSqlite } from '../db/connection'
+import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { now, getNextSortOrder, reorderByIds, safeHandle } from './utils'
 
 export function registerWorldNotesHandlers(): void {
   const db = getDb()
 
-  ipcMain.handle(IPC.WORLD_NOTES_GET_BY_WORK, async (_e, workId: string) => {
+  safeHandle(IPC.WORLD_NOTES_GET_BY_WORK, async (_e, workId: string) => {
     return db
       .select()
       .from(schema.worldNotes)
@@ -17,7 +17,7 @@ export function registerWorldNotesHandlers(): void {
       .all()
   })
 
-  ipcMain.handle(
+  safeHandle(
     IPC.WORLD_NOTES_CREATE,
     async (
       _e,
@@ -28,14 +28,14 @@ export function registerWorldNotesHandlers(): void {
         content?: string
       }
     ) => {
-      const now = new Date().toISOString()
+      const ts = now()
       const id = uuid()
-
-      const maxSort = db
-        .select({ max: sql<number>`coalesce(max(${schema.worldNotes.sortOrder}), -1)` })
-        .from(schema.worldNotes)
-        .where(eq(schema.worldNotes.workId, data.workId))
-        .get()
+      const sortOrder = getNextSortOrder(
+        schema.worldNotes.sortOrder,
+        schema.worldNotes,
+        schema.worldNotes.workId,
+        data.workId
+      )
 
       db.insert(schema.worldNotes)
         .values({
@@ -44,16 +44,16 @@ export function registerWorldNotesHandlers(): void {
           category: data.category,
           title: data.title,
           content: data.content || null,
-          sortOrder: (maxSort?.max ?? -1) + 1,
-          createdAt: now,
-          updatedAt: now,
+          sortOrder,
+          createdAt: ts,
+          updatedAt: ts,
         })
         .run()
       return { id }
     }
   )
 
-  ipcMain.handle(
+  safeHandle(
     IPC.WORLD_NOTES_UPDATE,
     async (
       _e,
@@ -61,29 +61,20 @@ export function registerWorldNotesHandlers(): void {
       data: Partial<{ category: string; title: string; content: string }>
     ) => {
       db.update(schema.worldNotes)
-        .set({ ...data, updatedAt: new Date().toISOString() })
+        .set({ ...data, updatedAt: now() })
         .where(eq(schema.worldNotes.id, id))
         .run()
       return { success: true }
     }
   )
 
-  ipcMain.handle(IPC.WORLD_NOTES_DELETE, async (_e, id: string) => {
+  safeHandle(IPC.WORLD_NOTES_DELETE, async (_e, id: string) => {
     db.delete(schema.worldNotes).where(eq(schema.worldNotes.id, id)).run()
     return { success: true }
   })
 
-  ipcMain.handle(IPC.WORLD_NOTES_REORDER, async (_e, orderedIds: string[]) => {
-    const sqlite = getSqlite()
-    const reorder = sqlite.transaction(() => {
-      for (let i = 0; i < orderedIds.length; i++) {
-        db.update(schema.worldNotes)
-          .set({ sortOrder: i })
-          .where(eq(schema.worldNotes.id, orderedIds[i]))
-          .run()
-      }
-    })
-    reorder()
+  safeHandle(IPC.WORLD_NOTES_REORDER, async (_e, orderedIds: string[]) => {
+    reorderByIds(schema.worldNotes, schema.worldNotes.id, schema.worldNotes.sortOrder, orderedIds)
     return { success: true }
   })
 }

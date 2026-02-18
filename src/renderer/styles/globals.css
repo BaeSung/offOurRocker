@@ -8,7 +8,7 @@
   }
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(240 10% 20%) transparent;
+    scrollbar-color: hsl(var(--border)) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
@@ -17,11 +17,11 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(240 10% 20%);
+    background: hsl(var(--border));
     border-radius: 9999px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: hsl(240 10% 28%);
+    background: hsl(var(--muted-foreground));
   }
 }
 
@@ -155,6 +155,55 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* ── React Flow (Mind Map) overrides ── */
+.mind-map-flow .react-flow__background {
+  background-color: hsl(var(--background));
+}
+
+.mind-map-flow .react-flow__edge-path {
+  stroke: hsl(var(--muted-foreground));
+  stroke-width: 1.5;
+}
+.mind-map-flow .react-flow__edge.selected .react-flow__edge-path {
+  stroke: hsl(var(--primary));
+  stroke-width: 2;
+}
+
+.mind-map-flow .react-flow__handle {
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--card));
+  width: 10px;
+  height: 10px;
+}
+
+.mind-map-flow .react-flow__minimap {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+}
+
+.mind-map-flow .react-flow__minimap-mask {
+  fill: hsl(var(--background) / 0.7);
+}
+
+.mind-map-flow .react-flow__controls {
+  display: none; /* Using custom toolbar instead */
+}
+
+.mind-map-flow .react-flow__selection {
+  background: hsl(var(--primary) / 0.08);
+  border: 1px solid hsl(var(--primary) / 0.3);
+}
+
+.mind-map-flow .react-flow__connection-line {
+  stroke: hsl(var(--primary));
+  stroke-width: 1.5;
+}
+
+.mind-map-flow .react-flow__attribution {
+  display: none;
 }
 
 /* ── Print styles ── */

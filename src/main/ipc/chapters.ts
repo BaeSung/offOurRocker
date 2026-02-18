@@ -1,32 +1,30 @@
-import { ipcMain } from 'electron'
 import { randomUUID as uuid } from 'crypto'
-import { eq, asc, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { now, charCountNoSpaces, getNextSortOrder, reorderByIds, safeHandle } from './utils'
 
 export function registerChaptersHandlers(): void {
   const db = getDb()
 
   // Get chapter by ID (with content)
-  ipcMain.handle(IPC.CHAPTERS_GET_BY_ID, async (_e, id: string) => {
-    const chapter = db.select().from(schema.chapters).where(eq(schema.chapters.id, id)).get()
-    if (!chapter) return null
-    return chapter
+  safeHandle(IPC.CHAPTERS_GET_BY_ID, async (_e, id: string) => {
+    return db.select().from(schema.chapters).where(eq(schema.chapters.id, id)).get() ?? null
   })
 
   // Create chapter
-  ipcMain.handle(
+  safeHandle(
     IPC.CHAPTERS_CREATE,
     async (_e, data: { workId: string; title: string }) => {
-      const now = new Date().toISOString()
+      const ts = now()
       const chapterId = uuid()
-
-      const maxSort = db
-        .select({ max: sql<number>`coalesce(max(${schema.chapters.sortOrder}), -1)` })
-        .from(schema.chapters)
-        .where(eq(schema.chapters.workId, data.workId))
-        .get()
+      const sortOrder = getNextSortOrder(
+        schema.chapters.sortOrder,
+        schema.chapters,
+        schema.chapters.workId,
+        data.workId
+      )
 
       db.insert(schema.chapters)
         .values({
@@ -34,15 +32,14 @@ export function registerChaptersHandlers(): void {
           workId: data.workId,
           title: data.title,
           content: '',
-          sortOrder: (maxSort?.max ?? -1) + 1,
-          createdAt: now,
-          updatedAt: now,
+          sortOrder,
+          createdAt: ts,
+          updatedAt: ts,
         })
         .run()
 
-      // Update work's updatedAt
       db.update(schema.works)
-        .set({ updatedAt: now })
+        .set({ updatedAt: ts })
         .where(eq(schema.works.id, data.workId))
         .run()
 
@@ -51,36 +48,33 @@ export function registerChaptersHandlers(): void {
   )
 
   // Save chapter content
-  ipcMain.handle(IPC.CHAPTERS_SAVE, async (_e, id: string, content: string) => {
-    const now = new Date().toISOString()
+  safeHandle(IPC.CHAPTERS_SAVE, async (_e, id: string, content: string) => {
+    const ts = now()
 
-    // Get the old content to compute diff for writing log
     const old = db.select({ content: schema.chapters.content, workId: schema.chapters.workId })
       .from(schema.chapters)
       .where(eq(schema.chapters.id, id))
       .get()
 
     db.update(schema.chapters)
-      .set({ content, updatedAt: now })
+      .set({ content, updatedAt: ts })
       .where(eq(schema.chapters.id, id))
       .run()
 
     if (old) {
       db.update(schema.works)
-        .set({ updatedAt: now })
+        .set({ updatedAt: ts })
         .where(eq(schema.works.id, old.workId))
         .run()
 
-      // Record writing log
-      const newCount = content.replace(/\s/g, '').length
-      const oldCount = (old.content || '').replace(/\s/g, '').length
+      const newCount = charCountNoSpaces(content)
+      const oldCount = charCountNoSpaces(old.content || '')
       const diff = newCount - oldCount
       if (diff > 0) {
-        const today = now.slice(0, 10) // YYYY-MM-DD
         db.insert(schema.writingLog)
           .values({
             id: uuid(),
-            date: today,
+            date: ts.slice(0, 10),
             workId: old.workId,
             charCount: diff,
           })
@@ -92,7 +86,7 @@ export function registerChaptersHandlers(): void {
   })
 
   // Delete chapter
-  ipcMain.handle(IPC.CHAPTERS_DELETE, async (_e, id: string) => {
+  safeHandle(IPC.CHAPTERS_DELETE, async (_e, id: string) => {
     const chapter = db.select({ workId: schema.chapters.workId })
       .from(schema.chapters)
       .where(eq(schema.chapters.id, id))
@@ -102,7 +96,7 @@ export function registerChaptersHandlers(): void {
 
     if (chapter) {
       db.update(schema.works)
-        .set({ updatedAt: new Date().toISOString() })
+        .set({ updatedAt: now() })
         .where(eq(schema.works.id, chapter.workId))
         .run()
     }
@@ -111,11 +105,10 @@ export function registerChaptersHandlers(): void {
   })
 
   // Update chapter metadata (title)
-  ipcMain.handle(
+  safeHandle(
     IPC.CHAPTERS_UPDATE,
-    async (_e, id: string, data: Partial<{ title: string }>) => {
-      const now = new Date().toISOString()
-      const updateData: Record<string, any> = { updatedAt: now }
+    async (_e, id: string, data: { title?: string }) => {
+      const updateData: { updatedAt: string; title?: string } = { updatedAt: now() }
       if (data.title !== undefined) updateData.title = data.title
       db.update(schema.chapters).set(updateData).where(eq(schema.chapters.id, id)).run()
       return { success: true }
@@ -123,16 +116,10 @@ export function registerChaptersHandlers(): void {
   )
 
   // Reorder chapters
-  ipcMain.handle(
+  safeHandle(
     IPC.CHAPTERS_REORDER,
     async (_e, orderedIds: string[]) => {
-      const now = new Date().toISOString()
-      for (let i = 0; i < orderedIds.length; i++) {
-        db.update(schema.chapters)
-          .set({ sortOrder: i, updatedAt: now })
-          .where(eq(schema.chapters.id, orderedIds[i]))
-          .run()
-      }
+      reorderByIds(schema.chapters, schema.chapters.id, schema.chapters.sortOrder, orderedIds)
       return { success: true }
     }
   )

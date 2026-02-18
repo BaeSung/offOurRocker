@@ -5,6 +5,13 @@ import { initDatabase, closeDatabase } from './db/connection'
 import { registerAllIpcHandlers } from './ipc'
 import { runAutoBackupIfNeeded } from './utils/auto-backup'
 
+// Disable the Chromium SUID sandbox when it is not available (e.g. in
+// containerised / CI environments where the chrome-sandbox binary cannot be
+// owned by root with mode 4755).
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('no-sandbox')
+}
+
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1200,

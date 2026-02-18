@@ -1,6 +1,6 @@
 {
   "name": "off-our-rocker",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "한국어 집필 앱 Off Our Rocker",
   "author": "BaeSung",
   "private": true,
@@ -16,6 +16,8 @@
     "build:nsis": "electron-vite build && electron-builder --win nsis --config"
   },
   "dependencies": {
+    "@xyflow/react": "^12.6.0",
+    "html-to-image": "^1.11.11",
     "@fontsource/noto-sans-kr": "^5.1.1",
     "@fontsource/noto-serif-kr": "^5.1.1",
     "@hookform/resolvers": "^3.9.1",

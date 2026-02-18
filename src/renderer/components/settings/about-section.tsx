@@ -12,7 +12,7 @@ export function AboutSection() {
           Off Our Rocker
         </h2>
         <p className="text-xs text-muted-foreground">
-          v0.1.0-alpha
+          v1.0.0
         </p>
         <p className="text-sm text-secondary-foreground">
           한국 작가를 위한 집필 도구

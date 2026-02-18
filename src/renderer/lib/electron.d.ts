@@ -141,11 +141,8 @@ interface TrashAPI {
   empty(): Promise<{ success: boolean; count?: number }>
 }
 
-export interface SpellCorrection {
-  original: string
-  corrected: string
-  explanation: string
-}
+export type { SpellCorrection } from '../../shared/types'
+import type { SpellCorrection } from '../../shared/types'
 
 interface AIAPI {
   storeKey(keyName: string, plainKey: string): Promise<{ success: boolean; error?: string }>
@@ -190,6 +187,14 @@ interface PlotEventsAPI {
   ): Promise<{ success: boolean }>
   delete(id: string): Promise<{ success: boolean }>
   reorder(orderedIds: string[]): Promise<{ success: boolean }>
+}
+
+interface MindMapAPI {
+  get(workId: string): Promise<{ nodes: unknown[]; edges: unknown[]; viewport: { x: number; y: number; zoom: number } }>
+  save(workId: string, data: string): Promise<{ success: boolean }>
+  exportPng(base64: string): Promise<{ success: boolean; path?: string; error?: string }>
+  exportJson(json: string): Promise<{ success: boolean; path?: string; error?: string }>
+  importJson(): Promise<{ success: boolean; data?: { nodes: unknown[]; edges: unknown[] }; error?: string }>
 }
 
 interface DatabaseAPI {
@@ -253,6 +258,7 @@ interface ElectronAPI {
   plotEvents: PlotEventsAPI
   characters: CharactersAPI
   worldNotes: WorldNotesAPI
+  mindMap: MindMapAPI
   database: DatabaseAPI
   system: SystemAPI
 }

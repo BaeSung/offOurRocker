@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRef } from 'react'
 import {
   Bold,
   Italic,
@@ -8,7 +8,6 @@ import {
   Minus,
   Superscript,
   ImageIcon,
-  CheckCheck,
   Maximize,
   Eye,
   MoreHorizontal,
@@ -21,15 +20,11 @@ import {
   BookMarked,
   BookOpen,
   X,
-  Loader2,
-  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { STATUS_CONFIG } from '../../shared/types'
-import type { WorkStatus } from '../../shared/types'
+import { STATUS_CONFIG } from '../../../shared/types'
+import type { WorkStatus } from '../../../shared/types'
 import type { Editor } from '@tiptap/react'
-import { useSettingsStore } from '@/stores/useSettingsStore'
-import { SpellCheckPanel } from '@/components/spell-check-panel'
 import {
   Tooltip,
   TooltipContent,
@@ -43,6 +38,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/hooks/use-toast'
+import { ToolbarButton } from './toolbar-button'
+import { InlineEdit } from './inline-edit'
+import { SpellCheckButton } from './spell-check-button'
+import { ImageInsertButton } from './image-insert-button'
 
 type EditorMode = 'normal' | 'focus' | 'preview'
 
@@ -69,111 +68,6 @@ interface EditorToolbarProps {
   versionHistoryOpen?: boolean
   onReferencePanelToggle?: () => void
   referencePanelOpen?: boolean
-}
-
-function ToolbarButton({
-  icon: Icon,
-  label,
-  active = false,
-  shortcut,
-  onClick,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  active?: boolean
-  shortcut?: string
-  onClick?: () => void
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          onClick={onClick}
-          className={cn(
-            'flex h-7 w-7 items-center justify-center rounded transition-colors duration-150',
-            active
-              ? 'bg-secondary text-primary'
-              : 'text-muted-foreground hover:bg-secondary/50 hover:text-primary'
-          )}
-          aria-label={label}
-          aria-pressed={active}
-        >
-          <Icon className="h-3.5 w-3.5" />
-        </button>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-xs">
-        {label}
-        {shortcut && (
-          <span className="ml-2 text-muted-foreground">{shortcut}</span>
-        )}
-      </TooltipContent>
-    </Tooltip>
-  )
-}
-
-function InlineEdit({
-  value,
-  onChange,
-  className,
-}: {
-  value: string
-  onChange: (v: string) => void
-  className?: string
-}) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(value)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (editing && inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
-    }
-  }, [editing])
-
-  if (editing) {
-    return (
-      <input
-        ref={inputRef}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => {
-          onChange(draft)
-          setEditing(false)
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            onChange(draft)
-            setEditing(false)
-          }
-          if (e.key === 'Escape') {
-            setDraft(value)
-            setEditing(false)
-          }
-        }}
-        className={cn(
-          'bg-transparent border-b border-primary/50 outline-none text-foreground px-0 py-0',
-          className
-        )}
-        style={{ width: `${Math.max(draft.length, 2)}ch` }}
-      />
-    )
-  }
-
-  return (
-    <button
-      onClick={() => {
-        setDraft(value)
-        setEditing(true)
-      }}
-      className={cn(
-        'text-foreground hover:text-primary transition-colors duration-150 cursor-text truncate',
-        className
-      )}
-    >
-      {value}
-    </button>
-  )
 }
 
 function HeadingDropdown({ editor }: { editor?: Editor | null }) {
@@ -280,7 +174,6 @@ function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersi
     const reader = new FileReader()
     reader.onload = async () => {
       const dataUrl = reader.result as string
-      // Resize to max 400px width to keep DB size reasonable
       const img = new Image()
       img.onload = async () => {
         const maxW = 400
@@ -368,257 +261,6 @@ function MoreMenu({ workId, onVersionHistoryToggle }: { workId?: string; onVersi
   )
 }
 
-function SpellCheckButton({ editor }: { editor?: Editor | null }) {
-  const [panelOpen, setPanelOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [corrections, setCorrections] = useState<{ original: string; corrected: string; explanation: string }[]>([])
-  const [error, setError] = useState('')
-
-  const { aiProvider, aiModel } = useSettingsStore()
-
-  const handleSpellCheck = useCallback(async () => {
-    if (!editor) return
-    if (aiProvider === 'none') {
-      setError('AI 설정에서 제공자를 선택하고 API 키를 등록하세요.')
-      setPanelOpen(true)
-      return
-    }
-
-    // Extract plain text from the editor
-    const text = editor.getText()
-    if (!text || text.trim().length < 5) {
-      setError('검사할 텍스트가 충분하지 않습니다.')
-      setPanelOpen(true)
-      return
-    }
-
-    // Limit to ~3000 chars for API efficiency
-    const trimmed = text.length > 3000 ? text.slice(0, 3000) : text
-    const model = aiModel || (aiProvider === 'openai' ? 'gpt-4o-mini' : 'claude-haiku-4-5-20251001')
-
-    setPanelOpen(true)
-    setLoading(true)
-    setError('')
-    setCorrections([])
-
-    try {
-      const result = await window.api.ai.spellCheck(trimmed, aiProvider, model, aiProvider)
-      if (result.success && result.corrections) {
-        setCorrections(result.corrections)
-      } else {
-        setError(result.error || '맞춤법 검사에 실패했습니다.')
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '맞춤법 검사에 실패했습니다.')
-    } finally {
-      setLoading(false)
-    }
-  }, [editor, aiProvider, aiModel])
-
-  const handleApply = (original: string, corrected: string) => {
-    if (!editor) return
-    // Use TipTap's search and replace via the editor commands
-    const { state } = editor
-    const { doc } = state
-    const text = doc.textContent
-    const idx = text.indexOf(original)
-    if (idx === -1) return
-
-    // Find the position in the document
-    let pos = 0
-    let found = false
-    doc.descendants((node, nodePos) => {
-      if (found) return false
-      if (node.isText) {
-        const nodeText = node.text || ''
-        const localIdx = nodeText.indexOf(original)
-        if (localIdx !== -1) {
-          pos = nodePos + localIdx
-          found = true
-          return false
-        }
-      }
-    })
-
-    if (found) {
-      editor
-        .chain()
-        .focus()
-        .insertContentAt(
-          { from: pos, to: pos + original.length },
-          corrected
-        )
-        .run()
-    }
-  }
-
-  const handleApplyAll = () => {
-    for (const c of corrections) {
-      handleApply(c.original, c.corrected)
-    }
-  }
-
-  return (
-    <div className="relative">
-      <ToolbarButton
-        icon={CheckCheck}
-        label="맞춤법 검사"
-        active={panelOpen}
-        onClick={handleSpellCheck}
-      />
-      <SpellCheckPanel
-        open={panelOpen}
-        onClose={() => setPanelOpen(false)}
-        loading={loading}
-        corrections={corrections}
-        error={error}
-        onApply={handleApply}
-        onApplyAll={handleApplyAll}
-      />
-    </div>
-  )
-}
-
-function ImageInsertButton({ editor }: { editor?: Editor | null }) {
-  const [panelOpen, setPanelOpen] = useState(false)
-  const [prompt, setPrompt] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [error, setError] = useState('')
-
-  const { aiProvider, aiImageSize, aiImageQuality, aiImageStyle } = useSettingsStore()
-
-  const handleGenerate = useCallback(async () => {
-    if (!prompt.trim()) return
-    if (aiProvider === 'none') {
-      setError('AI 설정에서 제공자를 선택하고 API 키를 등록하세요.')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-    setImageUrl(null)
-
-    try {
-      const result = await window.api.ai.generateImage(prompt.trim(), 'openai', {
-        size: aiImageSize,
-        quality: aiImageQuality,
-        style: aiImageStyle,
-      })
-      if (result.success && result.url) {
-        setImageUrl(result.url)
-      } else {
-        setError(result.error || '이미지 생성에 실패했습니다.')
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '이미지 생성에 실패했습니다.')
-    } finally {
-      setLoading(false)
-    }
-  }, [prompt, aiProvider, aiImageSize, aiImageQuality, aiImageStyle])
-
-  const handleInsert = () => {
-    if (!editor || !imageUrl) return
-    editor.chain().focus().setImage({ src: imageUrl }).run()
-    setPanelOpen(false)
-    setPrompt('')
-    setImageUrl(null)
-    setError('')
-    toast({ description: '삽화가 삽입되었습니다.' })
-  }
-
-  const handleClose = () => {
-    setPanelOpen(false)
-    setPrompt('')
-    setImageUrl(null)
-    setError('')
-  }
-
-  return (
-    <div className="relative">
-      <ToolbarButton
-        icon={ImageIcon}
-        label="삽화 삽입"
-        active={panelOpen}
-        onClick={() => setPanelOpen(!panelOpen)}
-      />
-      {panelOpen && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border border-border bg-card shadow-xl">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-border px-3 py-2">
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <h3 className="text-xs font-semibold text-foreground">AI 삽화 생성</h3>
-            </div>
-            <button onClick={handleClose} className="text-muted-foreground hover:text-foreground">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {/* Prompt input */}
-          <div className="p-3">
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="원하는 삽화를 묘사하세요...&#10;예: 어두운 숲 속 오래된 오두막, 수채화 스타일"
-              rows={3}
-              className="w-full resize-none rounded-md border border-border bg-background px-2.5 py-2 text-xs leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/50 focus:border-primary/50"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                  e.preventDefault()
-                  handleGenerate()
-                }
-              }}
-              autoFocus
-            />
-            <button
-              onClick={handleGenerate}
-              disabled={loading || !prompt.trim()}
-              className="mt-2 flex h-7 w-full items-center justify-center gap-1.5 rounded-md bg-primary/10 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:opacity-40"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  생성 중...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3 w-3" />
-                  생성 (Ctrl+Enter)
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="px-3 pb-3 text-center text-[11px] text-destructive">
-              {error}
-            </div>
-          )}
-
-          {/* Preview + Insert */}
-          {imageUrl && (
-            <div className="border-t border-border p-3">
-              <img
-                src={imageUrl}
-                alt="Generated"
-                className="w-full rounded-md border border-border"
-              />
-              <button
-                onClick={handleInsert}
-                className="mt-2 flex h-7 w-full items-center justify-center rounded-md bg-primary/10 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
-              >
-                본문에 삽입
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
 export function EditorToolbar({
   mode,
   onModeChange,
@@ -639,7 +281,6 @@ export function EditorToolbar({
 }: EditorToolbarProps) {
   return (
     <div className="flex h-11 shrink-0 items-center border-b border-border/50 px-4 print-hide">
-      {/* Left: Breadcrumb + Status */}
       <div className="flex items-center gap-1.5 overflow-hidden">
         <InlineEdit
           value={workTitle}
@@ -659,7 +300,6 @@ export function EditorToolbar({
         <StatusBadge status={status} onStatusChange={onStatusChange} />
       </div>
 
-      {/* Center: Formatting tools */}
       <div className="mx-auto flex items-center gap-0.5">
         <ToolbarButton
           icon={Bold}
@@ -706,7 +346,6 @@ export function EditorToolbar({
         <ImageInsertButton editor={editor} />
       </div>
 
-      {/* Right: Mode switches + More */}
       <div className="flex items-center gap-0.5">
         <SpellCheckButton editor={editor} />
         <ToolbarButton

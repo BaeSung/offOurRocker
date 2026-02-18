@@ -1,14 +1,9 @@
-import { ipcMain } from 'electron'
 import { IPC } from '../../shared/ipc-channels'
 import { storeApiKey, getApiKey, deleteApiKey } from '../utils/crypto'
+import { safeHandle } from './utils'
+import type { SpellCorrection } from '../../shared/types'
 
 /* ── Types ── */
-
-interface SpellCorrection {
-  original: string
-  corrected: string
-  explanation: string
-}
 
 interface SpellCheckResult {
   success: boolean
@@ -35,7 +30,7 @@ async function callOpenAI(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, messages, temperature: 0.2 }),
+    body: JSON.stringify({ model, messages, temperature: 0 }),
   })
 
   if (!res.ok) {
@@ -44,7 +39,9 @@ async function callOpenAI(
   }
 
   const data = await res.json()
-  return data.choices[0].message.content
+  const content = data?.choices?.[0]?.message?.content
+  if (!content) throw new Error('Unexpected OpenAI response format')
+  return content
 }
 
 async function callAnthropic(
@@ -62,6 +59,7 @@ async function callAnthropic(
     body: JSON.stringify({
       model,
       max_tokens: 4096,
+      temperature: 0,
       system: messages.find((m) => m.role === 'system')?.content,
       messages: messages
         .filter((m) => m.role !== 'system')
@@ -75,7 +73,9 @@ async function callAnthropic(
   }
 
   const data = await res.json()
-  return data.content[0].text
+  const text = data?.content?.[0]?.text
+  if (!text) throw new Error('Unexpected Anthropic response format')
+  return text
 }
 
 async function callLLM(
@@ -100,82 +100,59 @@ async function callLLM(
 /* ── Handlers ── */
 
 export function registerAiHandlers(): void {
-  // Store encrypted API key
-  ipcMain.handle(IPC.AI_STORE_KEY, async (_e, keyName: string, plainKey: string) => {
-    try {
-      storeApiKey(keyName, plainKey)
-      return { success: true }
-    } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : String(err) }
-    }
+  safeHandle(IPC.AI_STORE_KEY, async (_e, keyName: string, plainKey: string) => {
+    storeApiKey(keyName, plainKey)
+    return { success: true }
   })
 
-  // Get decrypted API key (returns masked version for display)
-  ipcMain.handle(IPC.AI_GET_KEY, async (_e, keyName: string) => {
-    try {
-      const key = getApiKey(keyName)
-      if (!key) return { exists: false, masked: '' }
-      // Return masked version: show first 7 and last 4 chars
-      const masked =
-        key.length > 12
-          ? key.slice(0, 7) + '•'.repeat(Math.min(key.length - 11, 20)) + key.slice(-4)
-          : '•'.repeat(key.length)
-      return { exists: true, masked }
-    } catch (err: unknown) {
-      return { exists: false, masked: '', error: err instanceof Error ? err.message : String(err) }
-    }
+  safeHandle(IPC.AI_GET_KEY, async (_e, keyName: string) => {
+    const key = getApiKey(keyName)
+    if (!key) return { exists: false, masked: '' }
+    const masked =
+      key.length > 12
+        ? key.slice(0, 7) + '•'.repeat(Math.min(key.length - 11, 20)) + key.slice(-4)
+        : '•'.repeat(key.length)
+    return { exists: true, masked }
   })
 
-  // Delete API key
-  ipcMain.handle(IPC.AI_DELETE_KEY, async (_e, keyName: string) => {
-    try {
-      deleteApiKey(keyName)
-      return { success: true }
-    } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : String(err) }
-    }
+  safeHandle(IPC.AI_DELETE_KEY, async (_e, keyName: string) => {
+    deleteApiKey(keyName)
+    return { success: true }
   })
 
-  // Test connection
-  ipcMain.handle(
+  safeHandle(
     IPC.AI_TEST_CONNECTION,
     async (_e, provider: 'openai' | 'anthropic', keyName: string) => {
-      try {
-        const apiKey = getApiKey(keyName)
-        if (!apiKey) return { success: false, error: 'API key not found' }
+      const apiKey = getApiKey(keyName)
+      if (!apiKey) return { success: false, error: 'API key not found' }
 
-        if (provider === 'openai') {
-          const res = await fetch('https://api.openai.com/v1/models', {
-            headers: { Authorization: `Bearer ${apiKey}` },
-          })
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          return { success: true }
-        } else {
-          // Anthropic: send a minimal message to verify the key
-          const res = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01',
-            },
-            body: JSON.stringify({
-              model: 'claude-haiku-4-5-20251001',
-              max_tokens: 1,
-              messages: [{ role: 'user', content: 'hi' }],
-            }),
-          })
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          return { success: true }
-        }
-      } catch (err: unknown) {
-        return { success: false, error: err instanceof Error ? err.message : String(err) }
+      if (provider === 'openai') {
+        const res = await fetch('https://api.openai.com/v1/models', {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return { success: true }
+      } else {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 1,
+            messages: [{ role: 'user', content: 'hi' }],
+          }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return { success: true }
       }
     }
   )
 
-  // Spell check
-  ipcMain.handle(
+  safeHandle(
     IPC.AI_SPELL_CHECK,
     async (
       _e,
@@ -184,37 +161,43 @@ export function registerAiHandlers(): void {
       model: string,
       keyName: string
     ): Promise<SpellCheckResult> => {
-      try {
-        const apiKey = getApiKey(keyName)
-        if (!apiKey) return { success: false, error: 'API key not found' }
+      const apiKey = getApiKey(keyName)
+      if (!apiKey) return { success: false, error: 'API key not found' }
 
-        const systemPrompt = `당신은 한국어 맞춤법 교정 전문가입니다.
-사용자가 보낸 텍스트에서 맞춤법, 띄어쓰기, 문법 오류를 찾아 교정하세요.
-반드시 아래 JSON 배열 형식으로만 응답하세요. 오류가 없으면 빈 배열 []을 반환하세요.
-[{"original":"틀린 부분","corrected":"교정된 부분","explanation":"교정 이유"}]`
+      const systemPrompt = `당신은 한국어 맞춤법·문법 교정 전문가입니다. 국립국어원 표준어 규정과 한글 맞춤법 통일안을 기준으로 검사하세요.
 
-        const result = await callLLM(provider, apiKey, model, systemPrompt, text)
+## 규칙
+1. **확실한 오류만** 지적하세요. 애매하거나 문체 선택에 해당하는 것은 건너뛰세요.
+2. 소설·창작 문체(의도적 구어체, 방언, 의성어·의태어, 캐릭터 말투)는 오류로 지적하지 마세요.
+3. 교정 대상: 맞춤법 오류, 띄어쓰기 오류, 조사 오용, 피동/사동 접사 오류, 높임법 불일치.
+4. original에는 오류가 포함된 최소 단위(어절 1~3개)만 포함하세요.
+5. 반드시 아래 JSON 배열 형식으로만 응답하세요. 오류가 없으면 빈 배열 []을 반환하세요.
 
-        // Extract JSON array from response (handle code fences, extra text)
-        let jsonStr = result.trim()
-        // Remove markdown code fences
-        jsonStr = jsonStr.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
-        // Extract the JSON array portion
-        const arrMatch = jsonStr.match(/\[[\s\S]*\]/)
-        if (!arrMatch) {
-          return { success: true, corrections: [] }
-        }
+## 출력 형식
+[{"original":"틀린 부분","corrected":"교정된 부분","explanation":"간결한 교정 이유"}]
 
-        const corrections: SpellCorrection[] = JSON.parse(arrMatch[0])
-        return { success: true, corrections }
-      } catch (err: unknown) {
-        return { success: false, error: err instanceof Error ? err.message : String(err) }
+## 예시
+입력: "그는 빛이 바랬다고 말했다."
+출력: [{"original":"바랬다고","corrected":"바랐다고","explanation":"'바라다'의 과거형은 '바랐다'입니다 (ㅎ 불규칙 아님)"}]
+
+입력: "나는 학교에 갔다."
+출력: []`
+
+      const result = await callLLM(provider, apiKey, model, systemPrompt, text)
+
+      let jsonStr = result.trim()
+      jsonStr = jsonStr.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
+      const arrMatch = jsonStr.match(/\[[\s\S]*\]/)
+      if (!arrMatch) {
+        return { success: true, corrections: [] }
       }
+
+      const corrections: SpellCorrection[] = JSON.parse(arrMatch[0])
+      return { success: true, corrections }
     }
   )
 
-  // Image generation (DALL-E)
-  ipcMain.handle(
+  safeHandle(
     IPC.AI_GENERATE_IMAGE,
     async (
       _e,
@@ -222,37 +205,35 @@ export function registerAiHandlers(): void {
       keyName: string,
       options?: { size?: string; quality?: string; style?: string }
     ): Promise<ImageGenerateResult> => {
-      try {
-        const apiKey = getApiKey(keyName)
-        if (!apiKey) return { success: false, error: 'API key not found' }
+      const apiKey = getApiKey(keyName)
+      if (!apiKey) return { success: false, error: 'API key not found' }
 
-        const res = await fetch('https://api.openai.com/v1/images/generations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt,
-            n: 1,
-            size: options?.size || '1024x1024',
-            quality: options?.quality || 'standard',
-            style: options?.style || 'natural',
-            response_format: 'url',
-          }),
-        })
+      const res = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'dall-e-3',
+          prompt,
+          n: 1,
+          size: options?.size || '1024x1024',
+          quality: options?.quality || 'standard',
+          style: options?.style || 'natural',
+          response_format: 'url',
+        }),
+      })
 
-        if (!res.ok) {
-          const body = await res.text()
-          throw new Error(`DALL-E API error ${res.status}: ${body}`)
-        }
-
-        const data = await res.json()
-        return { success: true, url: data.data[0].url }
-      } catch (err: unknown) {
-        return { success: false, error: err instanceof Error ? err.message : String(err) }
+      if (!res.ok) {
+        const body = await res.text()
+        throw new Error(`DALL-E API error ${res.status}: ${body}`)
       }
+
+      const data = await res.json()
+      const url = data?.data?.[0]?.url
+      if (!url) throw new Error('Unexpected DALL-E response format')
+      return { success: true, url }
     }
   )
 }
