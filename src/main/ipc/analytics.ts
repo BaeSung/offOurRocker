@@ -1,17 +1,16 @@
-import { ipcMain } from 'electron'
 import { sql, eq, and, gte, lte, desc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { safeHandle } from './utils'
 
 export function registerAnalyticsHandlers(): void {
   const db = getDb()
 
-  // Weekly trend: last 4 weeks, grouped by week
-  ipcMain.handle(IPC.ANALYTICS_WEEKLY_TREND, async () => {
+  safeHandle(IPC.ANALYTICS_WEEKLY_TREND, async () => {
     const today = new Date()
     const fourWeeksAgo = new Date(today)
-    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 27) // 4 weeks = 28 days
+    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 27)
     const startStr = fourWeeksAgo.toISOString().slice(0, 10)
 
     const logs = db
@@ -24,7 +23,6 @@ export function registerAnalyticsHandlers(): void {
       .groupBy(schema.writingLog.date)
       .all()
 
-    // Group into 4 weeks
     const weeks: { week: string; chars: number }[] = []
     for (let w = 3; w >= 0; w--) {
       const weekStart = new Date(today)
@@ -49,8 +47,7 @@ export function registerAnalyticsHandlers(): void {
     return weeks
   })
 
-  // Monthly trend: last 6 months
-  ipcMain.handle(IPC.ANALYTICS_MONTHLY_TREND, async () => {
+  safeHandle(IPC.ANALYTICS_MONTHLY_TREND, async () => {
     const today = new Date()
     const months: { month: string; chars: number }[] = []
 
@@ -65,12 +62,7 @@ export function registerAnalyticsHandlers(): void {
           total: sql<number>`coalesce(sum(${schema.writingLog.charCount}), 0)`,
         })
         .from(schema.writingLog)
-        .where(
-          and(
-            gte(schema.writingLog.date, startDate),
-            lte(schema.writingLog.date, endDate)
-          )
-        )
+        .where(and(gte(schema.writingLog.date, startDate), lte(schema.writingLog.date, endDate)))
         .get()
 
       const label = `${d.getMonth() + 1}월`
@@ -80,8 +72,7 @@ export function registerAnalyticsHandlers(): void {
     return months
   })
 
-  // Current streak + longest streak
-  ipcMain.handle(IPC.ANALYTICS_STREAK, async () => {
+  safeHandle(IPC.ANALYTICS_STREAK, async () => {
     const allDates = db
       .select({ date: schema.writingLog.date })
       .from(schema.writingLog)
@@ -94,21 +85,18 @@ export function registerAnalyticsHandlers(): void {
       return { current: 0, longest: 0 }
     }
 
-    // Current streak: starting from today/yesterday, count consecutive days
     const todayStr = new Date().toISOString().slice(0, 10)
     const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
 
     let current = 0
     const dateSet = new Set(allDates)
 
-    // Check if streak includes today or yesterday
     let checkDate: Date
     if (dateSet.has(todayStr)) {
       checkDate = new Date()
     } else if (dateSet.has(yesterdayStr)) {
       checkDate = new Date(Date.now() - 86400000)
     } else {
-      // No active streak
       current = 0
       checkDate = new Date(0)
     }
@@ -120,7 +108,6 @@ export function registerAnalyticsHandlers(): void {
       }
     }
 
-    // Longest streak
     let longest = 0
     let streak = 1
     for (let i = 0; i < allDates.length - 1; i++) {
@@ -140,8 +127,7 @@ export function registerAnalyticsHandlers(): void {
     return { current, longest }
   })
 
-  // Work distribution: chars per work
-  ipcMain.handle(IPC.ANALYTICS_WORK_DISTRIBUTION, async () => {
+  safeHandle(IPC.ANALYTICS_WORK_DISTRIBUTION, async () => {
     const charsExpr = sql<number>`coalesce(sum(length(replace(${schema.chapters.content}, ' ', ''))), 0)`
     const worksWithChars = db
       .select({

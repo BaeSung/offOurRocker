@@ -16,8 +16,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useWorkStore } from '@/stores/useWorkStore'
 import { useAppStore } from '@/stores/useAppStore'
-
-/* ── types ── */
+import { ModalOverlay, FieldLabel, TextInput } from './modal-primitives'
 
 type WorkType = 'novel' | 'short'
 type GenreOption = 'horror' | 'sf' | 'literary' | 'fantasy' | 'other'
@@ -38,126 +37,6 @@ const GENRES: GenreDef[] = [
   { key: 'fantasy', label: '판타지', dot: 'bg-violet-400', border: 'border-violet-400', bg: 'bg-violet-400/10' },
   { key: 'other', label: '기타', dot: 'bg-neutral-400', border: 'border-neutral-400', bg: 'bg-neutral-400/10' },
 ]
-
-/* ── shared overlay wrapper ── */
-
-function ModalOverlay({
-  open,
-  onClose,
-  children,
-}: {
-  open: boolean
-  onClose: () => void
-  children: React.ReactNode
-}) {
-  const [visible, setVisible] = useState(false)
-  const [animating, setAnimating] = useState(false)
-  const overlayRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (open) {
-      setVisible(true)
-      requestAnimationFrame(() => setAnimating(true))
-    } else {
-      setAnimating(false)
-      const t = setTimeout(() => setVisible(false), 250)
-      return () => clearTimeout(t)
-    }
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: globalThis.KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [open, onClose])
-
-  if (!visible) return null
-
-  return (
-    <div
-      ref={overlayRef}
-      className={cn(
-        'fixed inset-0 z-50 flex items-center justify-center transition-all duration-200',
-        animating ? 'bg-black/60 backdrop-blur-[4px]' : 'bg-black/0 backdrop-blur-0'
-      )}
-      onClick={(e) => {
-        if (e.target === overlayRef.current) onClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className={cn(
-          'transition-all duration-300 ease-out',
-          animating
-            ? 'scale-100 opacity-100'
-            : 'scale-95 opacity-0'
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
-
-/* ── shared input field ── */
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-  return (
-    <label className="mb-1.5 block text-[13px] font-medium text-foreground">
-      {children}
-      {required && <span className="ml-0.5 text-destructive">*</span>}
-    </label>
-  )
-}
-
-function TextInput({
-  value,
-  onChange,
-  placeholder,
-  autoFocus,
-  error,
-  inputRef,
-  suffix,
-}: {
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  autoFocus?: boolean
-  error?: boolean
-  inputRef?: React.RefObject<HTMLInputElement | null>
-  suffix?: string
-}) {
-  return (
-    <div className="relative">
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-        className={cn(
-          'h-10 w-full rounded-lg border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors duration-150',
-          'focus:border-primary focus:ring-1 focus:ring-primary/30',
-          error
-            ? 'animate-[shake_0.3s_ease-in-out] border-destructive focus:border-destructive focus:ring-destructive/30'
-            : 'border-border'
-        )}
-      />
-      {suffix && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-          {suffix}
-        </span>
-      )}
-    </div>
-  )
-}
-
-/* ── create work modal ── */
 
 export function CreateWorkModal({
   open,
@@ -187,7 +66,6 @@ export function CreateWorkModal({
   const { createWork } = useWorkStore()
   const setActiveDocument = useAppStore((s) => s.setActiveDocument)
 
-  // reset on open
   useEffect(() => {
     if (open) {
       setTitle('')
@@ -233,7 +111,6 @@ export function CreateWorkModal({
       onClose()
       toast({ description: `'${title.trim()}' 작품이 생성되었습니다.` })
 
-      // Navigate to the new work
       if (workType === 'short') {
         setActiveDocument(workId, null)
       } else {
@@ -262,8 +139,7 @@ export function CreateWorkModal({
     if (!deadline) return null
     const target = new Date(deadline)
     if (isNaN(target.getTime())) return null
-    const diff = Math.ceil((target.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    return diff
+    return Math.ceil((target.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
   })()
 
   const handleTagKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => {
@@ -279,7 +155,6 @@ export function CreateWorkModal({
   return (
     <ModalOverlay open={open} onClose={onClose}>
       <div className="w-full max-w-[520px] rounded-2xl border border-border bg-card shadow-2xl">
-        {/* header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-base font-semibold text-foreground">새 작품 만들기</h2>
           <button
@@ -291,9 +166,7 @@ export function CreateWorkModal({
           </button>
         </div>
 
-        {/* body */}
         <div className="scrollbar-thin max-h-[70vh] space-y-5 overflow-y-auto px-6 py-5">
-          {/* title */}
           <div>
             <FieldLabel required>제목</FieldLabel>
             <TextInput
@@ -312,7 +185,6 @@ export function CreateWorkModal({
             )}
           </div>
 
-          {/* work type */}
           <div>
             <FieldLabel required>유형</FieldLabel>
             <div className="grid grid-cols-2 gap-3">
@@ -346,7 +218,6 @@ export function CreateWorkModal({
             </div>
           </div>
 
-          {/* novel: first chapter */}
           <div
             className={cn(
               'overflow-hidden transition-all duration-200 ease-out',
@@ -364,7 +235,6 @@ export function CreateWorkModal({
             </p>
           </div>
 
-          {/* genre */}
           <div>
             <FieldLabel required>장르</FieldLabel>
             <div className="flex flex-wrap gap-2">
@@ -386,7 +256,6 @@ export function CreateWorkModal({
             </div>
           </div>
 
-          {/* belonging */}
           <div>
             <FieldLabel>소속</FieldLabel>
             <div className="flex gap-4">
@@ -422,7 +291,6 @@ export function CreateWorkModal({
               ))}
             </div>
 
-            {/* series dropdown */}
             <div
               className={cn(
                 'overflow-hidden transition-all duration-200 ease-out',
@@ -475,7 +343,6 @@ export function CreateWorkModal({
             </div>
           </div>
 
-          {/* goal chars */}
           <div>
             <FieldLabel>목표 글자수</FieldLabel>
             <TextInput
@@ -495,7 +362,6 @@ export function CreateWorkModal({
             )}
           </div>
 
-          {/* deadline */}
           <div>
             <FieldLabel>마감일</FieldLabel>
             <input
@@ -516,7 +382,6 @@ export function CreateWorkModal({
             )}
           </div>
 
-          {/* tags */}
           <div>
             <FieldLabel>태그</FieldLabel>
             <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border bg-background p-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/30">
@@ -546,7 +411,6 @@ export function CreateWorkModal({
           </div>
         </div>
 
-        {/* footer */}
         <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
           <button
             onClick={onClose}
@@ -560,136 +424,6 @@ export function CreateWorkModal({
             className={cn(
               'h-9 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98]',
               (creating || !title.trim()) && 'opacity-60'
-            )}
-          >
-            {creating ? '생성 중...' : '만들기'}
-          </button>
-        </div>
-      </div>
-    </ModalOverlay>
-  )
-}
-
-/* ── create series modal ── */
-
-export function CreateSeriesModal({
-  open,
-  onClose,
-}: {
-  open: boolean
-  onClose: () => void
-}) {
-  const [name, setName] = useState('')
-  const [nameError, setNameError] = useState(false)
-  const [nameErrorMsg, setNameErrorMsg] = useState('')
-  const [desc, setDesc] = useState('')
-  const [creating, setCreating] = useState(false)
-  const nameRef = useRef<HTMLInputElement>(null)
-  const { createSeries } = useWorkStore()
-
-  useEffect(() => {
-    if (open) {
-      setName('')
-      setNameError(false)
-      setNameErrorMsg('')
-      setDesc('')
-      setCreating(false)
-    }
-  }, [open])
-
-  const handleCreate = useCallback(async () => {
-    if (!name.trim()) {
-      setNameError(true)
-      setNameErrorMsg('시리즈 이름을 입력해주세요')
-      nameRef.current?.focus()
-      return
-    }
-    if (creating) return
-    setCreating(true)
-    try {
-      await createSeries({
-        title: name.trim(),
-        description: desc.trim() || undefined,
-      })
-      onClose()
-      toast({ description: `'${name.trim()}' 시리즈가 생성되었습니다.` })
-    } catch {
-      toast({ description: '시리즈 생성에 실패했습니다.', variant: 'destructive' })
-    } finally {
-      setCreating(false)
-    }
-  }, [name, desc, onClose, createSeries, creating])
-
-  return (
-    <ModalOverlay open={open} onClose={onClose}>
-      <div className="w-full max-w-[420px] rounded-2xl border border-border bg-card shadow-2xl">
-        {/* header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="text-base font-semibold text-foreground">새 시리즈 만들기</h2>
-          <button
-            onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="닫기"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* body */}
-        <div className="space-y-5 px-6 py-5">
-          {/* series name */}
-          <div>
-            <FieldLabel required>시리즈명</FieldLabel>
-            <TextInput
-              inputRef={nameRef}
-              value={name}
-              onChange={(v) => {
-                setName(v)
-                if (v.trim()) { setNameError(false); setNameErrorMsg('') }
-              }}
-              placeholder="시리즈 이름을 입력하세요"
-              autoFocus
-              error={nameError}
-            />
-            {nameErrorMsg && (
-              <p className="mt-1 text-xs text-destructive">{nameErrorMsg}</p>
-            )}
-          </div>
-
-          {/* description */}
-          <div>
-            <FieldLabel>설명</FieldLabel>
-            <div className="relative">
-              <textarea
-                value={desc}
-                onChange={(e) => {
-                  if (e.target.value.length <= 200) setDesc(e.target.value)
-                }}
-                placeholder="시리즈에 대한 간단한 설명"
-                rows={3}
-                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/30"
-              />
-              <span className="absolute bottom-2 right-3 text-[11px] tabular-nums text-muted-foreground">
-                {desc.length} / 200
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
-          <button
-            onClick={onClose}
-            className="h-9 rounded-lg border border-primary/40 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
-          >
-            {'취소'}
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={creating || !name.trim()}
-            className={cn(
-              'h-9 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98]',
-              (creating || !name.trim()) && 'opacity-60'
             )}
           >
             {creating ? '생성 중...' : '만들기'}

@@ -5,8 +5,26 @@ const api = {
   works: {
     getAll: () => ipcRenderer.invoke(IPC.WORKS_GET_ALL),
     getById: (id: string) => ipcRenderer.invoke(IPC.WORKS_GET_BY_ID, id),
-    create: (data: Record<string, unknown>) => ipcRenderer.invoke(IPC.WORKS_CREATE, data),
-    update: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke(IPC.WORKS_UPDATE, id, data),
+    create: (data: {
+      title: string
+      type: 'novel' | 'short'
+      genre: string
+      seriesId?: string
+      goalChars?: number
+      deadline?: string
+      tags?: string[]
+      firstChapterTitle?: string
+    }) => ipcRenderer.invoke(IPC.WORKS_CREATE, data),
+    update: (id: string, data: Partial<{
+      title: string
+      genre: string
+      status: string
+      seriesId: string | null
+      goalChars: number
+      deadline: string
+      tags: string[]
+      coverImage: string | null
+    }>) => ipcRenderer.invoke(IPC.WORKS_UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.WORKS_DELETE, id),
     getContent: (workId: string) => ipcRenderer.invoke(IPC.WORKS_GET_CONTENT, workId),
     saveContent: (workId: string, content: string) =>
@@ -27,7 +45,7 @@ const api = {
     getAll: () => ipcRenderer.invoke(IPC.SERIES_GET_ALL),
     create: (data: { title: string; description?: string }) =>
       ipcRenderer.invoke(IPC.SERIES_CREATE, data),
-    update: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke(IPC.SERIES_UPDATE, id, data),
+    update: (id: string, data: Partial<{ title: string; description: string }>) => ipcRenderer.invoke(IPC.SERIES_UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.SERIES_DELETE, id),
   },
   settings: {
@@ -45,15 +63,21 @@ const api = {
   },
   goals: {
     getAll: () => ipcRenderer.invoke(IPC.GOALS_GET_ALL),
-    create: (data: Record<string, unknown>) => ipcRenderer.invoke(IPC.GOALS_CREATE, data),
-    update: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke(IPC.GOALS_UPDATE, id, data),
+    create: (data: {
+      title: string
+      description?: string
+      targetType: 'daily' | 'total' | 'deadline'
+      targetValue: number
+      deadline?: string
+    }) => ipcRenderer.invoke(IPC.GOALS_CREATE, data),
+    update: (id: string, data: Partial<{ title: string; currentValue: number; targetValue: number }>) => ipcRenderer.invoke(IPC.GOALS_UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.GOALS_DELETE, id),
   },
   search: {
     query: (q: string) => ipcRenderer.invoke(IPC.SEARCH_QUERY, q),
   },
   export: {
-    work: (workId: string, format: string, options?: Record<string, unknown>) =>
+    work: (workId: string, format: 'markdown' | 'txt' | 'epub', options?: { frontmatter?: boolean; directory?: string }) =>
       ipcRenderer.invoke(IPC.EXPORT_WORK, workId, format, options),
   },
   backup: {
@@ -81,7 +105,7 @@ const api = {
       ipcRenderer.invoke(IPC.AI_TEST_CONNECTION, provider, keyName),
     spellCheck: (text: string, provider: 'openai' | 'anthropic', model: string, keyName: string) =>
       ipcRenderer.invoke(IPC.AI_SPELL_CHECK, text, provider, model, keyName),
-    generateImage: (prompt: string, keyName: string, options?: Record<string, unknown>) =>
+    generateImage: (prompt: string, keyName: string, options?: { size?: string; quality?: string; style?: string }) =>
       ipcRenderer.invoke(IPC.AI_GENERATE_IMAGE, prompt, keyName, options),
   },
   characters: {
@@ -125,7 +149,7 @@ const api = {
       color?: string
       chapterId?: string
     }) => ipcRenderer.invoke(IPC.PLOT_EVENTS_CREATE, data),
-    update: (id: string, data: Record<string, unknown>) =>
+    update: (id: string, data: Partial<{ title: string; description: string; color: string; chapterId: string | null }>) =>
       ipcRenderer.invoke(IPC.PLOT_EVENTS_UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.PLOT_EVENTS_DELETE, id),
     reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.PLOT_EVENTS_REORDER, orderedIds),

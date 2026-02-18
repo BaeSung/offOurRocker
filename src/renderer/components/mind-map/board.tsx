@@ -3,7 +3,6 @@ import {
   ReactFlow,
   Background,
   MiniMap,
-  Controls,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -14,20 +13,46 @@ import {
   BackgroundVariant,
   ConnectionLineType,
   MarkerType,
+  ReactFlowProvider,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import { CustomNode, type MindMapNodeData } from './custom-node'
+import { CustomNode, type MindMapNodeData, type MindMapNode } from './custom-node'
+import { LabeledEdge, type LabeledEdgeData } from './custom-edge'
 import { MindMapToolbar } from './toolbar'
 import { ImportNodesDialog, type ImportedNode } from './import-nodes-dialog'
+import { useToast } from '@/hooks/use-toast'
 
 interface BoardProps {
   workId: string
 }
 
 const nodeTypes = { custom: CustomNode }
+const edgeTypes = { labeled: LabeledEdge }
 
-export function Board({ workId }: BoardProps) {
+const MAX_HISTORY = 50
+
+interface Snapshot {
+  nodes: Node[]
+  edges: Edge[]
+}
+
+function stripNodeCallbacks(nodes: Node[]): Node[] {
+  return nodes.map((n) => ({
+    ...n,
+    data: { ...n.data, onDelete: undefined, onLabelChange: undefined },
+  }))
+}
+
+function stripEdgeCallbacks(edges: Edge[]): Edge[] {
+  return edges.map((e) => ({
+    ...e,
+    data: e.data ? { ...e.data, onLabelChange: undefined, onDelete: undefined } : e.data,
+  }))
+}
+
+function BoardInner({ workId }: BoardProps) {
+  const { toast } = useToast()
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
@@ -36,11 +61,111 @@ export function Board({ workId }: BoardProps) {
   const isLoadedRef = useRef(false)
   const workIdRef = useRef(workId)
 
+  // --- Undo / Redo history ---
+  const historyRef = useRef<Snapshot[]>([])
+  const redoRef = useRef<Snapshot[]>([])
+  const isRestoringRef = useRef(false)
+
+  const pushHistory = useCallback(() => {
+    historyRef.current.push({ nodes: stripNodeCallbacks(nodes), edges: stripEdgeCallbacks(edges) })
+    if (historyRef.current.length > MAX_HISTORY) historyRef.current.shift()
+    redoRef.current = []
+  }, [nodes, edges])
+
+  // Record snapshot on meaningful change (debounced alongside save)
+  const lastSnapshotRef = useRef('')
+  useEffect(() => {
+    if (!isLoadedRef.current || isRestoringRef.current) return
+    const key = JSON.stringify({ n: nodes.map((n) => n.id + JSON.stringify(n.position) + JSON.stringify(n.data)), e: edges.map((e) => e.id + (e.data?.label || '')) })
+    if (key !== lastSnapshotRef.current) {
+      // push previous state
+      if (lastSnapshotRef.current !== '') {
+        pushHistory()
+      }
+      lastSnapshotRef.current = key
+    }
+  }, [nodes, edges, pushHistory])
+
+  const undo = useCallback(() => {
+    if (historyRef.current.length === 0) return
+    const prev = historyRef.current.pop()!
+    redoRef.current.push({ nodes: stripNodeCallbacks(nodes), edges: stripEdgeCallbacks(edges) })
+    isRestoringRef.current = true
+    setNodes(prev.nodes)
+    setEdges(prev.edges)
+    lastSnapshotRef.current = ''
+    requestAnimationFrame(() => { isRestoringRef.current = false })
+  }, [nodes, edges, setNodes, setEdges])
+
+  const redo = useCallback(() => {
+    if (redoRef.current.length === 0) return
+    const next = redoRef.current.pop()!
+    historyRef.current.push({ nodes: stripNodeCallbacks(nodes), edges: stripEdgeCallbacks(edges) })
+    isRestoringRef.current = true
+    setNodes(next.nodes)
+    setEdges(next.edges)
+    lastSnapshotRef.current = ''
+    requestAnimationFrame(() => { isRestoringRef.current = false })
+  }, [nodes, edges, setNodes, setEdges])
+
+  // --- Copy / Paste ---
+  const clipboardRef = useRef<Node[]>([])
+
+  const copySelected = useCallback(() => {
+    const selected = nodes.filter((n) => n.selected)
+    if (selected.length === 0) return
+    clipboardRef.current = stripNodeCallbacks(selected)
+    toast({ description: `${selected.length}개 노드를 복사했습니다.` })
+  }, [nodes, toast])
+
+  const pasteNodes = useCallback(() => {
+    if (clipboardRef.current.length === 0) return
+    const offset = 40
+    const newNodes: Node[] = clipboardRef.current.map((n) => ({
+      ...n,
+      id: crypto.randomUUID(),
+      position: { x: n.position.x + offset, y: n.position.y + offset },
+      selected: false,
+      data: {
+        ...n.data,
+        // 복사된 노드는 sourceId 제거 (독립 노드)
+        sourceId: undefined,
+      },
+    }))
+    setNodes((nds) => [...nds, ...newNodes])
+    toast({ description: `${newNodes.length}개 노드를 붙여넣었습니다.` })
+  }, [setNodes, toast])
+
+  // --- Keyboard shortcuts ---
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // 입력 중이면 무시
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault()
+        undo()
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault()
+        redo()
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        e.preventDefault()
+        copySelected()
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault()
+        pasteNodes()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [undo, redo, copySelected, pasteNodes])
+
   // Track which source IDs already exist on the board
   const existingSourceIds = useMemo(() => {
     const set = new Set<string>()
     for (const node of nodes) {
-      const data = node.data as unknown as MindMapNodeData
+      const data = node.data as MindMapNodeData
       if (data.sourceId) set.add(data.sourceId)
     }
     return set
@@ -62,6 +187,21 @@ export function Board({ workId }: BoardProps) {
     )
   }, [setNodes])
 
+  // Edge handlers
+  const handleDeleteEdge = useCallback((edgeId: string) => {
+    setEdges((eds) => eds.filter((e) => e.id !== edgeId))
+  }, [setEdges])
+
+  const handleEdgeLabelChange = useCallback((edgeId: string, label: string) => {
+    setEdges((eds) =>
+      eds.map((e) =>
+        e.id === edgeId
+          ? { ...e, data: { ...e.data, label } }
+          : e
+      )
+    )
+  }, [setEdges])
+
   // Inject callbacks into node data
   const nodesWithCallbacks = useMemo(() => {
     return nodes.map((node) => ({
@@ -74,10 +214,31 @@ export function Board({ workId }: BoardProps) {
     }))
   }, [nodes, handleDeleteNode, handleLabelChange])
 
+  // Inject callbacks into edge data
+  const edgesWithCallbacks = useMemo(() => {
+    return edges.map((edge) => ({
+      ...edge,
+      data: {
+        ...edge.data,
+        onLabelChange: handleEdgeLabelChange,
+        onDelete: handleDeleteEdge,
+      },
+    }))
+  }, [edges, handleEdgeLabelChange, handleDeleteEdge])
+
+  // Clean up connected edges when nodes deleted via keyboard
+  const onNodesDelete = useCallback((deleted: Node[]) => {
+    const deletedIds = new Set(deleted.map((n) => n.id))
+    setEdges((eds) => eds.filter((e) => !deletedIds.has(e.source) && !deletedIds.has(e.target)))
+  }, [setEdges])
+
   // Load board data
   useEffect(() => {
     workIdRef.current = workId
     isLoadedRef.current = false
+    historyRef.current = []
+    redoRef.current = []
+    lastSnapshotRef.current = ''
 
     window.api.mindMap.get(workId).then((data) => {
       if (workIdRef.current !== workId) return
@@ -95,28 +256,28 @@ export function Board({ workId }: BoardProps) {
       isLoadedRef.current = true
     }).catch(() => {
       isLoadedRef.current = true
+      toast({ description: '마인드맵 데이터를 불러오지 못했습니다.', variant: 'destructive' })
     })
-  }, [workId, rfInstance, setNodes, setEdges])
+  }, [workId, rfInstance, setNodes, setEdges, toast])
 
   // Auto-save with debounce
   const saveBoard = useCallback(() => {
     if (!isLoadedRef.current || !rfInstance) return
 
     const flow = rfInstance.toObject()
-    // Strip callbacks from node data before saving
-    const cleanNodes = flow.nodes.map((n) => ({
-      ...n,
-      data: { ...n.data, onDelete: undefined, onLabelChange: undefined },
-    }))
+    const cleanNodes = stripNodeCallbacks(flow.nodes)
+    const cleanEdges = stripEdgeCallbacks(flow.edges)
 
     const payload = JSON.stringify({
       nodes: cleanNodes,
-      edges: flow.edges,
+      edges: cleanEdges,
       viewport: flow.viewport,
     })
 
-    window.api.mindMap.save(workIdRef.current, payload).catch(() => {})
-  }, [rfInstance])
+    window.api.mindMap.save(workIdRef.current, payload).catch(() => {
+      toast({ description: '마인드맵 저장에 실패했습니다.', variant: 'destructive' })
+    })
+  }, [rfInstance, toast])
 
   // Trigger save whenever nodes or edges change
   useEffect(() => {
@@ -134,10 +295,11 @@ export function Board({ workId }: BoardProps) {
         addEdge(
           {
             ...params,
-            type: 'default',
+            type: 'labeled',
             animated: false,
             markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(30 40% 64%)' },
             style: { stroke: 'hsl(30 8% 50%)', strokeWidth: 1.5 },
+            data: { label: '' },
           },
           eds
         )
@@ -218,30 +380,45 @@ export function Board({ workId }: BoardProps) {
         backgroundColor: 'hsl(240, 20%, 6%)',
         quality: 1,
       })
-      await window.api.mindMap.exportPng(dataUrl)
+      const result = await window.api.mindMap.exportPng(dataUrl)
+      if (result.success) {
+        toast({ description: 'PNG 이미지로 내보냈습니다.' })
+      }
     } catch {
-      // export failed
+      toast({ description: 'PNG 내보내기에 실패했습니다.', variant: 'destructive' })
     }
-  }, [rfInstance])
+  }, [rfInstance, toast])
 
-  const handleExportJson = useCallback(() => {
+  const handleExportJson = useCallback(async () => {
     if (!rfInstance) return
     const flow = rfInstance.toObject()
-    const cleanNodes = flow.nodes.map((n) => ({
-      ...n,
-      data: { ...n.data, onDelete: undefined, onLabelChange: undefined },
-    }))
-    const json = JSON.stringify({ nodes: cleanNodes, edges: flow.edges, viewport: flow.viewport }, null, 2)
-    window.api.mindMap.exportJson(json).catch(() => {})
-  }, [rfInstance])
+    const cleanNodes = stripNodeCallbacks(flow.nodes)
+    const cleanEdges = stripEdgeCallbacks(flow.edges)
+    const json = JSON.stringify({ nodes: cleanNodes, edges: cleanEdges, viewport: flow.viewport }, null, 2)
+    try {
+      const result = await window.api.mindMap.exportJson(json)
+      if (result.success) {
+        toast({ description: 'JSON 파일로 내보냈습니다.' })
+      }
+    } catch {
+      toast({ description: 'JSON 내보내기에 실패했습니다.', variant: 'destructive' })
+    }
+  }, [rfInstance, toast])
 
   const handleImportJson = useCallback(async () => {
-    const result = await window.api.mindMap.importJson()
-    if (result.success && result.data) {
-      setNodes(result.data.nodes as Node[])
-      setEdges(result.data.edges as Edge[])
+    try {
+      const result = await window.api.mindMap.importJson()
+      if (result.success && result.data) {
+        setNodes(result.data.nodes as Node[])
+        setEdges(result.data.edges as Edge[])
+        toast({ description: 'JSON 파일을 불러왔습니다.' })
+      } else if (result.error && result.error !== 'Cancelled') {
+        toast({ description: '올바른 마인드맵 JSON 형식이 아닙니다.', variant: 'destructive' })
+      }
+    } catch {
+      toast({ description: 'JSON 불러오기에 실패했습니다.', variant: 'destructive' })
     }
-  }, [setNodes, setEdges])
+  }, [setNodes, setEdges, toast])
 
   const handleZoomIn = useCallback(() => rfInstance?.zoomIn(), [rfInstance])
   const handleZoomOut = useCallback(() => rfInstance?.zoomOut(), [rfInstance])
@@ -251,18 +428,21 @@ export function Board({ workId }: BoardProps) {
     <div className="relative h-full w-full">
       <ReactFlow
         nodes={nodesWithCallbacks}
-        edges={edges}
+        edges={edgesWithCallbacks}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodesDelete={onNodesDelete}
         onConnect={onConnect}
         onInit={setRfInstance}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         connectionLineType={ConnectionLineType.SmoothStep}
         defaultEdgeOptions={{
-          type: 'default',
+          type: 'labeled',
           markerEnd: { type: MarkerType.ArrowClosed, color: 'hsl(30 40% 64%)' },
           style: { stroke: 'hsl(30 8% 50%)', strokeWidth: 1.5 },
         }}
+        deleteKeyCode={['Backspace', 'Delete']}
         fitView
         fitViewOptions={{ padding: 0.3 }}
         proOptions={{ hideAttribution: true }}
@@ -304,5 +484,13 @@ export function Board({ workId }: BoardProps) {
         onImport={handleImportNodes}
       />
     </div>
+  )
+}
+
+export function Board({ workId }: BoardProps) {
+  return (
+    <ReactFlowProvider>
+      <BoardInner workId={workId} />
+    </ReactFlowProvider>
   )
 }

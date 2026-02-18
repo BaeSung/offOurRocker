@@ -1,22 +1,20 @@
-import { ipcMain } from 'electron'
 import { eq } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { DEFAULT_SETTINGS } from '../../shared/types'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { safeHandle } from './utils'
 
 export function registerSettingsHandlers(): void {
   const db = getDb()
 
-  // Get all settings merged with defaults
-  ipcMain.handle(IPC.SETTINGS_GET_ALL, async () => {
+  safeHandle(IPC.SETTINGS_GET_ALL, async () => {
     const rows = db.select().from(schema.settings).all()
     const stored: Record<string, string> = {}
     for (const row of rows) {
       stored[row.key] = row.value
     }
 
-    // Merge with defaults
     const result: Record<string, unknown> = { ...DEFAULT_SETTINGS }
     for (const [key, value] of Object.entries(stored)) {
       if (key in DEFAULT_SETTINGS) {
@@ -33,8 +31,7 @@ export function registerSettingsHandlers(): void {
     return result
   })
 
-  // Set a single setting
-  ipcMain.handle(IPC.SETTINGS_SET, async (_e, key: string, value: unknown) => {
+  safeHandle(IPC.SETTINGS_SET, async (_e, key: string, value: unknown) => {
     const strValue = String(value)
     const existing = db.select().from(schema.settings).where(eq(schema.settings.key, key)).get()
     if (existing) {

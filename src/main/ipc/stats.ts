@@ -1,14 +1,13 @@
-import { ipcMain } from 'electron'
-import { eq, sql, desc, and, gte, lte, asc } from 'drizzle-orm'
+import { eq, sql, and, gte, lte, asc, desc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { safeHandle } from './utils'
 
 export function registerStatsHandlers(): void {
   const db = getDb()
 
-  // Summary stats for dashboard
-  ipcMain.handle(IPC.STATS_SUMMARY, async () => {
+  safeHandle(IPC.STATS_SUMMARY, async () => {
     const totalWorks = db
       .select({ count: sql<number>`count(*)` })
       .from(schema.works)
@@ -26,7 +25,6 @@ export function registerStatsHandlers(): void {
       .from(schema.chapters)
       .get()
 
-    // Weekly writing (last 7 days)
     const today = new Date()
     const weekAgo = new Date(today)
     weekAgo.setDate(weekAgo.getDate() - 6)
@@ -42,7 +40,6 @@ export function registerStatsHandlers(): void {
       .groupBy(schema.writingLog.date)
       .all()
 
-    // Build 7-day array
     const weeklyData: number[] = []
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today)
@@ -60,8 +57,7 @@ export function registerStatsHandlers(): void {
     }
   })
 
-  // Recent works for dashboard
-  ipcMain.handle(IPC.STATS_RECENT_WORKS, async () => {
+  safeHandle(IPC.STATS_RECENT_WORKS, async () => {
     const recentWorks = db
       .select()
       .from(schema.works)
@@ -71,7 +67,6 @@ export function registerStatsHandlers(): void {
       .all()
 
     return recentWorks.map((w) => {
-      // Get total char count for this work
       const chars = db
         .select({ total: sql<number>`coalesce(sum(length(replace(${schema.chapters.content}, ' ', ''))), 0)` })
         .from(schema.chapters)
@@ -86,9 +81,8 @@ export function registerStatsHandlers(): void {
     })
   })
 
-  // Genre distribution
-  ipcMain.handle(IPC.STATS_GENRE_DISTRIBUTION, async () => {
-    const result = db
+  safeHandle(IPC.STATS_GENRE_DISTRIBUTION, async () => {
+    return db
       .select({
         genre: schema.works.genre,
         count: sql<number>`count(*)`,
@@ -97,17 +91,15 @@ export function registerStatsHandlers(): void {
       .where(eq(schema.works.deleted, 0))
       .groupBy(schema.works.genre)
       .all()
-    return result
   })
 
-  // Writing log by month
-  ipcMain.handle(IPC.WRITING_LOG_GET_BY_MONTH, async (_e, year: number, month: number) => {
+  safeHandle(IPC.WRITING_LOG_GET_BY_MONTH, async (_e, year: number, month: number) => {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`
     const endMonth = month === 12 ? 1 : month + 1
     const endYear = month === 12 ? year + 1 : year
     const endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-01`
 
-    const logs = db
+    return db
       .select({
         date: schema.writingLog.date,
         total: sql<number>`sum(${schema.writingLog.charCount})`,
@@ -116,7 +108,5 @@ export function registerStatsHandlers(): void {
       .where(and(gte(schema.writingLog.date, startDate), lte(schema.writingLog.date, endDate)))
       .groupBy(schema.writingLog.date)
       .all()
-
-    return logs
   })
 }

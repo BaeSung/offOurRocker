@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { User, Globe, Flag, BookOpen } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import type { Character, WorldNote, PlotEvent } from '../../../shared/types'
 import type { MindMapNodeType } from './custom-node'
 
@@ -144,14 +145,6 @@ export function ImportNodesDialog({ open, onClose, workId, existingSourceIds, on
   }
 
   const typeLabel: Record<MindMapNodeType, string> = {
-    character: 'character',
-    worldNote: 'worldNote',
-    plotEvent: 'plotEvent',
-    chapter: 'chapter',
-    free: 'free',
-  }
-
-  const typeDisplayLabel: Record<MindMapNodeType, string> = {
     character: '캐릭터',
     worldNote: '세계관',
     plotEvent: '플롯',
@@ -206,7 +199,7 @@ export function ImportNodesDialog({ open, onClose, workId, existingSourceIds, on
                       <div className="mb-1.5 flex items-center gap-1.5">
                         <GroupIcon className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-xs font-medium text-muted-foreground">
-                          {typeDisplayLabel[nodeType]}
+                          {typeLabel[nodeType]}
                         </span>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -262,6 +255,3 @@ export function ImportNodesDialog({ open, onClose, workId, existingSourceIds, on
   )
 }
 
-function cn(...classes: (string | false | undefined)[]) {
-  return classes.filter(Boolean).join(' ')
-}

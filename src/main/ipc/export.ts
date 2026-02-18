@@ -1,4 +1,4 @@
-import { ipcMain, dialog } from 'electron'
+import { dialog } from 'electron'
 import { writeFile, mkdir } from 'fs/promises'
 import { join, dirname } from 'path'
 import { eq, asc } from 'drizzle-orm'
@@ -6,6 +6,7 @@ import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
 import { generateEpub } from '../utils/epub-generator'
+import { safeHandle } from './utils'
 
 function htmlToPlainText(html: string): string {
   return html
@@ -27,36 +28,27 @@ function htmlToPlainText(html: string): string {
 
 function htmlToMarkdown(html: string): string {
   let md = html
-    // Headings
     .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
     .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
     .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n')
-    // Bold, italic, strike
     .replace(/<(strong|b)>(.*?)<\/(strong|b)>/gi, '**$2**')
     .replace(/<(em|i)>(.*?)<\/(em|i)>/gi, '*$2*')
     .replace(/<(s|strike|del)>(.*?)<\/(s|strike|del)>/gi, '~~$2~~')
-    // Blockquote
     .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/gis, (_, content) => {
       return content.replace(/<p[^>]*>(.*?)<\/p>/gi, '> $1\n').trim() + '\n\n'
     })
-    // Horizontal rule
     .replace(/<hr\s*\/?>/gi, '\n---\n\n')
-    // Line breaks and paragraphs
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
-    // Images
     .replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*\/?>/gi, '![$2]($1)')
     .replace(/<img[^>]*src="([^"]*)"[^>]*\/?>/gi, '![]($1)')
-    // Remove remaining tags
     .replace(/<[^>]*>/g, '')
-    // HTML entities
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, ' ')
-    // Clean up extra newlines
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 
@@ -66,7 +58,7 @@ function htmlToMarkdown(html: string): string {
 export function registerExportHandlers(): void {
   const db = getDb()
 
-  ipcMain.handle(
+  safeHandle(
     IPC.EXPORT_WORK,
     async (
       _e,
@@ -89,7 +81,6 @@ export function registerExportHandlers(): void {
         .orderBy(asc(schema.chapters.sortOrder))
         .all()
 
-      // ── EPUB export ──
       if (format === 'epub') {
         const safeTitle = work.title.replace(/[<>:"/\\|?*]/g, '_')
         let filePath: string | undefined
@@ -124,7 +115,6 @@ export function registerExportHandlers(): void {
         return { success: true, path: filePath }
       }
 
-      // ── Markdown / Text export ──
       let output = ''
 
       if (format === 'markdown') {

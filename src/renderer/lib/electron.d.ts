@@ -141,11 +141,8 @@ interface TrashAPI {
   empty(): Promise<{ success: boolean; count?: number }>
 }
 
-export interface SpellCorrection {
-  original: string
-  corrected: string
-  explanation: string
-}
+export type { SpellCorrection } from '../../shared/types'
+import type { SpellCorrection } from '../../shared/types'
 
 interface AIAPI {
   storeKey(keyName: string, plainKey: string): Promise<{ success: boolean; error?: string }>

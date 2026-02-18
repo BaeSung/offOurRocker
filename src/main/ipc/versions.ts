@@ -1,32 +1,27 @@
-import { ipcMain } from 'electron'
 import { randomUUID as uuid } from 'crypto'
 import { eq, desc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
+import { now, safeHandle } from './utils'
 
 const MAX_VERSIONS_PER_CHAPTER = 50
 
 export function registerVersionsHandlers(): void {
   const db = getDb()
 
-  // List versions for a chapter
-  ipcMain.handle(IPC.VERSIONS_LIST, async (_e, chapterId: string) => {
-    const versions = db
+  safeHandle(IPC.VERSIONS_LIST, async (_e, chapterId: string) => {
+    return db
       .select()
       .from(schema.versions)
       .where(eq(schema.versions.chapterId, chapterId))
       .orderBy(desc(schema.versions.createdAt))
       .all()
-
-    return versions
   })
 
-  // Create a version snapshot
-  ipcMain.handle(
+  safeHandle(
     IPC.VERSIONS_CREATE,
     async (_e, chapterId: string, label?: string) => {
-      // Get current chapter content
       const chapter = db
         .select()
         .from(schema.chapters)
@@ -46,7 +41,7 @@ export function registerVersionsHandlers(): void {
           content,
           charCount,
           label: label || null,
-          createdAt: new Date().toISOString(),
+          createdAt: now(),
         })
         .run()
 
@@ -71,8 +66,7 @@ export function registerVersionsHandlers(): void {
     }
   )
 
-  // Restore a version (replaces current chapter content)
-  ipcMain.handle(IPC.VERSIONS_RESTORE, async (_e, versionId: string) => {
+  safeHandle(IPC.VERSIONS_RESTORE, async (_e, versionId: string) => {
     const version = db
       .select()
       .from(schema.versions)
@@ -81,7 +75,7 @@ export function registerVersionsHandlers(): void {
 
     if (!version) return { success: false, error: 'Version not found' }
 
-    // Save current content as a new version before restoring ("복원 전" snapshot)
+    // Save current content as a new version before restoring
     const chapter = db
       .select()
       .from(schema.chapters)
@@ -97,23 +91,21 @@ export function registerVersionsHandlers(): void {
           content: chapter.content || '',
           charCount: currentCharCount,
           label: '복원 전 자동 저장',
-          createdAt: new Date().toISOString(),
+          createdAt: now(),
         })
         .run()
     }
 
-    // Restore the version content
-    const now = new Date().toISOString()
+    const ts = now()
     db.update(schema.chapters)
-      .set({ content: version.content, updatedAt: now })
+      .set({ content: version.content, updatedAt: ts })
       .where(eq(schema.chapters.id, version.chapterId))
       .run()
 
     return { success: true, chapterId: version.chapterId }
   })
 
-  // Delete a version
-  ipcMain.handle(IPC.VERSIONS_DELETE, async (_e, versionId: string) => {
+  safeHandle(IPC.VERSIONS_DELETE, async (_e, versionId: string) => {
     db.delete(schema.versions)
       .where(eq(schema.versions.id, versionId))
       .run()

@@ -1,8 +1,8 @@
-import { ipcMain } from 'electron'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
 import { like, eq, and, or } from 'drizzle-orm'
+import { safeHandle } from './utils'
 
 export interface SearchResult {
   type: 'work' | 'chapter'
@@ -16,13 +16,12 @@ export interface SearchResult {
 export function registerSearchHandlers(): void {
   const db = getDb()
 
-  ipcMain.handle(IPC.SEARCH_QUERY, async (_e, query: string): Promise<SearchResult[]> => {
+  safeHandle(IPC.SEARCH_QUERY, async (_e, query: string): Promise<SearchResult[]> => {
     if (!query || query.trim().length === 0) return []
 
     const term = `%${query.trim()}%`
     const results: SearchResult[] = []
 
-    // Search work titles
     const workMatches = db
       .select({
         id: schema.works.id,
@@ -44,7 +43,6 @@ export function registerSearchHandlers(): void {
       })
     }
 
-    // Search chapter titles and content
     const chapterMatches = db
       .select({
         chapterId: schema.chapters.id,
@@ -68,8 +66,6 @@ export function registerSearchHandlers(): void {
       .all()
 
     for (const c of chapterMatches) {
-
-      // Extract snippet around the match
       let snippet = ''
       const plainContent = (c.content || '').replace(/<[^>]*>/g, '')
       const idx = plainContent.toLowerCase().indexOf(query.toLowerCase())
@@ -78,11 +74,9 @@ export function registerSearchHandlers(): void {
         const end = Math.min(plainContent.length, idx + query.length + 50)
         snippet = (start > 0 ? '...' : '') + plainContent.slice(start, end) + (end < plainContent.length ? '...' : '')
       } else {
-        // Title matched
         snippet = c.chapterTitle
       }
 
-      // Skip hidden __body__ chapter in display title
       const displayTitle = c.chapterTitle === '__body__' ? null : c.chapterTitle
 
       results.push({

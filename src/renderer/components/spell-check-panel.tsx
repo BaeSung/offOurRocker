@@ -1,12 +1,7 @@
 import { useState } from 'react'
 import { Loader2, CheckCircle2, X, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-interface SpellCorrection {
-  original: string
-  corrected: string
-  explanation: string
-}
+import type { SpellCorrection } from '../../shared/types'
 
 interface SpellCheckPanelProps {
   open: boolean

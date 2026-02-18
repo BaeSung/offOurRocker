@@ -106,7 +106,7 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
       <aside
         className={cn(
           "flex h-full flex-col border-r border-border bg-card transition-[width] duration-300 ease-in-out",
-          collapsed ? "w-[60px]" : "w-[280px]"
+          collapsed ? "w-[60px]" : "w-[340px]"
         )}
         role="complementary"
         aria-label="사이드바"

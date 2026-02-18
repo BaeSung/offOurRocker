@@ -1,5 +1,5 @@
 import { memo, useState, useCallback } from 'react'
-import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
 import { User, Globe, Flag, BookOpen, StickyNote, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -15,18 +15,21 @@ export interface MindMapNodeData {
   category?: string
   onDelete?: (id: string) => void
   onLabelChange?: (id: string, label: string) => void
+  [key: string]: unknown
 }
+
+export type MindMapNode = Node<MindMapNodeData, 'custom'>
 
 const TYPE_CONFIG: Record<MindMapNodeType, {
   icon: React.ComponentType<{ className?: string }>
   defaultColor: string
   label: string
 }> = {
-  character: { icon: User, defaultColor: '#d4a574', label: 'character' },
-  worldNote: { icon: Globe, defaultColor: '#4ade80', label: 'worldNote' },
-  plotEvent: { icon: Flag, defaultColor: '#3b82f6', label: 'plotEvent' },
-  chapter: { icon: BookOpen, defaultColor: '#818cf8', label: 'chapter' },
-  free: { icon: StickyNote, defaultColor: '#d4a574', label: 'free' },
+  character: { icon: User, defaultColor: '#d4a574', label: '캐릭터' },
+  worldNote: { icon: Globe, defaultColor: '#4ade80', label: '세계관' },
+  plotEvent: { icon: Flag, defaultColor: '#3b82f6', label: '플롯' },
+  chapter: { icon: BookOpen, defaultColor: '#818cf8', label: '챕터' },
+  free: { icon: StickyNote, defaultColor: '#d4a574', label: '자유' },
 }
 
 const ROLE_COLORS: Record<string, string> = {
@@ -55,8 +58,8 @@ function getNodeColor(data: MindMapNodeData): string {
   return TYPE_CONFIG[data.nodeType].defaultColor
 }
 
-function CustomNodeComponent({ id, data, selected }: NodeProps) {
-  const nodeData = data as unknown as MindMapNodeData
+function CustomNodeComponent({ id, data, selected }: NodeProps<MindMapNode>) {
+  const nodeData = data
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(nodeData.label)
   const color = getNodeColor(nodeData)
@@ -64,11 +67,9 @@ function CustomNodeComponent({ id, data, selected }: NodeProps) {
   const Icon = config.icon
 
   const handleDoubleClick = useCallback(() => {
-    if (nodeData.nodeType === 'free') {
-      setIsEditing(true)
-      setEditValue(nodeData.label)
-    }
-  }, [nodeData.nodeType, nodeData.label])
+    setIsEditing(true)
+    setEditValue(nodeData.label)
+  }, [nodeData.label])
 
   const handleBlur = useCallback(() => {
     setIsEditing(false)

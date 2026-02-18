@@ -225,6 +225,12 @@ export function matchesShortcut(e: KeyboardEvent, combo: string): boolean {
   return eventKey === targetKey
 }
 
+export interface SpellCorrection {
+  original: string
+  corrected: string
+  explanation: string
+}
+
 /* ── Config maps (shared between main & renderer) ── */
 
 export const STATUS_CONFIG: Record<WorkStatus, { label: string; color: string }> = {

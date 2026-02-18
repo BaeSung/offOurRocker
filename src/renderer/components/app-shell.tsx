@@ -97,7 +97,7 @@ export function AppShell() {
         />
         <div className="relative flex flex-1 flex-col overflow-hidden">
           {/* Thin top bar for inspector toggle */}
-          <div className={cn('flex h-9 shrink-0 items-center justify-end border-b border-border bg-card/50 px-3 print-hide', view !== 'editor' && 'invisible')}>
+          <div className={cn('flex h-9 shrink-0 items-center justify-end border-b border-border bg-card/50 px-3 print-hide', view !== 'editor' && 'hidden')}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
