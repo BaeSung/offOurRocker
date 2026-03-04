@@ -1,0 +1,4 @@
+# Only track the DB file
+*
+!.gitignore
+!off-our-rocker.db
