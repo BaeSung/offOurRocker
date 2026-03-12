@@ -197,6 +197,25 @@ interface MindMapAPI {
   importJson(): Promise<{ success: boolean; data?: { nodes: unknown[]; edges: unknown[] }; error?: string }>
 }
 
+interface GitCommitEntry {
+  hash: string
+  message: string
+  date: string
+}
+
+interface GitAPI {
+  check(): Promise<{ installed: boolean; version: string }>
+  init(path?: string): Promise<{ success: boolean; error?: string }>
+  commit(path?: string): Promise<{ success: boolean; message?: string; error?: string }>
+  status(path?: string): Promise<{ initialized: boolean; lastCommit: { message: string; date: string } | null }>
+  setRemote(url: string, path?: string): Promise<{ success: boolean; error?: string }>
+  push(path?: string): Promise<{ success: boolean; error?: string }>
+  pull(path?: string): Promise<{ success: boolean; conflict?: boolean; summary?: unknown; error?: string }>
+  log(maxCount?: number, path?: string): Promise<{ commits: GitCommitEntry[] }>
+  restore(commitHash: string, path?: string): Promise<{ success: boolean; needsReload?: boolean; error?: string }>
+  resolveConflict(strategy: 'ours' | 'theirs', path?: string): Promise<{ success: boolean; needsReload?: boolean; error?: string }>
+}
+
 interface DatabaseAPI {
   export(): Promise<{ success: boolean; path?: string; canceled?: boolean; error?: string }>
   import(): Promise<{ success: boolean; needsReload?: boolean; canceled?: boolean; error?: string }>
@@ -206,6 +225,7 @@ interface SystemAPI {
   selectDirectory(): Promise<string | null>
   getAppVersion(): Promise<string>
   print(): Promise<{ success: boolean; error?: string }>
+  openExternal(url: string): Promise<{ success: boolean; error?: string }>
 }
 
 interface CharactersAPI {
@@ -259,6 +279,7 @@ interface ElectronAPI {
   characters: CharactersAPI
   worldNotes: WorldNotesAPI
   mindMap: MindMapAPI
+  git: GitAPI
   database: DatabaseAPI
   system: SystemAPI
 }

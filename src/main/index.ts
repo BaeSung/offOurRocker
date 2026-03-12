@@ -51,9 +51,6 @@ app.whenReady().then(() => {
 
   createWindow()
 
-  // Run auto backup check after startup
-  runAutoBackupIfNeeded()
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -65,6 +62,18 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('before-quit', () => {
-  closeDatabase()
+let isQuitting = false
+
+app.on('before-quit', (e) => {
+  if (isQuitting) {
+    closeDatabase()
+    return
+  }
+
+  e.preventDefault()
+  isQuitting = true
+
+  runAutoBackupIfNeeded().finally(() => {
+    app.quit()
+  })
 })

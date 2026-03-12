@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Loader2, CheckCircle2, X, ArrowRight } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Loader2, CheckCircle2, X, ArrowRight, Flag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { SpellCorrection } from '../../shared/types'
 
@@ -109,16 +109,30 @@ export function SpellCheckPanel({
       </div>
 
       {/* Footer */}
-      {!loading && corrections.length > 0 && unappliedCount > 0 && (
-        <div className="border-t border-border px-3 py-2">
+      {!loading && corrections.length > 0 && (
+        <div className="border-t border-border px-3 py-2 flex flex-col gap-1.5">
+          {unappliedCount > 0 && (
+            <button
+              onClick={() => {
+                onApplyAll()
+                setApplied(new Set(corrections.map((_, i) => i)))
+              }}
+              className="w-full rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+            >
+              모두 적용 ({unappliedCount}개)
+            </button>
+          )}
           <button
             onClick={() => {
-              onApplyAll()
-              setApplied(new Set(corrections.map((_, i) => i)))
+              const url = 'https://github.com/BaeSung/offOurRocker/issues/new?labels=ai-report&title=' +
+                encodeURIComponent('AI 콘텐츠 신고: 맞춤법 검사') +
+                '&body=' + encodeURIComponent('## 신고 내용\n\nAI가 생성한 부적절한 교정 결과를 신고합니다.\n\n### 문제가 된 교정 내용\n\n(여기에 해당 내용을 작성해주세요)\n\n### 상세 설명\n\n')
+              window.api.system.openExternal(url)
             }}
-            className="w-full rounded-md bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+            className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
           >
-            모두 적용 ({unappliedCount}개)
+            <Flag className="h-2.5 w-2.5" />
+            부적절한 AI 콘텐츠 신고
           </button>
         </div>
       )}

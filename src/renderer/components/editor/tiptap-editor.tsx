@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useEditor, EditorContent, useEditorState } from '@tiptap/react'
+import { DOMSerializer } from '@tiptap/pm/model'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import CharacterCount from '@tiptap/extension-character-count'
@@ -86,6 +87,35 @@ export function TipTapEditor({
       attributes: {
         class: 'outline-none min-h-[500px]',
         spellcheck: 'false',
+      },
+      handleDOMEvents: {
+        copy: (view, event) => {
+          const { from, to } = view.state.selection
+          if (from === to) return false
+          const slice = view.state.doc.slice(from, to)
+          const serializer = DOMSerializer.fromSchema(view.state.schema)
+          const div = document.createElement('div')
+          div.appendChild(serializer.serializeFragment(slice.content))
+          const ce = event as ClipboardEvent
+          ce.clipboardData?.setData('text/html', div.innerHTML)
+          ce.clipboardData?.setData('text/plain', view.state.doc.textBetween(from, to, '\n\n'))
+          ce.preventDefault()
+          return true
+        },
+        cut: (view, event) => {
+          const { from, to } = view.state.selection
+          if (from === to) return false
+          const slice = view.state.doc.slice(from, to)
+          const serializer = DOMSerializer.fromSchema(view.state.schema)
+          const div = document.createElement('div')
+          div.appendChild(serializer.serializeFragment(slice.content))
+          const ce = event as ClipboardEvent
+          ce.clipboardData?.setData('text/html', div.innerHTML)
+          ce.clipboardData?.setData('text/plain', view.state.doc.textBetween(from, to, '\n\n'))
+          ce.preventDefault()
+          view.dispatch(view.state.tr.deleteSelection())
+          return true
+        },
       },
     },
   })

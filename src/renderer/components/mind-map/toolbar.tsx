@@ -6,6 +6,8 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Minimize2,
+  Focus,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -29,6 +31,8 @@ interface MindMapToolbarProps {
   onZoomIn: () => void
   onZoomOut: () => void
   onFitView: () => void
+  isFullscreen: boolean
+  onToggleFullscreen: () => void
 }
 
 function ToolbarButton({
@@ -67,6 +71,8 @@ export function MindMapToolbar({
   onZoomIn,
   onZoomOut,
   onFitView,
+  isFullscreen,
+  onToggleFullscreen,
 }: MindMapToolbarProps) {
   return (
     <div className="flex items-center gap-1 rounded-lg border border-border bg-card/90 px-2 py-1 shadow-md backdrop-blur-sm">
@@ -129,10 +135,19 @@ export function MindMapToolbar({
 
       <div className="mx-1 h-4 w-px bg-border" />
 
-      {/* Zoom */}
+      {/* Zoom & View */}
       <ToolbarButton icon={ZoomOut} label="축소" onClick={onZoomOut} />
       <ToolbarButton icon={ZoomIn} label="확대" onClick={onZoomIn} />
-      <ToolbarButton icon={Maximize2} label="전체 보기" onClick={onFitView} />
+      <ToolbarButton icon={Focus} label="노드 맞추기" onClick={onFitView} />
+
+      <div className="mx-1 h-4 w-px bg-border" />
+
+      {/* Fullscreen toggle */}
+      <ToolbarButton
+        icon={isFullscreen ? Minimize2 : Maximize2}
+        label={isFullscreen ? '전체 화면 해제 (ESC)' : '전체 화면'}
+        onClick={onToggleFullscreen}
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   addEdge,
   type Connection,
   type Edge,
@@ -22,6 +23,7 @@ import { LabeledEdge, type LabeledEdgeData } from './custom-edge'
 import { MindMapToolbar } from './toolbar'
 import { ImportNodesDialog, type ImportedNode } from './import-nodes-dialog'
 import { useToast } from '@/hooks/use-toast'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 
 interface BoardProps {
   workId: string
@@ -53,6 +55,14 @@ function stripEdgeCallbacks(edges: Edge[]): Edge[] {
 
 function BoardInner({ workId }: BoardProps) {
   const { toast } = useToast()
+  const { fitView, zoomIn, zoomOut, setViewport } = useReactFlow()
+  const theme = useSettingsStore((s) => s.theme)
+  const colorMode = useMemo<'dark' | 'light'>(() => {
+    if (theme === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+    return theme === 'light' ? 'light' : 'dark'
+  }, [theme])
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
@@ -249,10 +259,14 @@ function BoardInner({ workId }: BoardProps) {
       setNodes(loadedNodes)
       setEdges(loadedEdges)
 
-      // Restore viewport if available
-      if (data.viewport && rfInstance) {
-        rfInstance.setViewport(data.viewport)
-      }
+      // Wait for React to commit nodes, then restore viewport or fit view
+      setTimeout(() => {
+        if (data.viewport) {
+          setViewport(data.viewport)
+        } else if (loadedNodes.length > 0) {
+          fitView({ padding: 0.3 })
+        }
+      }, 80)
 
       isLoadedRef.current = true
     }).catch(() => {
@@ -262,7 +276,7 @@ function BoardInner({ workId }: BoardProps) {
     })
 
     return () => { cancelled = true }
-  }, [workId, rfInstance, setNodes, setEdges, toast])
+  }, [workId, setNodes, setEdges, setViewport, fitView, toast])
 
   // Auto-save with debounce
   const saveBoard = useCallback(() => {
@@ -425,12 +439,39 @@ function BoardInner({ workId }: BoardProps) {
     }
   }, [setNodes, setEdges, toast])
 
-  const handleZoomIn = useCallback(() => rfInstance?.zoomIn(), [rfInstance])
-  const handleZoomOut = useCallback(() => rfInstance?.zoomOut(), [rfInstance])
-  const handleFitView = useCallback(() => rfInstance?.fitView({ padding: 0.2 }), [rfInstance])
+  const handleZoomIn = useCallback(() => zoomIn(), [zoomIn])
+  const handleZoomOut = useCallback(() => zoomOut(), [zoomOut])
+  const handleFitView = useCallback(() => {
+    fitView({ padding: 0.2, duration: 200 })
+  }, [fitView])
+
+  // --- Fullscreen mode ---
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen((prev) => !prev)
+    // fitView after layout change
+    setTimeout(() => fitView({ padding: 0.2, duration: 200 }), 100)
+  }, [fitView])
+
+  // ESC to exit fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setIsFullscreen(false)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [isFullscreen])
 
   return (
-    <div className="relative h-full w-full">
+    <div className={
+      isFullscreen
+        ? 'fixed inset-0 z-50 bg-background'
+        : 'relative h-full w-full'
+    }>
       <ReactFlow
         nodes={nodesWithCallbacks}
         edges={edgesWithCallbacks}
@@ -441,6 +482,7 @@ function BoardInner({ workId }: BoardProps) {
         onInit={setRfInstance}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        colorMode={colorMode}
         connectionLineType={ConnectionLineType.SmoothStep}
         defaultEdgeOptions={{
           type: 'labeled',
@@ -478,6 +520,8 @@ function BoardInner({ workId }: BoardProps) {
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onFitView={handleFitView}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
         />
       </div>
 

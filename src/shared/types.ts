@@ -145,6 +145,12 @@ export interface AppSettings {
   aiImageQuality: string
   aiImageStyle: string
 
+  // Git
+  gitSaveEnabled: boolean
+  gitRepoPath: string
+  gitRemoteUrl: string
+  gitAutoPush: boolean
+
   // Shortcuts
   shortcuts: Record<string, string>
 }
@@ -192,6 +198,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   aiImageSize: '1024x1024',
   aiImageQuality: 'standard',
   aiImageStyle: 'natural',
+
+  gitSaveEnabled: false,
+  gitRepoPath: '',
+  gitRemoteUrl: '',
+  gitAutoPush: false,
 
   shortcuts: {
     save: 'Ctrl+S',

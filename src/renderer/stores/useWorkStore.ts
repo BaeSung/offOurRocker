@@ -20,7 +20,7 @@ interface WorkState {
     tags?: string[]
     firstChapterTitle?: string
   }) => Promise<string>
-  updateWork: (id: string, data: Partial<{ title: string; genre: string; status: string; seriesId: string | null }>) => Promise<void>
+  updateWork: (id: string, data: Partial<{ title: string; genre: string; status: string; seriesId: string | null; goalChars: number | null; deadline: string | null; tags: string[] }>) => Promise<void>
   deleteWork: (id: string) => Promise<void>
   duplicateWork: (id: string) => Promise<string | null>
 

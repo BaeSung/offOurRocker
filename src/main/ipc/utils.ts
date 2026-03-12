@@ -54,6 +54,20 @@ export function reorderByIds(
   run()
 }
 
+/** Flush WAL data into the main .db file (for cloud sync compatibility) */
+export function walCheckpoint(): void {
+  const sqlite = getSqlite()
+  if (sqlite) sqlite.pragma('wal_checkpoint(TRUNCATE)')
+}
+
+/** Read a single setting value from DB */
+export function getSettingValue(key: string): string | undefined {
+  const sqlite = getSqlite()
+  if (!sqlite) return undefined
+  const row = sqlite.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined
+  return row?.value
+}
+
 /**
  * Safe IPC handler wrapper — wraps handler in try-catch,
  * logging errors and returning { success: false, error } on failure.

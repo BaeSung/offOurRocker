@@ -1,4 +1,4 @@
-import { dialog, app, BrowserWindow } from 'electron'
+import { dialog, app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { IPC } from '../../shared/ipc-channels'
 import { createBackup } from '../utils/backup'
@@ -41,6 +41,13 @@ export function registerSystemHandlers(): void {
         }
       })
     })
+  })
+
+  safeHandle(IPC.SYSTEM_OPEN_EXTERNAL, async (_e, url: string) => {
+    // Only allow https URLs for safety
+    if (!url.startsWith('https://')) return { success: false, error: 'Only HTTPS URLs allowed' }
+    await shell.openExternal(url)
+    return { success: true }
   })
 
   safeHandle(IPC.BACKUP_NOW, async (_e, customDir?: string) => {

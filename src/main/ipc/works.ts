@@ -3,7 +3,8 @@ import { eq, and, asc, sql } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
-import { now, charCountNoSpaces, getNextSortOrder, safeHandle } from './utils'
+import { now, charCountNoSpaces, getNextSortOrder, safeHandle, walCheckpoint, getSettingValue } from './utils'
+import { gitAutoCommit } from './git'
 
 function safeParseTags(raw: string): string[] {
   try {
@@ -265,6 +266,10 @@ export function registerWorksHandlers(): void {
         .run()
     }
 
+    walCheckpoint()
+    if (getSettingValue('gitSaveEnabled') === 'true') {
+      gitAutoCommit(getSettingValue('gitRepoPath') || undefined)
+    }
     return { success: true }
   })
 }

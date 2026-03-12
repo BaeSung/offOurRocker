@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { ImageIcon, X, Loader2, Sparkles } from 'lucide-react'
+import { ImageIcon, X, Loader2, Sparkles, Flag } from 'lucide-react'
 import type { Editor } from '@tiptap/react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { toast } from '@/hooks/use-toast'
@@ -132,6 +132,18 @@ export function ImageInsertButton({ editor }: { editor?: Editor | null }) {
                 className="mt-2 flex h-7 w-full items-center justify-center rounded-md bg-primary/10 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
                 본문에 삽입
+              </button>
+              <button
+                onClick={() => {
+                  const url = 'https://github.com/BaeSung/offOurRocker/issues/new?labels=ai-report&title=' +
+                    encodeURIComponent('AI 콘텐츠 신고: 이미지 생성') +
+                    '&body=' + encodeURIComponent('## 신고 내용\n\nAI가 생성한 부적절한 이미지를 신고합니다.\n\n### 사용한 프롬프트\n\n(여기에 프롬프트를 작성해주세요)\n\n### 상세 설명\n\n')
+                  window.api.system.openExternal(url)
+                }}
+                className="mt-1 flex w-full items-center justify-center gap-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Flag className="h-2.5 w-2.5" />
+                부적절한 AI 콘텐츠 신고
               </button>
             </div>
           )}

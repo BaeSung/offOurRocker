@@ -16,6 +16,7 @@ import { registerDatabaseHandlers } from './database'
 import { registerAnalyticsHandlers } from './analytics'
 import { registerPlotEventsHandlers } from './plot-events'
 import { registerMindMapHandlers } from './mind-map'
+import { registerGitHandlers } from './git'
 
 export function registerAllIpcHandlers(): void {
   registerWorksHandlers()
@@ -36,4 +37,5 @@ export function registerAllIpcHandlers(): void {
   registerAnalyticsHandlers()
   registerPlotEventsHandlers()
   registerMindMapHandlers()
+  registerGitHandlers()
 }

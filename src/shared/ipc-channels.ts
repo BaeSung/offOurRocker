@@ -110,9 +110,22 @@ export const IPC = {
   MIND_MAP_EXPORT_JSON: 'mindMap:exportJson',
   MIND_MAP_IMPORT_JSON: 'mindMap:importJson',
 
+  // Git
+  GIT_CHECK: 'git:check',
+  GIT_INIT: 'git:init',
+  GIT_COMMIT: 'git:commit',
+  GIT_STATUS: 'git:status',
+  GIT_SET_REMOTE: 'git:set-remote',
+  GIT_PUSH: 'git:push',
+  GIT_PULL: 'git:pull',
+  GIT_LOG: 'git:log',
+  GIT_RESTORE: 'git:restore',
+  GIT_RESOLVE_CONFLICT: 'git:resolve-conflict',
+
   // System
   SYSTEM_SELECT_DIRECTORY: 'system:selectDirectory',
   SYSTEM_GET_APP_VERSION: 'system:getAppVersion',
   SYSTEM_GET_DEFAULT_PATHS: 'system:getDefaultPaths',
   SYSTEM_PRINT: 'system:print',
+  SYSTEM_OPEN_EXTERNAL: 'system:openExternal',
 } as const

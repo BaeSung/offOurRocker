@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronRight, BookOpen, FileText, PenLine, Plus } from 'lucide-react'
+import { EditWorkModal } from '@/components/creation-modals/edit-work-modal'
 import { cn } from '@/lib/utils'
 import { STATUS_CONFIG, GENRE_CONFIG } from '../../shared/types'
 import type { Work, WorkStatus, Genre } from '../../shared/types'
@@ -97,12 +98,14 @@ function WorkContextMenu({
   workTitle,
   seriesId,
   onStartRename,
+  onEditProperties,
 }: {
   children: React.ReactNode
   workId: string
   workTitle: string
   seriesId?: string | null
   onStartRename: () => void
+  onEditProperties: () => void
 }) {
   const deleteWork = useWorkStore((s) => s.deleteWork)
   const duplicateWork = useWorkStore((s) => s.duplicateWork)
@@ -122,6 +125,12 @@ function WorkContextMenu({
           onClick={onStartRename}
         >
           이름 변경
+        </ContextMenuItem>
+        <ContextMenuItem
+          className="text-xs text-popover-foreground focus:bg-secondary focus:text-foreground"
+          onClick={onEditProperties}
+        >
+          속성 편집
         </ContextMenuItem>
         <ContextMenuItem
           className="text-xs text-popover-foreground focus:bg-secondary focus:text-foreground"
@@ -267,6 +276,7 @@ export function WorkItem({
 }) {
   const [expanded, setExpanded] = useState(true)
   const [renaming, setRenaming] = useState(false)
+  const [editingProps, setEditingProps] = useState(false)
   const createChapter = useWorkStore((s) => s.createChapter)
   const updateWork = useWorkStore((s) => s.updateWork)
 
@@ -292,6 +302,7 @@ export function WorkItem({
         workTitle={work.title}
         seriesId={work.seriesId}
         onStartRename={() => setRenaming(true)}
+        onEditProperties={() => setEditingProps(true)}
       >
         <button
           onClick={() => {
@@ -377,6 +388,11 @@ export function WorkItem({
           </div>
         </div>
       )}
+      <EditWorkModal
+        open={editingProps}
+        onClose={() => setEditingProps(false)}
+        work={work}
+      />
     </div>
   )
 }

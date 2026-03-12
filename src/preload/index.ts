@@ -161,6 +161,18 @@ const api = {
     exportJson: (json: string) => ipcRenderer.invoke(IPC.MIND_MAP_EXPORT_JSON, json),
     importJson: () => ipcRenderer.invoke(IPC.MIND_MAP_IMPORT_JSON),
   },
+  git: {
+    check: () => ipcRenderer.invoke(IPC.GIT_CHECK),
+    init: (path?: string) => ipcRenderer.invoke(IPC.GIT_INIT, path),
+    commit: (path?: string) => ipcRenderer.invoke(IPC.GIT_COMMIT, path),
+    status: (path?: string) => ipcRenderer.invoke(IPC.GIT_STATUS, path),
+    setRemote: (url: string, path?: string) => ipcRenderer.invoke(IPC.GIT_SET_REMOTE, url, path),
+    push: (path?: string) => ipcRenderer.invoke(IPC.GIT_PUSH, path),
+    pull: (path?: string) => ipcRenderer.invoke(IPC.GIT_PULL, path),
+    log: (maxCount?: number, path?: string) => ipcRenderer.invoke(IPC.GIT_LOG, maxCount, path),
+    restore: (commitHash: string, path?: string) => ipcRenderer.invoke(IPC.GIT_RESTORE, commitHash, path),
+    resolveConflict: (strategy: 'ours' | 'theirs', path?: string) => ipcRenderer.invoke(IPC.GIT_RESOLVE_CONFLICT, strategy, path),
+  },
   database: {
     export: () => ipcRenderer.invoke(IPC.DB_EXPORT),
     import: () => ipcRenderer.invoke(IPC.DB_IMPORT),
@@ -170,6 +182,7 @@ const api = {
     getAppVersion: () => ipcRenderer.invoke(IPC.SYSTEM_GET_APP_VERSION),
     getDefaultPaths: () => ipcRenderer.invoke(IPC.SYSTEM_GET_DEFAULT_PATHS) as Promise<{ backup: string; save: string; export: string }>,
     print: () => ipcRenderer.invoke(IPC.SYSTEM_PRINT),
+    openExternal: (url: string) => ipcRenderer.invoke(IPC.SYSTEM_OPEN_EXTERNAL, url),
   },
 }
 

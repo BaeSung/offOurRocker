@@ -158,51 +158,64 @@
 }
 
 /* ── React Flow (Mind Map) overrides ── */
-.mind-map-flow .react-flow__background {
-  background-color: hsl(var(--background));
+/* Override @xyflow/react CSS variables to match app theme (dark/light).
+   Use .react-flow.mind-map-flow for higher specificity than defaults. */
+.react-flow.mind-map-flow {
+  --xy-background-color: hsl(var(--background));
+  --xy-edge-stroke: hsl(var(--muted-foreground));
+  --xy-edge-stroke-selected: hsl(var(--primary));
+  --xy-connectionline-stroke: hsl(var(--primary));
+  --xy-minimap-background-color: hsl(var(--card));
+  --xy-minimap-mask-background-color: hsl(var(--background) / 0.7);
+  --xy-minimap-node-background-color: hsl(var(--muted));
+  --xy-minimap-node-stroke-color: hsl(var(--border));
+  --xy-background-pattern-dots-color: hsl(var(--border));
+  --xy-background-pattern-lines-color: hsl(var(--border));
+  --xy-node-color: hsl(var(--foreground));
+  --xy-node-border: 1px solid hsl(var(--border));
+  --xy-node-background-color: hsl(var(--card));
+  --xy-node-boxshadow-hover: 0 1px 4px 1px hsl(var(--primary) / 0.12);
+  --xy-node-boxshadow-selected: 0 0 0 0.5px hsl(var(--primary));
+  --xy-handle-background-color: hsl(var(--primary));
+  --xy-handle-border-color: hsl(var(--card));
+  --xy-selection-background-color: hsl(var(--primary) / 0.08);
+  --xy-selection-border: 1px solid hsl(var(--primary) / 0.3);
+  --xy-edge-label-background-color: hsl(var(--card));
+  --xy-edge-label-color: hsl(var(--foreground));
+  --xy-attribution-background-color: transparent;
 }
 
-.mind-map-flow .react-flow__edge-path {
+.react-flow.mind-map-flow .react-flow__edge-path {
   stroke: hsl(var(--muted-foreground));
   stroke-width: 1.5;
 }
-.mind-map-flow .react-flow__edge.selected .react-flow__edge-path {
+.react-flow.mind-map-flow .react-flow__edge.selected .react-flow__edge-path {
   stroke: hsl(var(--primary));
   stroke-width: 2;
 }
 
-.mind-map-flow .react-flow__handle {
+.react-flow.mind-map-flow .react-flow__handle {
   background: hsl(var(--primary));
   border: 2px solid hsl(var(--card));
   width: 10px;
   height: 10px;
 }
 
-.mind-map-flow .react-flow__minimap {
+.react-flow.mind-map-flow .react-flow__minimap {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
   border-radius: 0.5rem;
 }
 
-.mind-map-flow .react-flow__minimap-mask {
+.react-flow.mind-map-flow .react-flow__minimap-mask {
   fill: hsl(var(--background) / 0.7);
 }
 
-.mind-map-flow .react-flow__controls {
+.react-flow.mind-map-flow .react-flow__controls {
   display: none; /* Using custom toolbar instead */
 }
 
-.mind-map-flow .react-flow__selection {
-  background: hsl(var(--primary) / 0.08);
-  border: 1px solid hsl(var(--primary) / 0.3);
-}
-
-.mind-map-flow .react-flow__connection-line {
-  stroke: hsl(var(--primary));
-  stroke-width: 1.5;
-}
-
-.mind-map-flow .react-flow__attribution {
+.react-flow.mind-map-flow .react-flow__attribution {
   display: none;
 }
 

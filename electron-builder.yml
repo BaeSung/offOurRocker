@@ -11,6 +11,10 @@ files:
   - node_modules/bindings/**/*
   - node_modules/file-uri-to-path/**/*
   - node_modules/drizzle-orm/**/*
+  - node_modules/simple-git/**/*
+  - node_modules/@kwsites/**/*
+  - node_modules/debug/**/*
+  - node_modules/ms/**/*
 asarUnpack:
   - node_modules/better-sqlite3/**/*
 win:

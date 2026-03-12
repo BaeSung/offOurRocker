@@ -3,7 +3,8 @@ import { eq } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
-import { now, charCountNoSpaces, getNextSortOrder, reorderByIds, safeHandle } from './utils'
+import { now, charCountNoSpaces, getNextSortOrder, reorderByIds, safeHandle, walCheckpoint, getSettingValue } from './utils'
+import { gitAutoCommit } from './git'
 
 export function registerChaptersHandlers(): void {
   const db = getDb()
@@ -82,6 +83,10 @@ export function registerChaptersHandlers(): void {
       }
     }
 
+    walCheckpoint()
+    if (getSettingValue('gitSaveEnabled') === 'true') {
+      gitAutoCommit(getSettingValue('gitRepoPath') || undefined)
+    }
     return { success: true }
   })
 

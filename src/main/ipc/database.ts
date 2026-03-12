@@ -2,10 +2,8 @@ import { dialog, app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { copyFileSync, existsSync } from 'fs'
 import { IPC } from '../../shared/ipc-channels'
-import { closeDatabase } from '../db/connection'
+import { closeDatabase, DB_NAME } from '../db/connection'
 import { safeHandle } from './utils'
-
-const DB_NAME = 'off-our-rocker.db'
 
 function getDbPath(): string {
   return join(app.getPath('userData'), DB_NAME)

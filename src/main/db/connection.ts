@@ -7,7 +7,7 @@ import * as schema from './schema'
 let db: ReturnType<typeof drizzle<typeof schema>>
 let sqlite: Database.Database
 
-const DB_NAME = 'off-our-rocker.db'
+export const DB_NAME = 'off-our-rocker.db'
 
 export function initDatabase(): void {
   const userDataPath = app.getPath('userData')

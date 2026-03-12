@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import { copyFile, mkdir, readdir, stat, unlink } from 'fs/promises'
 import { join } from 'path'
-import { getSqlite } from '../db/connection'
+import { DB_NAME, getSqlite } from '../db/connection'
 
 const MAX_BACKUPS = 30
 
@@ -10,7 +10,7 @@ function getDefaultBackupDir(): string {
 }
 
 function getDbPath(): string {
-  return join(app.getPath('userData'), 'off-our-rocker.db')
+  return join(app.getPath('userData'), DB_NAME)
 }
 
 export async function createBackup(customDir?: string): Promise<{ success: boolean; path?: string; error?: string }> {
