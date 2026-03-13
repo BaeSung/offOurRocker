@@ -12,7 +12,7 @@ export function ImageInsertButton({ editor }: { editor?: Editor | null }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [error, setError] = useState('')
 
-  const { aiProvider, aiImageSize, aiImageQuality, aiImageStyle } = useSettingsStore()
+  const { aiProvider, aiImageShareKey, aiImageSize, aiImageQuality, aiImageStyle } = useSettingsStore()
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) return
@@ -26,7 +26,8 @@ export function ImageInsertButton({ editor }: { editor?: Editor | null }) {
     setImageUrl(null)
 
     try {
-      const result = await window.api.ai.generateImage(prompt.trim(), 'openai', {
+      const keyName = aiImageShareKey ? 'openai' : 'openai_image'
+      const result = await window.api.ai.generateImage(prompt.trim(), keyName, {
         size: aiImageSize,
         quality: aiImageQuality,
         style: aiImageStyle,
@@ -41,7 +42,7 @@ export function ImageInsertButton({ editor }: { editor?: Editor | null }) {
     } finally {
       setLoading(false)
     }
-  }, [prompt, aiProvider, aiImageSize, aiImageQuality, aiImageStyle])
+  }, [prompt, aiProvider, aiImageShareKey, aiImageSize, aiImageQuality, aiImageStyle])
 
   const handleInsert = () => {
     if (!editor || !imageUrl) return

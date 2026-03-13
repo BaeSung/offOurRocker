@@ -64,6 +64,7 @@ interface StatsAPI {
     weeklyData: number[]
   }>
   recentWorks(): Promise<(Work & { charCount: number })[]>
+  allWorks(): Promise<(Work & { charCount: number })[]>
   genreDistribution(): Promise<{ genre: string; count: number }[]>
 }
 

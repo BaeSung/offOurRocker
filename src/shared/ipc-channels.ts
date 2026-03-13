@@ -32,6 +32,7 @@ export const IPC = {
   // Stats
   STATS_SUMMARY: 'stats:summary',
   STATS_RECENT_WORKS: 'stats:recentWorks',
+  STATS_ALL_WORKS: 'stats:allWorks',
   STATS_GENRE_DISTRIBUTION: 'stats:genreDistribution',
 
   // Writing Log

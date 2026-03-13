@@ -81,6 +81,29 @@ export function registerStatsHandlers(): void {
     })
   })
 
+  safeHandle(IPC.STATS_ALL_WORKS, async () => {
+    const allWorks = db
+      .select()
+      .from(schema.works)
+      .where(eq(schema.works.deleted, 0))
+      .orderBy(desc(schema.works.updatedAt))
+      .all()
+
+    return allWorks.map((w) => {
+      const chars = db
+        .select({ total: sql<number>`coalesce(sum(length(replace(${schema.chapters.content}, ' ', ''))), 0)` })
+        .from(schema.chapters)
+        .where(eq(schema.chapters.workId, w.id))
+        .get()
+
+      return {
+        ...w,
+        tags: (() => { try { const p = JSON.parse(w.tags); return Array.isArray(p) ? p : [] } catch { return [] } })(),
+        charCount: chars?.total ?? 0,
+      }
+    })
+  })
+
   safeHandle(IPC.STATS_GENRE_DISTRIBUTION, async () => {
     return db
       .select({

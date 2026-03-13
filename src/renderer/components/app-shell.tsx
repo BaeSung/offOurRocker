@@ -15,6 +15,7 @@ import { SearchModal } from '@/components/search-modal'
 import { TrashPage } from '@/components/trash-page'
 import { PlotTimelinePage } from '@/components/plot-timeline-page'
 import { MindMapPage } from '@/components/mind-map-page'
+import { AllWorksPage } from '@/components/all-works-page'
 import {
   Tooltip,
   TooltipContent,
@@ -121,6 +122,7 @@ export function AppShell() {
           </div>
           <div className="flex flex-1 overflow-hidden">
             {view === 'dashboard' && <DashboardPage />}
+            {view === 'allWorks' && <AllWorksPage />}
             {view === 'trash' && <TrashPage />}
             {view === 'plotTimeline' && <PlotTimelinePage />}
             {view === 'mindMap' && <MindMapPage />}

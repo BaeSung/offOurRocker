@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/stores/useAppStore"
+import { useSettingsStore } from "@/stores/useSettingsStore"
 import { GENRE_CONFIG } from '../../../shared/types'
 import type { Work } from '../../../shared/types'
-import { ImageIcon, Sparkles, Upload, X, Loader2 } from 'lucide-react'
+import { ImageIcon, Sparkles, Upload, X, Loader2, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from '@/hooks/use-toast'
 
@@ -65,6 +66,7 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 function CoverArea({ work, onCoverChange }: { work: Work & { charCount: number }; onCoverChange: (coverImage: string | null) => void }) {
+  const { aiProvider, aiImageShareKey } = useSettingsStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const [aiMode, setAiMode] = useState(false)
   const [prompt, setPrompt] = useState('')
@@ -111,11 +113,16 @@ function CoverArea({ work, onCoverChange }: { work: Work & { charCount: number }
 
   const handleAiGenerate = async () => {
     if (!prompt.trim()) return
+    if (aiProvider === 'none') {
+      toast({ description: 'AI 설정에서 제공자를 선택하고 API 키를 등록하세요.', variant: 'destructive' })
+      return
+    }
     setGenerating(true)
+    const keyName = aiImageShareKey ? 'openai' : 'openai_image'
     try {
       const result = await window.api.ai.generateImage(
         `Book cover art: ${prompt.trim()}. Vertical book cover composition, artistic, no text.`,
-        'openai-key',
+        keyName,
         { size: '1024x1792', quality: 'standard', style: 'vivid' }
       )
       if (!result.success || !result.url) {
@@ -255,6 +262,7 @@ function CoverArea({ work, onCoverChange }: { work: Work & { charCount: number }
 export function RecentWorks() {
   const [works, setWorks] = useState<(Work & { charCount: number })[]>([])
   const setActiveDocument = useAppStore((s) => s.setActiveDocument)
+  const setView = useAppStore((s) => s.setView)
 
   useEffect(() => {
     let cancelled = false
@@ -285,6 +293,13 @@ export function RecentWorks() {
     <section>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-sans text-lg font-semibold text-foreground">최근 작업</h2>
+        <button
+          onClick={() => setView('allWorks')}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          더보기
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {works.map((work, i) => {

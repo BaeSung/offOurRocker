@@ -55,6 +55,7 @@ const api = {
   stats: {
     summary: () => ipcRenderer.invoke(IPC.STATS_SUMMARY),
     recentWorks: () => ipcRenderer.invoke(IPC.STATS_RECENT_WORKS),
+    allWorks: () => ipcRenderer.invoke(IPC.STATS_ALL_WORKS),
     genreDistribution: () => ipcRenderer.invoke(IPC.STATS_GENRE_DISTRIBUTION),
   },
   writingLog: {
