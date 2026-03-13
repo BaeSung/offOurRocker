@@ -2,28 +2,10 @@ import { useState, useEffect, useMemo } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/stores/useAppStore"
-import { useSettingsStore } from "@/stores/useSettingsStore"
 import { GENRE_CONFIG } from '../../shared/types'
 import type { Work } from '../../shared/types'
-import { ArrowLeft, ImageIcon, Sparkles, Upload, X, Loader2, Search } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { toast } from '@/hooks/use-toast'
-
-const GENRE_GRADIENTS: Record<string, string> = {
-  horror: "from-indigo-950 via-purple-950 to-slate-900",
-  sf: "from-cyan-950 via-teal-950 to-slate-900",
-  literary: "from-amber-950 via-orange-950 to-stone-900",
-  fantasy: "from-violet-950 via-indigo-950 to-slate-900",
-  other: "from-neutral-950 via-stone-950 to-slate-900",
-}
-
-const GENRE_ICONS: Record<string, string> = {
-  horror: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v2h-2v-2zm0-10h2v8h-2V7z",
-  sf: "M12 2L2 19h20L12 2zm0 3l7.5 12h-15L12 5z",
-  literary: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
-  fantasy: "M12 2L2 19h20L12 2zm0 3l7.5 12h-15L12 5z",
-  other: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z",
-}
+import { ArrowLeft, Search } from 'lucide-react'
+import { CoverArea } from '@/components/dashboard/recent-works'
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   writing: { label: '집필중', color: 'bg-blue-500' },
@@ -112,6 +94,10 @@ export function AllWorksPage() {
     return result
   }, [works, search, sortKey, filterGenre, filterStatus])
 
+  const handleCoverChange = (workId: string, coverImage: string | null) => {
+    setWorks((prev) => prev.map((w) => w.id === workId ? { ...w, coverImage } : w))
+  }
+
   return (
     <ScrollArea className="flex-1">
       <div className="mx-auto max-w-[960px] px-6 md:px-12 py-10">
@@ -197,18 +183,7 @@ export function AllWorksPage() {
                     animation: `fadeSlideUp 400ms ${200 + i * 50}ms ease-out forwards`,
                   }}
                 >
-                  {/* Cover */}
-                  <div
-                    className={`relative flex h-full w-28 shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br ${GENRE_GRADIENTS[work.genre] || GENRE_GRADIENTS.other}`}
-                  >
-                    {work.coverImage ? (
-                      <img src={work.coverImage} alt={work.title} className="absolute inset-0 h-full w-full object-cover" />
-                    ) : (
-                      <svg viewBox="0 0 24 24" className="h-8 w-8 text-foreground/15" fill="currentColor">
-                        <path d={GENRE_ICONS[work.genre] || GENRE_ICONS.other} />
-                      </svg>
-                    )}
-                  </div>
+                  <CoverArea work={work} onCoverChange={(img) => handleCoverChange(work.id, img)} />
 
                   {/* Info */}
                   <div className="flex flex-1 flex-col gap-1.5 p-3.5 min-w-0">

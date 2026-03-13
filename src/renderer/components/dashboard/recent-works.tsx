@@ -65,7 +65,7 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString('ko-KR')
 }
 
-function CoverArea({ work, onCoverChange }: { work: Work & { charCount: number }; onCoverChange: (coverImage: string | null) => void }) {
+export function CoverArea({ work, onCoverChange }: { work: Work & { charCount: number }; onCoverChange: (coverImage: string | null) => void }) {
   const { aiProvider, aiImageShareKey } = useSettingsStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const [aiMode, setAiMode] = useState(false)
