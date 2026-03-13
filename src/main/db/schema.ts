@@ -31,6 +31,8 @@ export const chapters = sqliteTable('chapters', {
   workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   content: text('content').notNull().default(''),
+  charCount: integer('char_count').notNull().default(0),
+  charCountNoSpaces: integer('char_count_no_spaces').notNull().default(0),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()

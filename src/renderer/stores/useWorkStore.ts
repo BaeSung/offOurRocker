@@ -29,6 +29,8 @@ interface WorkState {
   deleteChapter: (id: string) => Promise<void>
   reorderChapters: (orderedIds: string[]) => Promise<void>
 
+  updateWorkCharCount: (workId: string, charCount: number, charCountNoSpaces: number) => void
+
   createSeries: (data: { title: string; description?: string }) => Promise<string>
   updateSeries: (id: string, data: Partial<{ title: string; description: string }>) => Promise<void>
   deleteSeries: (id: string) => Promise<void>
@@ -186,6 +188,13 @@ export const useWorkStore = create<WorkState>((set, get) => ({
         }))
       )
     }
+  },
+
+  // Update char counts without full reload (called after auto-save)
+  updateWorkCharCount: (workId, charCount, charCountNoSpaces) => {
+    set((state) =>
+      updateWorkInTree(state, workId, (w) => ({ ...w, charCount, charCountNoSpaces }))
+    )
   },
 
   // Full reload needed (structural change)

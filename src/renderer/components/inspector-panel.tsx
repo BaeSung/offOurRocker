@@ -4,6 +4,7 @@ import { Separator } from '@/components/ui/separator'
 import { useAppStore } from '@/stores/useAppStore'
 import { useWorkStore } from '@/stores/useWorkStore'
 import { useEditorStore } from '@/stores/useEditorStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { GENRE_CONFIG, STATUS_CONFIG } from '../../shared/types'
 
 interface InspectorPanelProps {
@@ -36,7 +37,9 @@ function InspectorRow({
 export function InspectorPanel({ open, onClose }: InspectorPanelProps) {
   const activeDocument = useAppStore((s) => s.activeDocument)
   const { series, standaloneWorks } = useWorkStore()
-  const charCountNoSpaces = useEditorStore((s) => s.charCountNoSpaces)
+  const editorCharCount = useEditorStore((s) => s.charCount)
+  const editorCharCountNoSpaces = useEditorStore((s) => s.charCountNoSpaces)
+  const charCountMode = useSettingsStore((s) => s.charCountMode)
 
   const activeWork = (() => {
     if (!activeDocument) return null
@@ -56,7 +59,8 @@ export function InspectorPanel({ open, onClose }: InspectorPanelProps) {
   const title = activeChapter?.title || activeWork?.title || '선택된 문서 없음'
   const genre = activeWork?.genre ? GENRE_CONFIG[activeWork.genre]?.label || activeWork.genre : '-'
   const status = activeWork?.status ? STATUS_CONFIG[activeWork.status]?.label || activeWork.status : '-'
-  const charDisplay = charCountNoSpaces > 0 ? `${charCountNoSpaces.toLocaleString()}자` : '-'
+  const displayCount = charCountMode === 'include' ? editorCharCount : editorCharCountNoSpaces
+  const charDisplay = displayCount > 0 ? `${displayCount.toLocaleString()}자` : '-'
   const updatedAt = activeWork?.updatedAt
     ? new Date(activeWork.updatedAt).toLocaleDateString('ko-KR', {
         year: 'numeric',

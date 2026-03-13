@@ -31,7 +31,7 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
   const editorRef = useRef<Editor | null>(null)
 
   const activeDocument = useAppStore((s) => s.activeDocument)
-  const { charCountNoSpaces, cursorLine, cursorCol } = useEditorStore()
+  const { charCount, charCountNoSpaces, cursorLine, cursorCol } = useEditorStore()
 
   // Find the active work/chapter info
   const { series, standaloneWorks } = useWorkStore()
@@ -247,7 +247,7 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
           style={{ background: 'hsl(var(--background))' }}
         >
           <EditorContent focusMode editorRef={editorRef} />
-          <FocusStatusBar charCount={charCountNoSpaces} />
+          <FocusStatusBar charCount={charCount} charCountNoSpaces={charCountNoSpaces} />
         </div>
       </main>
     )

@@ -49,16 +49,20 @@ export function registerChaptersHandlers(): void {
   )
 
   // Save chapter content
-  safeHandle(IPC.CHAPTERS_SAVE, async (_e, id: string, content: string) => {
+  safeHandle(IPC.CHAPTERS_SAVE, async (_e, id: string, content: string, charCount?: number, charCountNs?: number) => {
     const ts = now()
 
-    const old = db.select({ content: schema.chapters.content, workId: schema.chapters.workId })
+    const old = db.select({ content: schema.chapters.content, charCountNoSpaces: schema.chapters.charCountNoSpaces, workId: schema.chapters.workId })
       .from(schema.chapters)
       .where(eq(schema.chapters.id, id))
       .get()
 
+    // Use passed counts if available, fallback to HTML-based approximation
+    const newCharCount = charCount ?? content.replace(/<[^>]*>/g, '').length
+    const newCharCountNs = charCountNs ?? content.replace(/<[^>]*>/g, '').replace(/\s/g, '').length
+
     db.update(schema.chapters)
-      .set({ content, updatedAt: ts })
+      .set({ content, charCount: newCharCount, charCountNoSpaces: newCharCountNs, updatedAt: ts })
       .where(eq(schema.chapters.id, id))
       .run()
 
@@ -68,9 +72,8 @@ export function registerChaptersHandlers(): void {
         .where(eq(schema.works.id, old.workId))
         .run()
 
-      const newCount = charCountNoSpaces(content)
-      const oldCount = charCountNoSpaces(old.content || '')
-      const diff = newCount - oldCount
+      const oldCountNs = old.charCountNoSpaces || charCountNoSpaces(old.content || '')
+      const diff = newCharCountNs - oldCountNs
       if (diff > 0) {
         db.insert(schema.writingLog)
           .values({

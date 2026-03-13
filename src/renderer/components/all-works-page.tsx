@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { useAppStore } from "@/stores/useAppStore"
+import { useSettingsStore } from "@/stores/useSettingsStore"
 import { GENRE_CONFIG } from '../../shared/types'
 import type { Work } from '../../shared/types'
 import { ArrowLeft, Search } from 'lucide-react'
@@ -50,13 +51,14 @@ function ProgressBar({ current, target }: { current: number; target: number }) {
 }
 
 export function AllWorksPage() {
-  const [works, setWorks] = useState<(Work & { charCount: number })[]>([])
+  const [works, setWorks] = useState<(Work & { charCount: number; charCountNoSpaces: number })[]>([])
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt')
   const [filterGenre, setFilterGenre] = useState<FilterGenre>('all')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all')
   const setView = useAppStore((s) => s.setView)
   const setActiveDocument = useAppStore((s) => s.setActiveDocument)
+  const charCountMode = useSettingsStore((s) => s.charCountMode)
 
   useEffect(() => {
     let cancelled = false
@@ -201,10 +203,10 @@ export function AllWorksPage() {
                       마지막 편집: {formatRelativeTime(work.updatedAt)}
                     </p>
                     {work.goalChars ? (
-                      <ProgressBar current={work.charCount} target={work.goalChars} />
+                      <ProgressBar current={charCountMode === 'include' ? work.charCount : work.charCountNoSpaces} target={work.goalChars} />
                     ) : (
                       <p className="text-[11px] tabular-nums text-muted-foreground">
-                        {work.charCount.toLocaleString()}자
+                        {(charCountMode === 'include' ? work.charCount : work.charCountNoSpaces).toLocaleString()}자
                       </p>
                     )}
                     <Button

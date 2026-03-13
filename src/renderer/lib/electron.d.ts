@@ -31,14 +31,14 @@ interface WorksAPI {
   ): Promise<{ success: boolean }>
   delete(id: string): Promise<{ success: boolean }>
   getContent(workId: string): Promise<string>
-  saveContent(workId: string, content: string): Promise<{ success: boolean }>
+  saveContent(workId: string, content: string, charCount?: number, charCountNoSpaces?: number): Promise<{ success: boolean }>
   duplicate(id: string): Promise<{ success: boolean; id: string }>
 }
 
 interface ChaptersAPI {
   getById(id: string): Promise<Chapter | null>
   create(data: { workId: string; title: string }): Promise<{ id: string }>
-  save(id: string, content: string): Promise<{ success: boolean }>
+  save(id: string, content: string, charCount?: number, charCountNoSpaces?: number): Promise<{ success: boolean }>
   delete(id: string): Promise<{ success: boolean }>
   reorder(orderedIds: string[]): Promise<{ success: boolean }>
   update(id: string, data: { title?: string }): Promise<{ success: boolean }>
@@ -63,8 +63,8 @@ interface StatsAPI {
     totalChars: number
     weeklyData: number[]
   }>
-  recentWorks(): Promise<(Work & { charCount: number })[]>
-  allWorks(): Promise<(Work & { charCount: number })[]>
+  recentWorks(): Promise<(Work & { charCount: number; charCountNoSpaces: number })[]>
+  allWorks(): Promise<(Work & { charCount: number; charCountNoSpaces: number })[]>
   genreDistribution(): Promise<{ genre: string; count: number }[]>
 }
 

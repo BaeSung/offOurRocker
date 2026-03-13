@@ -16,7 +16,7 @@ export function registerTrashHandlers(): void {
         genre: schema.works.genre,
         deletedAt: schema.works.deletedAt,
         charCount: sql<number>`(
-          SELECT coalesce(sum(length(replace(content, ' ', ''))), 0)
+          SELECT coalesce(sum(char_count_no_spaces), 0)
           FROM chapters WHERE work_id = ${schema.works.id}
         )`,
       })

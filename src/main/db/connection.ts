@@ -152,6 +152,24 @@ function runMigrations(): void {
     sqlite.exec('ALTER TABLE works ADD COLUMN cover_image TEXT')
   }
 
+  // Add char count columns to chapters
+  const chapCols = sqlite.pragma('table_info(chapters)') as { name: string }[]
+  if (!chapCols.some((c) => c.name === 'char_count')) {
+    sqlite.exec('ALTER TABLE chapters ADD COLUMN char_count INTEGER NOT NULL DEFAULT 0')
+    sqlite.exec('ALTER TABLE chapters ADD COLUMN char_count_no_spaces INTEGER NOT NULL DEFAULT 0')
+
+    // Backfill: strip HTML tags, compute both counts
+    const rows = sqlite.prepare('SELECT id, content FROM chapters').all() as { id: string; content: string }[]
+    const update = sqlite.prepare('UPDATE chapters SET char_count = ?, char_count_no_spaces = ? WHERE id = ?')
+    const backfill = sqlite.transaction(() => {
+      for (const row of rows) {
+        const text = (row.content || '').replace(/<[^>]*>/g, '')
+        update.run(text.length, text.replace(/\s/g, '').length, row.id)
+      }
+    })
+    backfill()
+  }
+
   // Indexes on FK columns and frequently queried columns
   sqlite.exec(`
     CREATE INDEX IF NOT EXISTS idx_chapters_work_id ON chapters(work_id);

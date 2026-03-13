@@ -65,7 +65,7 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString('ko-KR')
 }
 
-export function CoverArea({ work, onCoverChange }: { work: Work & { charCount: number }; onCoverChange: (coverImage: string | null) => void }) {
+export function CoverArea({ work, onCoverChange }: { work: Work & { charCount: number; charCountNoSpaces?: number }; onCoverChange: (coverImage: string | null) => void }) {
   const { aiProvider, aiImageShareKey } = useSettingsStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const [aiMode, setAiMode] = useState(false)
@@ -260,9 +260,10 @@ export function CoverArea({ work, onCoverChange }: { work: Work & { charCount: n
 }
 
 export function RecentWorks() {
-  const [works, setWorks] = useState<(Work & { charCount: number })[]>([])
+  const [works, setWorks] = useState<(Work & { charCount: number; charCountNoSpaces: number })[]>([])
   const setActiveDocument = useAppStore((s) => s.setActiveDocument)
   const setView = useAppStore((s) => s.setView)
+  const charCountMode = useSettingsStore((s) => s.charCountMode)
 
   useEffect(() => {
     let cancelled = false
@@ -333,10 +334,10 @@ export function RecentWorks() {
                   마지막 편집: {formatRelativeTime(work.updatedAt)}
                 </p>
                 {work.goalChars ? (
-                  <ProgressBar current={work.charCount} target={work.goalChars} />
+                  <ProgressBar current={charCountMode === 'include' ? work.charCount : work.charCountNoSpaces} target={work.goalChars} />
                 ) : (
                   <p className="text-[11px] tabular-nums text-muted-foreground">
-                    {work.charCount.toLocaleString()}자
+                    {(charCountMode === 'include' ? work.charCount : work.charCountNoSpaces).toLocaleString()}자
                   </p>
                 )}
                 <Button

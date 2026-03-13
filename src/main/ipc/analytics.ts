@@ -128,7 +128,7 @@ export function registerAnalyticsHandlers(): void {
   })
 
   safeHandle(IPC.ANALYTICS_WORK_DISTRIBUTION, async () => {
-    const charsExpr = sql<number>`coalesce(sum(length(replace(${schema.chapters.content}, ' ', ''))), 0)`
+    const charsExpr = sql<number>`coalesce(sum(${schema.chapters.charCountNoSpaces}), 0)`
     const worksWithChars = db
       .select({
         id: schema.works.id,

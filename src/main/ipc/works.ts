@@ -35,7 +35,8 @@ export function registerWorksHandlers(): void {
         sortOrder: schema.chapters.sortOrder,
         createdAt: schema.chapters.createdAt,
         updatedAt: schema.chapters.updatedAt,
-        charCount: sql<number>`length(replace(${schema.chapters.content}, ' ', ''))`,
+        charCount: schema.chapters.charCount,
+        charCountNoSpaces: schema.chapters.charCountNoSpaces,
       })
       .from(schema.chapters)
       .orderBy(asc(schema.chapters.sortOrder))
@@ -47,7 +48,8 @@ export function registerWorksHandlers(): void {
         .map((w) => {
           const workChapters = allChapters.filter((c) => c.workId === w.id)
           const charCount = workChapters.reduce((sum, c) => sum + (c.charCount || 0), 0)
-          return { ...w, tags: safeParseTags(w.tags), chapters: workChapters, charCount }
+          const charCountNoSpaces = workChapters.reduce((sum, c) => sum + (c.charCountNoSpaces || 0), 0)
+          return { ...w, tags: safeParseTags(w.tags), chapters: workChapters, charCount, charCountNoSpaces }
         })
       return { ...s, works: seriesWorks }
     })
@@ -57,7 +59,8 @@ export function registerWorksHandlers(): void {
       .map((w) => {
         const workChapters = allChapters.filter((c) => c.workId === w.id)
         const charCount = workChapters.reduce((sum, c) => sum + (c.charCount || 0), 0)
-        return { ...w, tags: safeParseTags(w.tags), chapters: workChapters, charCount }
+        const charCountNoSpaces = workChapters.reduce((sum, c) => sum + (c.charCountNoSpaces || 0), 0)
+        return { ...w, tags: safeParseTags(w.tags), chapters: workChapters, charCount, charCountNoSpaces }
       })
 
     return { series: seriesResult, standaloneWorks }
@@ -237,24 +240,26 @@ export function registerWorksHandlers(): void {
   })
 
   // Save content for short story
-  safeHandle(IPC.WORKS_SAVE_CONTENT, async (_e, workId: string, content: string) => {
+  safeHandle(IPC.WORKS_SAVE_CONTENT, async (_e, workId: string, content: string, charCount?: number, charCountNs?: number) => {
     const ts = now()
 
     const old = db
-      .select({ content: schema.chapters.content })
+      .select({ content: schema.chapters.content, charCountNoSpaces: schema.chapters.charCountNoSpaces })
       .from(schema.chapters)
       .where(and(eq(schema.chapters.workId, workId), eq(schema.chapters.title, '__body__')))
       .get()
 
+    const newCharCount = charCount ?? content.replace(/<[^>]*>/g, '').length
+    const newCharCountNs = charCountNs ?? content.replace(/<[^>]*>/g, '').replace(/\s/g, '').length
+
     db.update(schema.chapters)
-      .set({ content, updatedAt: ts })
+      .set({ content, charCount: newCharCount, charCountNoSpaces: newCharCountNs, updatedAt: ts })
       .where(and(eq(schema.chapters.workId, workId), eq(schema.chapters.title, '__body__')))
       .run()
     db.update(schema.works).set({ updatedAt: ts }).where(eq(schema.works.id, workId)).run()
 
-    const newCount = charCountNoSpaces(content)
-    const oldCount = charCountNoSpaces(old?.content || '')
-    const diff = newCount - oldCount
+    const oldCountNs = old?.charCountNoSpaces || charCountNoSpaces(old?.content || '')
+    const diff = newCharCountNs - oldCountNs
     if (diff > 0) {
       db.insert(schema.writingLog)
         .values({

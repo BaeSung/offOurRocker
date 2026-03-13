@@ -1,10 +1,11 @@
-import { useState } from 'react'
 import { useEditorStore } from '@/stores/useEditorStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
 export function EditorStatusBar() {
-  const [includeSpaces, setIncludeSpaces] = useState(false)
+  const charCountMode = useSettingsStore((s) => s.charCountMode)
+  const includeSpaces = charCountMode === 'include'
   const { charCount, charCountNoSpaces, cursorLine, cursorCol, isDirty, lastSavedAt } =
     useEditorStore()
 
@@ -27,7 +28,7 @@ export function EditorStatusBar() {
       {/* Left */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => setIncludeSpaces(!includeSpaces)}
+          onClick={() => useSettingsStore.getState().setSetting('charCountMode', includeSpaces ? 'exclude' : 'include')}
           className="transition-colors duration-150 hover:text-foreground"
           aria-label={includeSpaces ? '공백 제외 글자수로 전환' : '공백 포함 글자수로 전환'}
         >
@@ -79,10 +80,12 @@ export function EditorStatusBar() {
   )
 }
 
-export function FocusStatusBar({ charCount }: { charCount: number }) {
+export function FocusStatusBar({ charCount, charCountNoSpaces }: { charCount: number; charCountNoSpaces: number }) {
+  const charCountMode = useSettingsStore((s) => s.charCountMode)
+  const displayCount = charCountMode === 'include' ? charCount : charCountNoSpaces
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[11px] text-muted-foreground/40">
-      {charCount.toLocaleString()}
+      {displayCount.toLocaleString()}
       {'자'}
     </div>
   )

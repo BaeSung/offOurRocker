@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { STATUS_CONFIG, GENRE_CONFIG } from '../../shared/types'
 import type { Work, WorkStatus, Genre } from '../../shared/types'
 import { useWorkStore } from '@/stores/useWorkStore'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { toast } from '@/hooks/use-toast'
 import {
   ContextMenu,
@@ -261,7 +262,7 @@ export function ChapterItem({
 }
 
 // Work item (can have children if it's a novel with chapters)
-type TreeWork = Work & { chapters?: { id: string; title: string; sortOrder: number }[]; charCount?: number }
+type TreeWork = Work & { chapters?: { id: string; title: string; sortOrder: number }[]; charCount?: number; charCountNoSpaces?: number }
 
 export function WorkItem({
   work,
@@ -277,6 +278,7 @@ export function WorkItem({
   const [expanded, setExpanded] = useState(true)
   const [renaming, setRenaming] = useState(false)
   const [editingProps, setEditingProps] = useState(false)
+  const charCountMode = useSettingsStore((s) => s.charCountMode)
   const createChapter = useWorkStore((s) => s.createChapter)
   const updateWork = useWorkStore((s) => s.updateWork)
 
@@ -356,7 +358,7 @@ export function WorkItem({
         <span className="w-3 shrink-0" />
         <span className="w-3.5 shrink-0" />
         <span className="text-[10px] text-muted-foreground">
-          {formatCharCount(work.charCount || 0)}
+          {formatCharCount(charCountMode === 'include' ? (work.charCount || 0) : (work.charCountNoSpaces || work.charCount || 0))}
         </span>
       </div>
       {hasChapters && (

@@ -27,15 +27,15 @@ const api = {
     }>) => ipcRenderer.invoke(IPC.WORKS_UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.WORKS_DELETE, id),
     getContent: (workId: string) => ipcRenderer.invoke(IPC.WORKS_GET_CONTENT, workId),
-    saveContent: (workId: string, content: string) =>
-      ipcRenderer.invoke(IPC.WORKS_SAVE_CONTENT, workId, content),
+    saveContent: (workId: string, content: string, charCount?: number, charCountNoSpaces?: number) =>
+      ipcRenderer.invoke(IPC.WORKS_SAVE_CONTENT, workId, content, charCount, charCountNoSpaces),
     duplicate: (id: string) => ipcRenderer.invoke(IPC.WORKS_DUPLICATE, id),
   },
   chapters: {
     getById: (id: string) => ipcRenderer.invoke(IPC.CHAPTERS_GET_BY_ID, id),
     create: (data: { workId: string; title: string }) =>
       ipcRenderer.invoke(IPC.CHAPTERS_CREATE, data),
-    save: (id: string, content: string) => ipcRenderer.invoke(IPC.CHAPTERS_SAVE, id, content),
+    save: (id: string, content: string, charCount?: number, charCountNoSpaces?: number) => ipcRenderer.invoke(IPC.CHAPTERS_SAVE, id, content, charCount, charCountNoSpaces),
     delete: (id: string) => ipcRenderer.invoke(IPC.CHAPTERS_DELETE, id),
     reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.CHAPTERS_REORDER, orderedIds),
     update: (id: string, data: { title?: string }) =>

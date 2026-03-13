@@ -21,7 +21,7 @@ export function registerStatsHandlers(): void {
       .get()
 
     const totalChars = db
-      .select({ total: sql<number>`coalesce(sum(length(replace(${schema.chapters.content}, ' ', ''))), 0)` })
+      .select({ total: sql<number>`coalesce(sum(${schema.chapters.charCountNoSpaces}), 0)` })
       .from(schema.chapters)
       .get()
 
@@ -68,7 +68,10 @@ export function registerStatsHandlers(): void {
 
     return recentWorks.map((w) => {
       const chars = db
-        .select({ total: sql<number>`coalesce(sum(length(replace(${schema.chapters.content}, ' ', ''))), 0)` })
+        .select({
+          total: sql<number>`coalesce(sum(${schema.chapters.charCount}), 0)`,
+          totalNoSpaces: sql<number>`coalesce(sum(${schema.chapters.charCountNoSpaces}), 0)`,
+        })
         .from(schema.chapters)
         .where(eq(schema.chapters.workId, w.id))
         .get()
@@ -77,6 +80,7 @@ export function registerStatsHandlers(): void {
         ...w,
         tags: (() => { try { const p = JSON.parse(w.tags); return Array.isArray(p) ? p : [] } catch { return [] } })(),
         charCount: chars?.total ?? 0,
+        charCountNoSpaces: chars?.totalNoSpaces ?? 0,
       }
     })
   })
@@ -91,7 +95,10 @@ export function registerStatsHandlers(): void {
 
     return allWorks.map((w) => {
       const chars = db
-        .select({ total: sql<number>`coalesce(sum(length(replace(${schema.chapters.content}, ' ', ''))), 0)` })
+        .select({
+          total: sql<number>`coalesce(sum(${schema.chapters.charCount}), 0)`,
+          totalNoSpaces: sql<number>`coalesce(sum(${schema.chapters.charCountNoSpaces}), 0)`,
+        })
         .from(schema.chapters)
         .where(eq(schema.chapters.workId, w.id))
         .get()
@@ -100,6 +107,7 @@ export function registerStatsHandlers(): void {
         ...w,
         tags: (() => { try { const p = JSON.parse(w.tags); return Array.isArray(p) ? p : [] } catch { return [] } })(),
         charCount: chars?.total ?? 0,
+        charCountNoSpaces: chars?.totalNoSpaces ?? 0,
       }
     })
   })
