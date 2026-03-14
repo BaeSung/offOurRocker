@@ -125,36 +125,32 @@ export function CoverArea({ work, onCoverChange }: { work: Work & { charCount: n
         keyName,
         { size: '1024x1792', quality: 'standard', style: 'vivid' }
       )
-      if (!result.success || !result.url) {
+      if (!result.success || !result.b64) {
         toast({ description: result.error || 'AI 표지 생성 실패', variant: 'destructive' })
         return
       }
-      // Fetch the image and convert to base64
-      const res = await fetch(result.url)
-      const blob = await res.blob()
-      const reader = new FileReader()
-      reader.onload = async () => {
-        const img = new window.Image()
-        img.onload = async () => {
-          const maxW = 400
-          const scale = Math.min(1, maxW / img.width)
-          const canvas = document.createElement('canvas')
-          canvas.width = img.width * scale
-          canvas.height = img.height * scale
-          canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
-          const resized = canvas.toDataURL('image/jpeg', 0.8)
-          await window.api.works.update(work.id, { coverImage: resized })
-          onCoverChange(resized)
-          setMenuOpen(false)
-          setAiMode(false)
-          setPrompt('')
-          toast({ description: 'AI 표지가 설정되었습니다.' })
-        }
-        img.src = reader.result as string
+      // Use base64 directly from main process
+      const dataUrl = `data:image/png;base64,${result.b64}`
+      const img = new window.Image()
+      img.onload = async () => {
+        const maxW = 400
+        const scale = Math.min(1, maxW / img.width)
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width * scale
+        canvas.height = img.height * scale
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+        const resized = canvas.toDataURL('image/jpeg', 0.8)
+        await window.api.works.update(work.id, { coverImage: resized })
+        onCoverChange(resized)
+        setMenuOpen(false)
+        setAiMode(false)
+        setPrompt('')
+        toast({ description: 'AI 표지가 설정되었습니다.' })
       }
-      reader.readAsDataURL(blob)
-    } catch {
-      toast({ description: 'AI 표지 생성 실패', variant: 'destructive' })
+      img.src = dataUrl
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      toast({ description: `AI 표지 생성 실패: ${msg}`, variant: 'destructive' })
     } finally {
       setGenerating(false)
     }

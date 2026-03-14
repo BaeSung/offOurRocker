@@ -121,6 +121,7 @@ export const IPC = {
   GIT_PULL: 'git:pull',
   GIT_LOG: 'git:log',
   GIT_RESTORE: 'git:restore',
+  GIT_FORCE_PULL: 'git:force-pull',
   GIT_RESOLVE_CONFLICT: 'git:resolve-conflict',
 
   // System

@@ -32,8 +32,8 @@ export function ImageInsertButton({ editor }: { editor?: Editor | null }) {
         quality: aiImageQuality,
         style: aiImageStyle,
       })
-      if (result.success && result.url) {
-        setImageUrl(result.url)
+      if (result.success && result.b64) {
+        setImageUrl(`data:image/png;base64,${result.b64}`)
       } else {
         setError(result.error || '이미지 생성에 실패했습니다.')
       }

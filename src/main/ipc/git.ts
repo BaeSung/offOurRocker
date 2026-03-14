@@ -187,6 +187,32 @@ export function registerGitHandlers(): void {
     }
   })
 
+  // Force pull: fetch + reset --hard (discard local, use remote)
+  safeHandle(IPC.GIT_FORCE_PULL, async (_e, customPath?: string) => {
+    const repoPath = getRepoPath(customPath)
+    const git = getGit(repoPath)
+
+    const isRepo = await git.checkIsRepo().catch(() => false)
+    if (!isRepo) return { success: false, error: 'Git 저장소가 초기화되지 않았습니다.' }
+
+    try {
+      walCheckpoint()
+      closeDatabase()
+
+      const branch = (await git.branchLocal()).current
+      await git.fetch('origin')
+      await git.reset(['--hard', `origin/${branch}`])
+
+      // Restart to reload DB with new data
+      app.relaunch()
+      app.exit(0)
+
+      return { success: true }
+    } catch (err) {
+      return { success: false, error: `강제 Pull 실패: ${err instanceof Error ? err.message : err}` }
+    }
+  })
+
   // Resolve conflict: 'ours' keeps local, 'theirs' uses remote
   safeHandle(IPC.GIT_RESOLVE_CONFLICT, async (_e, strategy: 'ours' | 'theirs', customPath?: string) => {
     const repoPath = getRepoPath(customPath)

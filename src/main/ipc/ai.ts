@@ -14,6 +14,7 @@ interface SpellCheckResult {
 interface ImageGenerateResult {
   success: boolean
   url?: string
+  b64?: string
   error?: string
 }
 
@@ -221,7 +222,7 @@ export function registerAiHandlers(): void {
           size: options?.size || '1024x1024',
           quality: options?.quality || 'standard',
           style: options?.style || 'natural',
-          response_format: 'url',
+          response_format: 'b64_json',
         }),
       })
 
@@ -231,9 +232,9 @@ export function registerAiHandlers(): void {
       }
 
       const data = await res.json()
-      const url = data?.data?.[0]?.url
-      if (!url) throw new Error('Unexpected DALL-E response format')
-      return { success: true, url }
+      const b64 = data?.data?.[0]?.b64_json
+      if (!b64) throw new Error('Unexpected DALL-E response format')
+      return { success: true, b64 }
     }
   )
 }

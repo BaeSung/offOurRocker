@@ -483,6 +483,7 @@ function GitSaveSection({
   const [restoring, setRestoring] = useState<string | null>(null)
   const [showConflict, setShowConflict] = useState(false)
   const [resolving, setResolving] = useState(false)
+  const [forcePulling, setForcePulling] = useState(false)
 
   useEffect(() => {
     window.api.git.check().then((r: { installed: boolean }) => setGitInstalled(r.installed)).catch(() => setGitInstalled(false))
@@ -639,6 +640,23 @@ function GitSaveSection({
       toast({ description: '복원에 실패했습니다.', variant: 'destructive' })
     } finally {
       setRestoring(null)
+    }
+  }
+
+  const handleForcePull = async () => {
+    if (!confirm('원격 버전으로 강제 동기화합니다.\n로컬 변경사항이 모두 덮어씌워지며, 앱이 재시작됩니다.\n계속하시겠습니까?')) return
+    setForcePulling(true)
+    try {
+      const result = await window.api.git.forcePull(gitRepoPath || undefined)
+      if (result.success) {
+        // App will restart automatically
+        return
+      }
+      toast({ description: result.error || '강제 Pull에 실패했습니다.', variant: 'destructive' })
+    } catch {
+      toast({ description: '강제 Pull에 실패했습니다.', variant: 'destructive' })
+    } finally {
+      setForcePulling(false)
     }
   }
 
@@ -822,6 +840,23 @@ function GitSaveSection({
                     <span className="flex items-center gap-1.5">
                       <CloudDownload className="h-3 w-3" />
                       Pull
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={handleForcePull}
+                  disabled={forcePulling || !gitRemoteUrl}
+                  className="h-8 rounded-md border border-amber-500/40 px-4 text-xs text-amber-400 transition-colors hover:bg-amber-500/10 disabled:opacity-50"
+                >
+                  {forcePulling ? (
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      강제 Pull 중...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <CloudDownload className="h-3 w-3" />
+                      강제 Pull
                     </span>
                   )}
                 </button>
