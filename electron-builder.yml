@@ -1,0 +1,42 @@
+appId: com.offourrocker.app
+productName: Off Our Rocker
+copyright: Copyright © 2026 BaeSung
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**/*
+  - "!node_modules/**/*"
+  - node_modules/better-sqlite3/**/*
+  - node_modules/bindings/**/*
+  - node_modules/file-uri-to-path/**/*
+  - node_modules/drizzle-orm/**/*
+  - node_modules/simple-git/**/*
+  - node_modules/@kwsites/**/*
+  - node_modules/debug/**/*
+  - node_modules/ms/**/*
+asarUnpack:
+  - node_modules/better-sqlite3/**/*
+win:
+  target:
+    - target: appx
+      arch: [x64]
+    - target: nsis
+      arch: [x64]
+  icon: resources/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  artifactName: "${productName}-Setup-${version}.${ext}"
+appx:
+  identityName: "offMyRocker.offOurRocker-koreanwritingapp"
+  publisher: "CN=04523EE6-BC05-437D-ABA9-ECB4BFEFFF90"
+  publisherDisplayName: "offMyRocker"
+  applicationId: "OffOurRocker"
+  displayName: "Off Our Rocker"
+  languages:
+    - ko-KR
+publish:
+  provider: github
+  owner: BaeSung
+  repo: offOurRocker

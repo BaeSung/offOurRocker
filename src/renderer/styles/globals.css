@@ -1,0 +1,315 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer base {
+  :root {
+    --background: 240 20% 6%;
+    --foreground: 35 30% 88%;
+    --card: 240 16% 9%;
+    --card-foreground: 35 30% 88%;
+    --popover: 240 16% 11%;
+    --popover-foreground: 35 30% 88%;
+    --primary: 30 40% 64%;
+    --primary-foreground: 240 20% 6%;
+    --secondary: 240 10% 14%;
+    --secondary-foreground: 35 20% 75%;
+    --muted: 240 10% 14%;
+    --muted-foreground: 30 8% 50%;
+    --accent: 30 40% 64%;
+    --accent-foreground: 240 20% 6%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 10% 16%;
+    --input: 240 10% 16%;
+    --ring: 30 40% 64%;
+    --chart-1: 30 40% 64%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: 240 16% 9%;
+    --sidebar-foreground: 35 30% 88%;
+    --sidebar-primary: 30 40% 64%;
+    --sidebar-primary-foreground: 240 20% 6%;
+    --sidebar-accent: 240 10% 14%;
+    --sidebar-accent-foreground: 35 30% 88%;
+    --sidebar-border: 240 10% 16%;
+    --sidebar-ring: 30 40% 64%;
+    --editor-surface: 240 16% 10%;
+  }
+}
+
+@layer base {
+  .light {
+    --background: 40 20% 96%;
+    --foreground: 240 10% 15%;
+    --card: 40 15% 93%;
+    --card-foreground: 240 10% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 15%;
+    --primary: 30 40% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 10% 88%;
+    --secondary-foreground: 240 10% 25%;
+    --muted: 40 10% 88%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 30 40% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 40 10% 82%;
+    --input: 40 10% 82%;
+    --ring: 30 40% 50%;
+    --chart-1: 30 40% 50%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 40%;
+    --chart-4: 43 74% 50%;
+    --chart-5: 27 87% 55%;
+    --sidebar-background: 40 15% 93%;
+    --sidebar-foreground: 240 10% 15%;
+    --sidebar-primary: 30 40% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 10% 88%;
+    --sidebar-accent-foreground: 240 10% 15%;
+    --sidebar-border: 40 10% 82%;
+    --sidebar-ring: 30 40% 50%;
+    --editor-surface: 40 15% 95%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes progressGrow {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--tw-progress, 100%);
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── React Flow (Mind Map) overrides ── */
+/* Override @xyflow/react CSS variables to match app theme (dark/light).
+   Use .react-flow.mind-map-flow for higher specificity than defaults. */
+.react-flow.mind-map-flow {
+  --xy-background-color: hsl(var(--background));
+  --xy-edge-stroke: hsl(var(--muted-foreground));
+  --xy-edge-stroke-selected: hsl(var(--primary));
+  --xy-connectionline-stroke: hsl(var(--primary));
+  --xy-minimap-background-color: hsl(var(--card));
+  --xy-minimap-mask-background-color: hsl(var(--background) / 0.7);
+  --xy-minimap-node-background-color: hsl(var(--muted));
+  --xy-minimap-node-stroke-color: hsl(var(--border));
+  --xy-background-pattern-dots-color: hsl(var(--border));
+  --xy-background-pattern-lines-color: hsl(var(--border));
+  --xy-node-color: hsl(var(--foreground));
+  --xy-node-border: 1px solid hsl(var(--border));
+  --xy-node-background-color: hsl(var(--card));
+  --xy-node-boxshadow-hover: 0 1px 4px 1px hsl(var(--primary) / 0.12);
+  --xy-node-boxshadow-selected: 0 0 0 0.5px hsl(var(--primary));
+  --xy-handle-background-color: hsl(var(--primary));
+  --xy-handle-border-color: hsl(var(--card));
+  --xy-selection-background-color: hsl(var(--primary) / 0.08);
+  --xy-selection-border: 1px solid hsl(var(--primary) / 0.3);
+  --xy-edge-label-background-color: hsl(var(--card));
+  --xy-edge-label-color: hsl(var(--foreground));
+  --xy-attribution-background-color: transparent;
+}
+
+.react-flow.mind-map-flow .react-flow__edge-path {
+  stroke: hsl(var(--muted-foreground));
+  stroke-width: 1.5;
+}
+.react-flow.mind-map-flow .react-flow__edge.selected .react-flow__edge-path {
+  stroke: hsl(var(--primary));
+  stroke-width: 2;
+}
+
+.react-flow.mind-map-flow .react-flow__handle {
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--card));
+  width: 10px;
+  height: 10px;
+}
+
+.react-flow.mind-map-flow .react-flow__minimap {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+}
+
+.react-flow.mind-map-flow .react-flow__minimap-mask {
+  fill: hsl(var(--background) / 0.7);
+}
+
+.react-flow.mind-map-flow .react-flow__controls {
+  display: none; /* Using custom toolbar instead */
+}
+
+.react-flow.mind-map-flow .react-flow__attribution {
+  display: none;
+}
+
+/* ── Print styles ── */
+@media print {
+  @page {
+    margin: 20mm 25mm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Reset ALL layout constraints for print flow */
+  * {
+    box-shadow: none !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Hide UI elements */
+  .print-hide {
+    display: none !important;
+  }
+
+  aside[role="complementary"] {
+    display: none !important;
+  }
+
+  /* Break flex/grid layout → block flow for pagination */
+  html, body, #root, #root > div,
+  #root > div > div,
+  #root > div > div > div,
+  main, main > div {
+    display: block !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    position: static !important;
+    flex: unset !important;
+  }
+
+  /* The editor wrapper */
+  .tiptap-editor {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Editor content */
+  .tiptap-editor .ProseMirror {
+    font-family: 'Noto Serif KR', serif !important;
+    font-size: 11pt !important;
+    line-height: 1.8 !important;
+    color: black !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  .tiptap-editor .ProseMirror p {
+    text-indent: 0 !important;
+    margin-bottom: 0.2em !important;
+  }
+
+  .tiptap-editor .ProseMirror h1,
+  .tiptap-editor .ProseMirror h2,
+  .tiptap-editor .ProseMirror h3 {
+    text-indent: 0 !important;
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  .tiptap-editor .ProseMirror blockquote {
+    text-indent: 0 !important;
+    border-left: 2px solid #999 !important;
+    color: #333 !important;
+  }
+
+  .tiptap-editor .ProseMirror hr {
+    border-top: 1px solid #ccc !important;
+  }
+
+  /* Hide placeholder */
+  .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+    display: none !important;
+  }
+
+  /* Images */
+  .tiptap-editor .ProseMirror img {
+    max-width: 80% !important;
+    page-break-inside: avoid;
+  }
+}
