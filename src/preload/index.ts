@@ -106,6 +106,11 @@ const api = {
       ipcRenderer.invoke(IPC.AI_TEST_CONNECTION, provider, keyName),
     spellCheck: (text: string, provider: 'openai' | 'anthropic', model: string, keyName: string) =>
       ipcRenderer.invoke(IPC.AI_SPELL_CHECK, text, provider, model, keyName),
+    onSpellCheckProgress: (callback: (progress: { current: number; total: number }) => void) => {
+      const handler = (_e: Electron.IpcRendererEvent, progress: { current: number; total: number }) => callback(progress)
+      ipcRenderer.on(IPC.AI_SPELL_CHECK_PROGRESS, handler)
+      return () => { ipcRenderer.removeListener(IPC.AI_SPELL_CHECK_PROGRESS, handler) }
+    },
     generateImage: (prompt: string, keyName: string, options?: { size?: string; quality?: string; style?: string }) =>
       ipcRenderer.invoke(IPC.AI_GENERATE_IMAGE, prompt, keyName, options),
   },

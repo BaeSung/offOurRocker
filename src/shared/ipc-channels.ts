@@ -71,6 +71,7 @@ export const IPC = {
   AI_DELETE_KEY: 'ai:deleteKey',
   AI_TEST_CONNECTION: 'ai:testConnection',
   AI_SPELL_CHECK: 'ai:spellCheck',
+  AI_SPELL_CHECK_PROGRESS: 'ai:spellCheckProgress',
   AI_GENERATE_IMAGE: 'ai:generateImage',
 
   // Characters

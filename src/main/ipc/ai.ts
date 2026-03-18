@@ -1,3 +1,4 @@
+import { BrowserWindow } from 'electron'
 import { IPC } from '../../shared/ipc-channels'
 import { storeApiKey, getApiKey, deleteApiKey } from '../utils/crypto'
 import { safeHandle } from './utils'
@@ -165,14 +166,24 @@ export function registerAiHandlers(): void {
       const apiKey = getApiKey(keyName)
       if (!apiKey) return { success: false, error: 'API key not found' }
 
-      const systemPrompt = `당신은 한국어 맞춤법·문법 교정 전문가입니다. 국립국어원 표준어 규정과 한글 맞춤법 통일안을 기준으로 검사하세요.
+      const systemPrompt = `당신은 한국어 맞춤법·문법 교정 전문가입니다. 국립국어원 표준어 규정과 한글 맞춤법 통일안을 기준으로 꼼꼼하게 검사하세요.
+
+## 반드시 검사할 항목
+1. **띄어쓰기**: 조사 붙여쓰기, 의존명사 띄어쓰기, 합성어 띄어쓰기 등
+2. **맞춤법**: 된/됀, 돼/되, 데/대, 로서/로써, 이/히 부사 구분, 사이시옷, 겹받침
+3. **조사 오용**: 은/는, 이/가, 을/를, 에/에서, 로/으로
+4. **어미 활용**: 불규칙 활용 오류 (ㅂ/ㅎ/ㄷ/ㅅ/르 불규칙 등)
+5. **피동/사동 이중 표현**: "잡혀지다", "보여지다" 등
+6. **높임법 불일치**
+7. **자주 틀리는 표현**: 왠지/웬지, 안돼/안되, 됬/됐, 몇일/며칠, 어떻해/어떡해, 오랫만/오랜만, 금새/금세, 일일히/일일이, 깨끗히/깨끗이 등
+8. **중복·군더더기 표현**: "역전앞", "처음 첫", "약 ~정도" 등
 
 ## 규칙
-1. **확실한 오류만** 지적하세요. 애매하거나 문체 선택에 해당하는 것은 건너뛰세요.
-2. 소설·창작 문체(의도적 구어체, 방언, 의성어·의태어, 캐릭터 말투)는 오류로 지적하지 마세요.
-3. 교정 대상: 맞춤법 오류, 띄어쓰기 오류, 조사 오용, 피동/사동 접사 오류, 높임법 불일치.
-4. original에는 오류가 포함된 최소 단위(어절 1~3개)만 포함하세요.
-5. 반드시 아래 JSON 배열 형식으로만 응답하세요. 오류가 없으면 빈 배열 []을 반환하세요.
+- 소설·창작 문체(의도적 구어체, 방언, 의성어·의태어, 캐릭터 대사)는 오류로 지적하지 마세요.
+- 하지만 서술부(지문)의 오류는 반드시 지적하세요.
+- original에는 오류가 포함된 최소 단위(어절 1~3개)만 포함하세요.
+- 반드시 아래 JSON 배열 형식으로만 응답하세요. 오류가 없으면 빈 배열 []을 반환하세요.
+- **사소한 오류도 놓치지 마세요.** 누락하는 것보다 지적하는 것이 낫습니다.
 
 ## 출력 형식
 [{"original":"틀린 부분","corrected":"교정된 부분","explanation":"간결한 교정 이유"}]
@@ -181,20 +192,64 @@ export function registerAiHandlers(): void {
 입력: "그는 빛이 바랬다고 말했다."
 출력: [{"original":"바랬다고","corrected":"바랐다고","explanation":"'바라다'의 과거형은 '바랐다'입니다 (ㅎ 불규칙 아님)"}]
 
+입력: "한참동안 아무말 없이 걸었다."
+출력: [{"original":"한참동안","corrected":"한참 동안","explanation":"의존명사 '동안'은 띄어 씁니다"},{"original":"아무말","corrected":"아무 말","explanation":"관형사 '아무'와 명사 '말'은 띄어 씁니다"}]
+
 입력: "나는 학교에 갔다."
 출력: []`
 
-      const result = await callLLM(provider, apiKey, model, systemPrompt, text)
-
-      let jsonStr = result.trim()
-      jsonStr = jsonStr.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
-      const arrMatch = jsonStr.match(/\[[\s\S]*\]/)
-      if (!arrMatch) {
-        return { success: true, corrections: [] }
+      // Split text into chunks of ~2000 chars at sentence boundaries
+      const CHUNK_SIZE = 2000
+      const chunks: string[] = []
+      let remaining = text
+      while (remaining.length > 0) {
+        if (remaining.length <= CHUNK_SIZE) {
+          chunks.push(remaining)
+          break
+        }
+        // Find the last sentence-ending punctuation within the chunk size
+        let splitIdx = -1
+        for (let i = CHUNK_SIZE; i >= CHUNK_SIZE * 0.6; i--) {
+          if ('.!?。\n'.includes(remaining[i])) {
+            splitIdx = i + 1
+            break
+          }
+        }
+        if (splitIdx === -1) {
+          // Fallback: split at last space
+          splitIdx = remaining.lastIndexOf(' ', CHUNK_SIZE)
+          if (splitIdx === -1) splitIdx = CHUNK_SIZE
+        }
+        chunks.push(remaining.slice(0, splitIdx))
+        remaining = remaining.slice(splitIdx).trimStart()
       }
 
-      const corrections: SpellCorrection[] = JSON.parse(arrMatch[0])
-      return { success: true, corrections }
+      const allCorrections: SpellCorrection[] = []
+      const win = BrowserWindow.getFocusedWindow()
+
+      for (let i = 0; i < chunks.length; i++) {
+        // Send progress to renderer
+        win?.webContents.send(IPC.AI_SPELL_CHECK_PROGRESS, {
+          current: i + 1,
+          total: chunks.length,
+        })
+
+        const result = await callLLM(provider, apiKey, model, systemPrompt, chunks[i])
+
+        let jsonStr = result.trim()
+        jsonStr = jsonStr.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
+        const arrMatch = jsonStr.match(/\[[\s\S]*\]/)
+        if (arrMatch) {
+          try {
+            const parsed: SpellCorrection[] = JSON.parse(arrMatch[0])
+            allCorrections.push(...parsed)
+          } catch {
+            // skip malformed chunk result
+          }
+        }
+      }
+
+      return { success: true, corrections: allCorrections }
     }
   )
 

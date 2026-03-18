@@ -11,6 +11,7 @@ interface SpellCheckPanelProps {
   error?: string
   onApply: (original: string, corrected: string) => void
   onApplyAll: () => void
+  progress?: { current: number; total: number } | null
 }
 
 export function SpellCheckPanel({
@@ -21,6 +22,7 @@ export function SpellCheckPanel({
   error,
   onApply,
   onApplyAll,
+  progress,
 }: SpellCheckPanelProps) {
   const [applied, setApplied] = useState<Set<number>>(new Set())
 
@@ -49,9 +51,23 @@ export function SpellCheckPanel({
       {/* Content */}
       <div className="max-h-[300px] overflow-y-auto scrollbar-thin">
         {loading && (
-          <div className="flex items-center justify-center gap-2 py-8">
+          <div className="flex flex-col items-center gap-3 py-8">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            <span className="text-xs text-muted-foreground">검사 중...</span>
+            {progress && progress.total > 1 ? (
+              <>
+                <div className="w-48 overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className="h-1.5 rounded-full bg-primary transition-all duration-300"
+                    style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  검사 중... ({progress.current}/{progress.total})
+                </span>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground">검사 중...</span>
+            )}
           </div>
         )}
 

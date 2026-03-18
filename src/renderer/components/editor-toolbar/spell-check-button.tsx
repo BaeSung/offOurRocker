@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { CheckCheck } from 'lucide-react'
 import type { Editor } from '@tiptap/react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
@@ -10,34 +10,41 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
   const [loading, setLoading] = useState(false)
   const [corrections, setCorrections] = useState<{ original: string; corrected: string; explanation: string }[]>([])
   const [error, setError] = useState('')
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null)
 
   const { aiProvider, aiModel } = useSettingsStore()
 
-  const handleSpellCheck = useCallback(async () => {
-    if (!editor) return
+  // Listen for progress events
+  useEffect(() => {
+    const cleanup = window.api.ai.onSpellCheckProgress((p) => {
+      setProgress(p)
+    })
+    return cleanup
+  }, [])
+
+  const runSpellCheck = useCallback(async (text: string) => {
     if (aiProvider === 'none') {
       setError('AI 설정에서 제공자를 선택하고 API 키를 등록하세요.')
       setPanelOpen(true)
       return
     }
 
-    const text = editor.getText()
     if (!text || text.trim().length < 5) {
       setError('검사할 텍스트가 충분하지 않습니다.')
       setPanelOpen(true)
       return
     }
 
-    const trimmed = text.length > 3000 ? text.slice(0, 3000) : text
     const model = aiModel || (aiProvider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-5-20250929')
 
     setPanelOpen(true)
     setLoading(true)
     setError('')
     setCorrections([])
+    setProgress(null)
 
     try {
-      const result = await window.api.ai.spellCheck(trimmed, aiProvider, model, aiProvider)
+      const result = await window.api.ai.spellCheck(text, aiProvider, model, aiProvider)
       if (result.success && result.corrections) {
         setCorrections(result.corrections)
       } else {
@@ -47,8 +54,19 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
       setError(err instanceof Error ? err.message : '맞춤법 검사에 실패했습니다.')
     } finally {
       setLoading(false)
+      setProgress(null)
     }
-  }, [editor, aiProvider, aiModel])
+  }, [aiProvider, aiModel])
+
+  const handleSpellCheck = useCallback(async () => {
+    if (!editor) return
+    // Use selection if exists, otherwise full text
+    const { from, to } = editor.state.selection
+    const text = from !== to
+      ? editor.state.doc.textBetween(from, to, '\n')
+      : editor.getText()
+    await runSpellCheck(text)
+  }, [editor, runSpellCheck])
 
   const handleApply = (original: string, corrected: string) => {
     if (!editor) return
@@ -104,6 +122,7 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
         error={error}
         onApply={handleApply}
         onApplyAll={handleApplyAll}
+        progress={progress}
       />
     </div>
   )

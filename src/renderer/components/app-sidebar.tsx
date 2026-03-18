@@ -160,7 +160,9 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
         </div>
 
         {/* Tree View */}
-        <TreeView collapsed={collapsed} onItemSelect={onEditorOpen} />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <TreeView collapsed={collapsed} onItemSelect={onEditorOpen} />
+        </div>
 
         {/* Bottom actions */}
         <div className="mt-auto border-t border-border">
