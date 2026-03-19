@@ -365,7 +365,7 @@ export function WorkItem({
         <div
           className={cn(
             'overflow-hidden transition-all duration-200 ease-in-out',
-            expanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+            expanded ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
           )}
         >
           <div className="ml-4 border-l border-border/50 pl-2" role="group">

@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import { useWorkStore } from '@/stores/useWorkStore'
 import { useAppStore } from '@/stores/useAppStore'
 import { WorkItem } from '@/components/tree-item'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import type { Work } from '../../shared/types'
 
 type WorkWithChapters = Work & { chapters?: { id: string; title: string; sortOrder: number }[]; charCount?: number }
@@ -38,7 +37,7 @@ function SeriesFolder({
       <div
         className={cn(
           'overflow-hidden transition-all duration-200 ease-in-out',
-          expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+          expanded ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
         )}
       >
         <div className="ml-3 border-l border-border/50 pl-1" role="group">
@@ -88,7 +87,7 @@ function StandaloneSection({
       <div
         className={cn(
           'overflow-hidden transition-all duration-200 ease-in-out',
-          expanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+          expanded ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
         )}
       >
         <div className="ml-3 border-l border-border/50 pl-1" role="group">
@@ -127,7 +126,7 @@ export function TreeView({ collapsed, onItemSelect }: { collapsed: boolean; onIt
   if (collapsed) return null
 
   return (
-    <ScrollArea className="flex-1">
+    <div>
       <div className="px-2 py-1" role="tree" aria-label="작품 목록">
         <p className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
           작품 목록
@@ -154,6 +153,6 @@ export function TreeView({ collapsed, onItemSelect }: { collapsed: boolean; onIt
           </p>
         )}
       </div>
-    </ScrollArea>
+    </div>
   )
 }

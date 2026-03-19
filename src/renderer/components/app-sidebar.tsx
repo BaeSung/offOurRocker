@@ -105,7 +105,7 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
   return (
       <aside
         className={cn(
-          "flex h-full flex-col border-r border-border bg-card transition-[width] duration-300 ease-in-out",
+          "flex h-screen flex-col overflow-hidden border-r border-border bg-card transition-[width] duration-300 ease-in-out",
           collapsed ? "w-[60px]" : "w-[340px]"
         )}
         role="complementary"
@@ -155,17 +155,17 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
         )}
 
         {/* Search */}
-        <div className={cn("px-3 py-2", collapsed && "flex justify-center")}>
+        <div className={cn("shrink-0 px-3 py-2", collapsed && "flex justify-center")}>
           <SearchBar collapsed={collapsed} />
         </div>
 
         {/* Tree View */}
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin">
           <TreeView collapsed={collapsed} onItemSelect={onEditorOpen} />
         </div>
 
         {/* Bottom actions */}
-        <div className="mt-auto border-t border-border">
+        <div className="shrink-0 border-t border-border">
           <div
             className={cn(
               "flex flex-col gap-1 p-2",
