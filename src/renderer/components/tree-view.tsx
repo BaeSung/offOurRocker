@@ -82,7 +82,7 @@ function StandaloneSection({
           )}
         />
         <PenLine className="h-3.5 w-3.5 shrink-0 text-primary" />
-        <span className="truncate">독립 단편</span>
+        <span className="truncate">독립 작품</span>
       </button>
       <div
         className={cn(

@@ -2,7 +2,7 @@ import { eq, sql, and, gte, lte, asc, desc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
-import { safeHandle } from './utils'
+import { safeHandle, localDateStr } from './utils'
 
 export function registerStatsHandlers(): void {
   const db = getDb()
@@ -21,14 +21,14 @@ export function registerStatsHandlers(): void {
       .get()
 
     const totalChars = db
-      .select({ total: sql<number>`coalesce(sum(${schema.chapters.charCountNoSpaces}), 0)` })
+      .select({ total: sql<number>`coalesce(sum(${schema.chapters.charCount}), 0)` })
       .from(schema.chapters)
       .get()
 
     const today = new Date()
     const weekAgo = new Date(today)
     weekAgo.setDate(weekAgo.getDate() - 6)
-    const weekAgoStr = weekAgo.toISOString().slice(0, 10)
+    const weekAgoStr = localDateStr(weekAgo)
 
     const weeklyLogs = db
       .select({
@@ -44,7 +44,7 @@ export function registerStatsHandlers(): void {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today)
       d.setDate(d.getDate() - i)
-      const dateStr = d.toISOString().slice(0, 10)
+      const dateStr = localDateStr(d)
       const log = weeklyLogs.find((l) => l.date === dateStr)
       weeklyData.push(log?.total ?? 0)
     }

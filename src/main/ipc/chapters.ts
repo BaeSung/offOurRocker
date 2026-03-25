@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
-import { now, charCountNoSpaces, getNextSortOrder, reorderByIds, safeHandle, walCheckpoint, getSettingValue } from './utils'
+import { now, localDateStr, charCountNoSpaces, getNextSortOrder, reorderByIds, safeHandle, walCheckpoint, getSettingValue } from './utils'
 import { gitAutoCommit } from './git'
 
 export function registerChaptersHandlers(): void {
@@ -52,7 +52,7 @@ export function registerChaptersHandlers(): void {
   safeHandle(IPC.CHAPTERS_SAVE, async (_e, id: string, content: string, charCount?: number, charCountNs?: number) => {
     const ts = now()
 
-    const old = db.select({ content: schema.chapters.content, charCountNoSpaces: schema.chapters.charCountNoSpaces, workId: schema.chapters.workId })
+    const old = db.select({ content: schema.chapters.content, charCount: schema.chapters.charCount, charCountNoSpaces: schema.chapters.charCountNoSpaces, workId: schema.chapters.workId })
       .from(schema.chapters)
       .where(eq(schema.chapters.id, id))
       .get()
@@ -72,13 +72,13 @@ export function registerChaptersHandlers(): void {
         .where(eq(schema.works.id, old.workId))
         .run()
 
-      const oldCountNs = old.charCountNoSpaces || charCountNoSpaces(old.content || '')
-      const diff = newCharCountNs - oldCountNs
+      const oldCount = old.charCount || (old.content || '').replace(/<[^>]*>/g, '').length
+      const diff = newCharCount - oldCount
       if (diff > 0) {
         db.insert(schema.writingLog)
           .values({
             id: uuid(),
-            date: ts.slice(0, 10),
+            date: localDateStr(),
             workId: old.workId,
             charCount: diff,
           })

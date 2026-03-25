@@ -2,16 +2,16 @@ import { sql, eq, and, gte, lte, desc } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
-import { safeHandle } from './utils'
+import { safeHandle, localDateStr } from './utils'
 
 export function registerAnalyticsHandlers(): void {
   const db = getDb()
 
   safeHandle(IPC.ANALYTICS_WEEKLY_TREND, async () => {
     const today = new Date()
-    const fourWeeksAgo = new Date(today)
-    fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 27)
-    const startStr = fourWeeksAgo.toISOString().slice(0, 10)
+    const weekAgo = new Date(today)
+    weekAgo.setDate(weekAgo.getDate() - 6)
+    const startStr = localDateStr(weekAgo)
 
     const logs = db
       .select({
@@ -23,28 +23,17 @@ export function registerAnalyticsHandlers(): void {
       .groupBy(schema.writingLog.date)
       .all()
 
-    const weeks: { week: string; chars: number }[] = []
-    for (let w = 3; w >= 0; w--) {
-      const weekStart = new Date(today)
-      weekStart.setDate(weekStart.getDate() - w * 7 - 6)
-      const weekEnd = new Date(today)
-      weekEnd.setDate(weekEnd.getDate() - w * 7)
-
-      const startD = weekStart.toISOString().slice(0, 10)
-      const endD = weekEnd.toISOString().slice(0, 10)
-
-      let total = 0
-      for (const log of logs) {
-        if (log.date >= startD && log.date <= endD) {
-          total += log.total
-        }
-      }
-
-      const label = `${weekStart.getMonth() + 1}/${weekStart.getDate()}`
-      weeks.push({ week: label, chars: total })
+    const logMap = new Map(logs.map((l) => [l.date, l.total]))
+    const days: { week: string; chars: number }[] = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today)
+      d.setDate(d.getDate() - i)
+      const dateStr = localDateStr(d)
+      const label = `${d.getMonth() + 1}/${d.getDate()}`
+      days.push({ week: label, chars: logMap.get(dateStr) ?? 0 })
     }
 
-    return weeks
+    return days
   })
 
   safeHandle(IPC.ANALYTICS_MONTHLY_TREND, async () => {
@@ -53,9 +42,9 @@ export function registerAnalyticsHandlers(): void {
 
     for (let m = 5; m >= 0; m--) {
       const d = new Date(today.getFullYear(), today.getMonth() - m, 1)
-      const startDate = d.toISOString().slice(0, 10)
+      const startDate = localDateStr(d)
       const nextMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1)
-      const endDate = nextMonth.toISOString().slice(0, 10)
+      const endDate = localDateStr(nextMonth)
 
       const result = db
         .select({
@@ -85,8 +74,8 @@ export function registerAnalyticsHandlers(): void {
       return { current: 0, longest: 0 }
     }
 
-    const todayStr = new Date().toISOString().slice(0, 10)
-    const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+    const todayStr = localDateStr()
+    const yesterdayStr = localDateStr(new Date(Date.now() - 86400000))
 
     let current = 0
     const dateSet = new Set(allDates)
@@ -102,7 +91,7 @@ export function registerAnalyticsHandlers(): void {
     }
 
     if (checkDate.getTime() > 0) {
-      while (dateSet.has(checkDate.toISOString().slice(0, 10))) {
+      while (dateSet.has(localDateStr(checkDate))) {
         current++
         checkDate.setDate(checkDate.getDate() - 1)
       }
@@ -128,7 +117,7 @@ export function registerAnalyticsHandlers(): void {
   })
 
   safeHandle(IPC.ANALYTICS_WORK_DISTRIBUTION, async () => {
-    const charsExpr = sql<number>`coalesce(sum(${schema.chapters.charCountNoSpaces}), 0)`
+    const charsExpr = sql<number>`coalesce(sum(${schema.chapters.charCount}), 0)`
     const worksWithChars = db
       .select({
         id: schema.works.id,

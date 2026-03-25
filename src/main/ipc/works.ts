@@ -3,7 +3,7 @@ import { eq, and, asc, sql } from 'drizzle-orm'
 import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
-import { now, charCountNoSpaces, getNextSortOrder, safeHandle, walCheckpoint, getSettingValue } from './utils'
+import { now, localDateStr, charCountNoSpaces, getNextSortOrder, safeHandle, walCheckpoint, getSettingValue } from './utils'
 import { gitAutoCommit } from './git'
 
 function safeParseTags(raw: string): string[] {
@@ -244,7 +244,7 @@ export function registerWorksHandlers(): void {
     const ts = now()
 
     const old = db
-      .select({ content: schema.chapters.content, charCountNoSpaces: schema.chapters.charCountNoSpaces })
+      .select({ content: schema.chapters.content, charCount: schema.chapters.charCount, charCountNoSpaces: schema.chapters.charCountNoSpaces })
       .from(schema.chapters)
       .where(and(eq(schema.chapters.workId, workId), eq(schema.chapters.title, '__body__')))
       .get()
@@ -258,13 +258,13 @@ export function registerWorksHandlers(): void {
       .run()
     db.update(schema.works).set({ updatedAt: ts }).where(eq(schema.works.id, workId)).run()
 
-    const oldCountNs = old?.charCountNoSpaces || charCountNoSpaces(old?.content || '')
-    const diff = newCharCountNs - oldCountNs
+    const oldCount = old?.charCount || (old?.content || '').replace(/<[^>]*>/g, '').length
+    const diff = newCharCount - oldCount
     if (diff > 0) {
       db.insert(schema.writingLog)
         .values({
           id: uuid(),
-          date: ts.slice(0, 10),
+          date: localDateStr(),
           workId,
           charCount: diff,
         })

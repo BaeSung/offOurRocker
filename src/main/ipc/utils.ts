@@ -3,9 +3,21 @@ import { sql, eq } from 'drizzle-orm'
 import type { SQLiteTable, SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import { getDb, getSqlite } from '../db/connection'
 
-/** Current ISO timestamp */
+/** Current ISO timestamp (local timezone) */
 export function now(): string {
-  return new Date().toISOString()
+  return toLocalISO(new Date())
+}
+
+/** Convert a Date to local-timezone ISO string (YYYY-MM-DDTHH:mm:ss.sss) */
+function toLocalISO(d: Date): string {
+  const pad = (n: number, len = 2) => String(n).padStart(len, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`
+}
+
+/** Get today's date as YYYY-MM-DD in local timezone */
+export function localDateStr(d: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 /** Count characters excluding whitespace */

@@ -10,16 +10,22 @@ import {
 } from 'recharts'
 
 export function WorkDistribution() {
-  const [data, setData] = useState<{ title: string; chars: number }[]>([])
+  const [rawData, setRawData] = useState<{ title: string; chars: number }[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     window.api.analytics
       .workDistribution()
-      .then(setData)
+      .then(setRawData)
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  const data = rawData.map((d) => ({
+    ...d,
+    fullTitle: d.title,
+    shortTitle: d.title.length > 8 ? d.title.slice(0, 8) + '…' : d.title,
+  }))
 
   return (
     <section
@@ -37,7 +43,7 @@ export function WorkDistribution() {
             작품을 추가하면 집필량 분포가 표시됩니다.
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={Math.max(200, data.length * 36)}>
             <BarChart
               data={data}
               layout="vertical"
@@ -59,14 +65,16 @@ export function WorkDistribution() {
               />
               <YAxis
                 type="category"
-                dataKey="title"
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                dataKey="shortTitle"
+                tick={(props: any) => (
+                  <text x={4} y={props.y} dy={4} textAnchor="start" fontSize={11} fill="hsl(var(--muted-foreground))">
+                    {props.payload.value}
+                  </text>
+                )}
                 axisLine={false}
                 tickLine={false}
-                width={80}
-                tickFormatter={(v: string) =>
-                  v.length > 6 ? v.slice(0, 6) + '…' : v
-                }
+                width={90}
+                interval={0}
               />
               <Tooltip
                 contentStyle={{
@@ -75,9 +83,9 @@ export function WorkDistribution() {
                   borderRadius: 8,
                   fontSize: 12,
                 }}
-                formatter={(value: number) => [
+                formatter={(value: number, _name: string, props: any) => [
                   `${value.toLocaleString()}자`,
-                  '글자 수',
+                  props.payload?.fullTitle ?? '글자 수',
                 ]}
               />
               <Bar
