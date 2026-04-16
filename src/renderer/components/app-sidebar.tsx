@@ -101,6 +101,8 @@ function SidebarButton({
   )
 }
 
+const isMac = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform)
+
 export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive, onDashboardOpen, dashboardActive, onTrashOpen, trashActive, onPlotTimelineOpen, plotTimelineActive, onMindMapOpen, mindMapActive, onEditorOpen, onNewWork, onNewSeries }: AppSidebarProps) {
   return (
       <aside
@@ -115,6 +117,8 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
         <div
           className={cn(
             "flex h-9 shrink-0 items-center border-b border-border px-3",
+            isMac && !collapsed && "pl-[78px]",
+            isMac && collapsed && "mt-7",
             collapsed ? "justify-center" : "justify-between"
           )}
         >

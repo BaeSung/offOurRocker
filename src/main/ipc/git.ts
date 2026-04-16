@@ -187,6 +187,34 @@ export function registerGitHandlers(): void {
     }
   })
 
+  // Force push: overwrite remote with local (uses --force-with-lease for safety)
+  safeHandle(IPC.GIT_FORCE_PUSH, async (_e, customPath?: string) => {
+    const repoPath = getRepoPath(customPath)
+    const git = getGit(repoPath)
+
+    const isRepo = await git.checkIsRepo().catch(() => false)
+    if (!isRepo) return { success: false, error: 'Git 저장소가 초기화되지 않았습니다.' }
+
+    try {
+      const branch = (await git.branchLocal()).current
+      // Fetch first so --force-with-lease has a fresh ref to compare against
+      await git.fetch('origin').catch(() => {})
+      try {
+        await git.push(['-u', 'origin', branch, '--force-with-lease'])
+      } catch (leaseErr) {
+        // If lease fails (no upstream yet, etc.), fall back to plain --force
+        const msg = leaseErr instanceof Error ? leaseErr.message : String(leaseErr)
+        if (msg.includes('stale info') || msg.includes('rejected')) {
+          throw leaseErr
+        }
+        await git.push(['-u', 'origin', branch, '--force'])
+      }
+      return { success: true }
+    } catch (err) {
+      return { success: false, error: `강제 Push 실패: ${err instanceof Error ? err.message : err}` }
+    }
+  })
+
   // Force pull: fetch + reset --hard (discard local, use remote)
   safeHandle(IPC.GIT_FORCE_PULL, async (_e, customPath?: string) => {
     const repoPath = getRepoPath(customPath)

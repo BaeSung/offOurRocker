@@ -6,17 +6,14 @@ directories:
   buildResources: resources
 files:
   - out/**/*
-  - "!node_modules/**/*"
-  - node_modules/better-sqlite3/**/*
-  - node_modules/bindings/**/*
-  - node_modules/file-uri-to-path/**/*
-  - node_modules/drizzle-orm/**/*
-  - node_modules/simple-git/**/*
-  - node_modules/@kwsites/**/*
-  - node_modules/debug/**/*
-  - node_modules/ms/**/*
+  - package.json
+  - node_modules/**/*
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,readme.md,*.markdown,.npmignore,.eslintrc*}"
+  - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples,docs,doc}"
+  - "!**/node_modules/*.d.ts"
+  - "!**/node_modules/.bin"
 asarUnpack:
-  - node_modules/better-sqlite3/**/*
+  - "**/node_modules/better-sqlite3/**/*"
 win:
   target:
     - target: appx
@@ -28,6 +25,19 @@ nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   artifactName: "${productName}-Setup-${version}.${ext}"
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  icon: resources/icon.png
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  identity: null
+dmg:
+  artifactName: "${productName}-${version}-${arch}.${ext}"
 appx:
   identityName: "offMyRocker.offOurRocker-koreanwritingapp"
   publisher: "CN=04523EE6-BC05-437D-ABA9-ECB4BFEFFF90"

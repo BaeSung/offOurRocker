@@ -176,6 +176,7 @@ const api = {
     push: (path?: string) => ipcRenderer.invoke(IPC.GIT_PUSH, path),
     pull: (path?: string) => ipcRenderer.invoke(IPC.GIT_PULL, path),
     forcePull: (path?: string) => ipcRenderer.invoke(IPC.GIT_FORCE_PULL, path),
+    forcePush: (path?: string) => ipcRenderer.invoke(IPC.GIT_FORCE_PUSH, path),
     log: (maxCount?: number, path?: string) => ipcRenderer.invoke(IPC.GIT_LOG, maxCount, path),
     restore: (commitHash: string, path?: string) => ipcRenderer.invoke(IPC.GIT_RESTORE, commitHash, path),
     resolveConflict: (strategy: 'ours' | 'theirs', path?: string) => ipcRenderer.invoke(IPC.GIT_RESOLVE_CONFLICT, strategy, path),

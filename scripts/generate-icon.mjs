@@ -114,10 +114,13 @@ async function main() {
     pngBuffers.push({ width: size, buf })
   }
 
-  // Save 256x256 PNG
-  const png256 = pngBuffers.find(p => p.width === 256)
-  writeFileSync(join(outDir, 'icon.png'), png256.buf)
-  console.log('Created resources/icon.png (256x256)')
+  // Save 1024x1024 PNG (used by electron-builder to derive .icns for macOS)
+  const png1024 = await sharp(svgBuffer, { density: 300 })
+    .resize(1024, 1024)
+    .png()
+    .toBuffer()
+  writeFileSync(join(outDir, 'icon.png'), png1024)
+  console.log('Created resources/icon.png (1024x1024)')
 
   // Build and save ICO
   const ico = buildIco(pngBuffers)

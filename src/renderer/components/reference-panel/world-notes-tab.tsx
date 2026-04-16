@@ -24,6 +24,7 @@ export function WorldNotesTab({ workId }: { workId: string }) {
   const [loading, setLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const [formTitle, setFormTitle] = useState('')
   const [formCategory, setFormCategory] = useState<WorldNoteCategory>('기타')
@@ -139,8 +140,9 @@ export function WorldNotesTab({ workId }: { workId: string }) {
           notes.map((note) => (
             <div
               key={note.id}
+              onClick={() => setExpandedId(expandedId === note.id ? null : note.id)}
               className={cn(
-                'group flex flex-col gap-1 border-b border-border/50 px-3 py-2.5 transition-colors',
+                'group flex cursor-pointer flex-col gap-1 border-b border-border/50 px-3 py-2.5 transition-colors',
                 editingId === note.id ? 'bg-secondary' : 'hover:bg-secondary/50'
               )}
             >
@@ -151,14 +153,14 @@ export function WorldNotesTab({ workId }: { workId: string }) {
                 </div>
                 <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
-                    onClick={() => startEdit(note)}
+                    onClick={(e) => { e.stopPropagation(); startEdit(note) }}
                     className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-primary/10 hover:text-primary"
                     title="편집"
                   >
                     <Pencil className="h-2.5 w-2.5" />
                   </button>
                   <button
-                    onClick={() => handleDelete(note.id)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(note.id) }}
                     className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                     title="삭제"
                   >
@@ -167,7 +169,12 @@ export function WorldNotesTab({ workId }: { workId: string }) {
                 </div>
               </div>
               {note.content && (
-                <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                <p
+                  className={cn(
+                    'text-[11px] leading-relaxed text-muted-foreground',
+                    expandedId === note.id ? 'whitespace-pre-wrap break-words' : 'line-clamp-2'
+                  )}
+                >
                   {note.content}
                 </p>
               )}
@@ -176,7 +183,7 @@ export function WorldNotesTab({ workId }: { workId: string }) {
       </div>
 
       {isFormOpen && (
-        <div className="shrink-0 border-t border-border bg-card p-4">
+        <div className="max-h-[60%] shrink-0 overflow-y-auto border-t border-border bg-card p-4 scrollbar-thin">
           <div className="flex flex-col gap-3.5">
             <div>
               <label className="mb-1.5 block text-[11px] font-medium text-muted-foreground">제목</label>

@@ -212,6 +212,8 @@ interface GitAPI {
   setRemote(url: string, path?: string): Promise<{ success: boolean; error?: string }>
   push(path?: string): Promise<{ success: boolean; error?: string }>
   pull(path?: string): Promise<{ success: boolean; conflict?: boolean; summary?: unknown; error?: string }>
+  forcePull(path?: string): Promise<{ success: boolean; error?: string }>
+  forcePush(path?: string): Promise<{ success: boolean; error?: string }>
   log(maxCount?: number, path?: string): Promise<{ commits: GitCommitEntry[] }>
   restore(commitHash: string, path?: string): Promise<{ success: boolean; needsReload?: boolean; error?: string }>
   resolveConflict(strategy: 'ours' | 'theirs', path?: string): Promise<{ success: boolean; needsReload?: boolean; error?: string }>

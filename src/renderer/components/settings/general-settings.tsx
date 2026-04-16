@@ -484,6 +484,7 @@ function GitSaveSection({
   const [showConflict, setShowConflict] = useState(false)
   const [resolving, setResolving] = useState(false)
   const [forcePulling, setForcePulling] = useState(false)
+  const [forcePushing, setForcePushing] = useState(false)
 
   useEffect(() => {
     window.api.git.check().then((r: { installed: boolean }) => setGitInstalled(r.installed)).catch(() => setGitInstalled(false))
@@ -657,6 +658,23 @@ function GitSaveSection({
       toast({ description: '강제 Pull에 실패했습니다.', variant: 'destructive' })
     } finally {
       setForcePulling(false)
+    }
+  }
+
+  const handleForcePush = async () => {
+    if (!confirm('로컬 버전으로 원격을 강제 덮어씁니다.\n원격 저장소의 변경사항이 모두 사라질 수 있습니다.\n계속하시겠습니까?')) return
+    setForcePushing(true)
+    try {
+      const result = await window.api.git.forcePush(gitRepoPath || undefined)
+      if (result.success) {
+        toast({ description: '강제 Push 완료!' })
+      } else {
+        toast({ description: result.error || '강제 Push에 실패했습니다.', variant: 'destructive' })
+      }
+    } catch {
+      toast({ description: '강제 Push에 실패했습니다.', variant: 'destructive' })
+    } finally {
+      setForcePushing(false)
     }
   }
 
@@ -857,6 +875,23 @@ function GitSaveSection({
                     <span className="flex items-center gap-1.5">
                       <CloudDownload className="h-3 w-3" />
                       강제 Pull
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={handleForcePush}
+                  disabled={forcePushing || !gitRemoteUrl}
+                  className="h-8 rounded-md border border-amber-500/40 px-4 text-xs text-amber-400 transition-colors hover:bg-amber-500/10 disabled:opacity-50"
+                >
+                  {forcePushing ? (
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      강제 Push 중...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <CloudUpload className="h-3 w-3" />
+                      강제 Push
                     </span>
                   )}
                 </button>
