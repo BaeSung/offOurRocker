@@ -147,10 +147,10 @@ export function WritingCalendar() {
         </div>
 
         {/* Legend */}
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1">
           {LEGEND.map((l) => (
             <div key={l.label} className="flex items-center gap-1.5">
-              <div className={`h-3 w-3 rounded-sm ${l.cls} border border-border/30`} />
+              <div className={`h-3 w-3 shrink-0 rounded-sm ${l.cls} border border-border/30`} />
               <span className="text-[10px] text-muted-foreground">{l.label}</span>
             </div>
           ))}

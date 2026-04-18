@@ -58,7 +58,7 @@ export function DashboardPage() {
         </div>
 
         {/* Genre chart + Writing calendar (side by side) */}
-        <div className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5 [&>*]:min-w-0">
           <GenreChart />
           <WritingCalendar />
         </div>
@@ -73,7 +73,7 @@ export function DashboardPage() {
           <WritingTrends />
         </div>
 
-        <div className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-5 [&>*]:min-w-0">
           <StreakTracker />
           <WorkDistribution />
         </div>

@@ -295,8 +295,8 @@ export function EditorToolbar({
   referencePanelOpen,
 }: EditorToolbarProps) {
   return (
-    <div className="flex h-11 shrink-0 items-center border-b border-border/50 px-4 print-hide">
-      <div className="flex items-center gap-1.5 overflow-hidden">
+    <div className="flex h-11 shrink-0 items-center overflow-x-auto scrollbar-none border-b border-border/50 px-4 print-hide">
+      <div className="flex shrink-0 items-center gap-1.5">
         <InlineEdit
           value={workTitle}
           onChange={onWorkTitleChange}
@@ -315,7 +315,7 @@ export function EditorToolbar({
         <StatusBadge status={status} onStatusChange={onStatusChange} />
       </div>
 
-      <div className="mx-auto flex items-center gap-0.5">
+      <div className="mx-auto flex shrink-0 items-center gap-0.5">
         <ToolbarButton
           icon={Bold}
           label="굵게"
@@ -361,7 +361,7 @@ export function EditorToolbar({
         <ImageInsertButton editor={editor} />
       </div>
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex shrink-0 items-center gap-0.5">
         <ReferenceHighlightToggle />
         <SpellCheckButton editor={editor} />
         <ToolbarButton

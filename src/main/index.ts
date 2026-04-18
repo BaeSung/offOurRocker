@@ -14,10 +14,10 @@ if (process.platform === 'linux') {
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    width: 1360,
+    height: 880,
+    minWidth: 960,
+    minHeight: 640,
     show: false,
     frame: true,
     icon: join(__dirname, '../../resources/icon.png'),

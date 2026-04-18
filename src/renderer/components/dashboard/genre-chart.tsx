@@ -132,20 +132,20 @@ export function GenreChart() {
       }}
     >
       <h2 className="mb-4 font-sans text-lg font-semibold text-foreground">장르별 분포</h2>
-      <div className="flex items-center gap-8 rounded-xl border border-border bg-card p-6">
+      <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-card p-6 sm:flex-row sm:gap-8">
         <DonutChart genres={genres} total={total} animated={animated} />
-        <div className="flex flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-3 self-stretch">
           {genres.map((g) => (
             <div key={g.genre} className="flex items-center gap-3">
               <span
-                className="h-3 w-3 rounded-full"
+                className="h-3 w-3 shrink-0 rounded-full"
                 style={{ background: g.hsl }}
               />
-              <span className="w-14 text-sm text-foreground">{g.label}</span>
-              <span className="text-sm tabular-nums text-muted-foreground">
+              <span className="min-w-0 flex-1 truncate text-sm text-foreground">{g.label}</span>
+              <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
                 {g.count}편
               </span>
-              <span className="text-xs tabular-nums text-muted-foreground/60">
+              <span className="shrink-0 text-xs tabular-nums text-muted-foreground/60">
                 {g.percent}%
               </span>
             </div>
