@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import type { Series, Work, Chapter } from '../../shared/types'
+import type { Series, Work, Chapter, Genre, WorkStatus } from '../../shared/types'
 
 type WorkWithChapters = Work & { chapters: Omit<Chapter, 'content'>[] }
-type SeriesWithWorks = Series & { works: WorkWithChapters[] }
+type SeriesWithWorks = Omit<Series, 'works'> & { works: WorkWithChapters[] }
 
 interface WorkState {
   series: SeriesWithWorks[]
@@ -13,14 +13,14 @@ interface WorkState {
   createWork: (data: {
     title: string
     type: 'novel' | 'short'
-    genre: string
+    genre: Genre
     seriesId?: string
     goalChars?: number
     deadline?: string
     tags?: string[]
     firstChapterTitle?: string
   }) => Promise<string>
-  updateWork: (id: string, data: Partial<{ title: string; genre: string; status: string; seriesId: string | null; goalChars: number | null; deadline: string | null; tags: string[] }>) => Promise<void>
+  updateWork: (id: string, data: Partial<{ title: string; genre: Genre; status: WorkStatus; seriesId: string | null; goalChars: number | null; deadline: string | null; tags: string[] }>) => Promise<void>
   deleteWork: (id: string) => Promise<void>
   duplicateWork: (id: string) => Promise<string | null>
 

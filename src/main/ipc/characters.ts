@@ -4,6 +4,7 @@ import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
 import { now, getNextSortOrder, reorderByIds, safeHandle } from './utils'
+import type { CharacterRole } from '../../shared/types'
 
 export function registerCharactersHandlers(): void {
   const db = getDb()
@@ -58,7 +59,7 @@ export function registerCharactersHandlers(): void {
     async (
       _e,
       id: string,
-      data: Partial<{ name: string; role: string; description: string }>
+      data: Partial<{ name: string; role: CharacterRole; description: string }>
     ) => {
       db.update(schema.characters)
         .set({ ...data, updatedAt: now() })

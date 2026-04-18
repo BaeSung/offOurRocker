@@ -65,26 +65,16 @@ export async function generateEpub(options: EpubOptions): Promise<Buffer> {
     content: htmlToXhtml(ch.content || '<p></p>'),
   }))
 
-  // Prepare cover image buffer if available
-  let cover: Buffer | undefined
-  if (options.coverImage) {
-    const match = options.coverImage.match(/^data:image\/[^;]+;base64,(.+)$/)
-    if (match) {
-      cover = Buffer.from(match[1], 'base64')
-    }
-  }
-
   const epubOptions: Parameters<typeof epub>[0] = {
     title: options.title,
     author: '',
-    content: epubChapters,
     css: EPUB_CSS,
     lang: 'ko',
     description: `장르: ${options.genre}`,
     date: options.createdAt,
-    ...(cover ? { cover } : {}),
+    ...(options.coverImage ? { cover: options.coverImage } : {}),
   }
 
-  const buffer = await epub(epubOptions)
+  const buffer = await epub(epubOptions, epubChapters)
   return Buffer.from(buffer)
 }

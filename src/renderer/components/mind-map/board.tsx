@@ -34,19 +34,21 @@ const edgeTypes = { labeled: LabeledEdge }
 
 const MAX_HISTORY = 50
 
+type MindMapEdge = Edge<LabeledEdgeData>
+
 interface Snapshot {
-  nodes: Node[]
-  edges: Edge[]
+  nodes: MindMapNode[]
+  edges: MindMapEdge[]
 }
 
-function stripNodeCallbacks(nodes: Node[]): Node[] {
+function stripNodeCallbacks(nodes: MindMapNode[]): MindMapNode[] {
   return nodes.map((n) => ({
     ...n,
     data: { ...n.data, onDelete: undefined, onLabelChange: undefined },
   }))
 }
 
-function stripEdgeCallbacks(edges: Edge[]): Edge[] {
+function stripEdgeCallbacks(edges: MindMapEdge[]): MindMapEdge[] {
   return edges.map((e) => ({
     ...e,
     data: e.data ? { ...e.data, onLabelChange: undefined, onDelete: undefined } : e.data,
@@ -63,9 +65,9 @@ function BoardInner({ workId }: BoardProps) {
     }
     return theme === 'light' ? 'light' : 'dark'
   }, [theme])
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
-  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
+  const [nodes, setNodes, onNodesChange] = useNodesState<MindMapNode>([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState<MindMapEdge>([])
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance<MindMapNode, MindMapEdge> | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isLoadedRef = useRef(false)
@@ -119,7 +121,7 @@ function BoardInner({ workId }: BoardProps) {
   }, [nodes, edges, setNodes, setEdges])
 
   // --- Copy / Paste ---
-  const clipboardRef = useRef<Node[]>([])
+  const clipboardRef = useRef<MindMapNode[]>([])
 
   const copySelected = useCallback(() => {
     const selected = nodes.filter((n) => n.selected)
@@ -131,7 +133,7 @@ function BoardInner({ workId }: BoardProps) {
   const pasteNodes = useCallback(() => {
     if (clipboardRef.current.length === 0) return
     const offset = 40
-    const newNodes: Node[] = clipboardRef.current.map((n) => ({
+    const newNodes: MindMapNode[] = clipboardRef.current.map((n) => ({
       ...n,
       id: crypto.randomUUID(),
       position: { x: n.position.x + offset, y: n.position.y + offset },
@@ -213,7 +215,7 @@ function BoardInner({ workId }: BoardProps) {
   }, [setEdges])
 
   // Inject callbacks into node data
-  const nodesWithCallbacks = useMemo(() => {
+  const nodesWithCallbacks = useMemo<MindMapNode[]>(() => {
     return nodes.map((node) => ({
       ...node,
       data: {
@@ -225,7 +227,7 @@ function BoardInner({ workId }: BoardProps) {
   }, [nodes, handleDeleteNode, handleLabelChange])
 
   // Inject callbacks into edge data
-  const edgesWithCallbacks = useMemo(() => {
+  const edgesWithCallbacks = useMemo<MindMapEdge[]>(() => {
     return edges.map((edge) => ({
       ...edge,
       data: {
@@ -237,7 +239,7 @@ function BoardInner({ workId }: BoardProps) {
   }, [edges, handleEdgeLabelChange, handleDeleteEdge])
 
   // Clean up connected edges when nodes deleted via keyboard
-  const onNodesDelete = useCallback((deleted: Node[]) => {
+  const onNodesDelete = useCallback((deleted: MindMapNode[]) => {
     const deletedIds = new Set(deleted.map((n) => n.id))
     setEdges((eds) => eds.filter((e) => !deletedIds.has(e.source) && !deletedIds.has(e.target)))
   }, [setEdges])
@@ -253,8 +255,8 @@ function BoardInner({ workId }: BoardProps) {
 
     window.api.mindMap.get(workId).then((data) => {
       if (cancelled || workIdRef.current !== workId) return
-      const loadedNodes = (data.nodes || []) as Node[]
-      const loadedEdges = (data.edges || []) as Edge[]
+      const loadedNodes = (data.nodes || []) as MindMapNode[]
+      const loadedEdges = (data.edges || []) as MindMapEdge[]
 
       setNodes(loadedNodes)
       setEdges(loadedEdges)
@@ -283,8 +285,8 @@ function BoardInner({ workId }: BoardProps) {
     if (!isLoadedRef.current || !rfInstance) return
 
     const flow = rfInstance.toObject()
-    const cleanNodes = stripNodeCallbacks(flow.nodes)
-    const cleanEdges = stripEdgeCallbacks(flow.edges)
+    const cleanNodes = stripNodeCallbacks(flow.nodes as MindMapNode[])
+    const cleanEdges = stripEdgeCallbacks(flow.edges as MindMapEdge[])
 
     const payload = JSON.stringify({
       nodes: cleanNodes,
@@ -334,14 +336,14 @@ function BoardInner({ workId }: BoardProps) {
       y: window.innerHeight / 2,
     })
 
-    const newNode: Node = {
+    const newNode: MindMapNode = {
       id: crypto.randomUUID(),
       type: 'custom',
       position: { x: center.x - 80, y: center.y - 30 },
       data: {
         label: '새 노드',
-        nodeType: 'free',
-      } satisfies Omit<MindMapNodeData, 'onDelete' | 'onLabelChange'>,
+        nodeType: 'free' as const,
+      },
     }
 
     setNodes((nds) => [...nds, newNode])
@@ -357,7 +359,7 @@ function BoardInner({ workId }: BoardProps) {
         y: window.innerHeight / 2,
       })
 
-      const newNodes: Node[] = imported.map((item, i) => {
+      const newNodes: MindMapNode[] = imported.map((item, i) => {
         const cols = Math.ceil(Math.sqrt(imported.length))
         const col = i % cols
         const row = Math.floor(i / cols)
@@ -411,8 +413,8 @@ function BoardInner({ workId }: BoardProps) {
   const handleExportJson = useCallback(async () => {
     if (!rfInstance) return
     const flow = rfInstance.toObject()
-    const cleanNodes = stripNodeCallbacks(flow.nodes)
-    const cleanEdges = stripEdgeCallbacks(flow.edges)
+    const cleanNodes = stripNodeCallbacks(flow.nodes as MindMapNode[])
+    const cleanEdges = stripEdgeCallbacks(flow.edges as MindMapEdge[])
     const json = JSON.stringify({ nodes: cleanNodes, edges: cleanEdges, viewport: flow.viewport }, null, 2)
     try {
       const result = await window.api.mindMap.exportJson(json)
@@ -428,8 +430,8 @@ function BoardInner({ workId }: BoardProps) {
     try {
       const result = await window.api.mindMap.importJson()
       if (result.success && result.data) {
-        setNodes(result.data.nodes as Node[])
-        setEdges(result.data.edges as Edge[])
+        setNodes(result.data.nodes as MindMapNode[])
+        setEdges(result.data.edges as MindMapEdge[])
         toast({ description: 'JSON 파일을 불러왔습니다.' })
       } else if (result.error && result.error !== 'Cancelled') {
         toast({ description: '올바른 마인드맵 JSON 형식이 아닙니다.', variant: 'destructive' })
@@ -472,7 +474,7 @@ function BoardInner({ workId }: BoardProps) {
         ? 'fixed inset-0 z-50 bg-background'
         : 'relative h-full w-full'
     }>
-      <ReactFlow
+      <ReactFlow<MindMapNode, MindMapEdge>
         nodes={nodesWithCallbacks}
         edges={edgesWithCallbacks}
         onNodesChange={onNodesChange}

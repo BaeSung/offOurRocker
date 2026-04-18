@@ -5,6 +5,7 @@ import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
 import { now, localDateStr, charCountNoSpaces, getNextSortOrder, safeHandle, walCheckpoint, getSettingValue } from './utils'
 import { gitAutoCommit } from './git'
+import type { Genre, WorkStatus } from '../../shared/types'
 
 function safeParseTags(raw: string): string[] {
   try {
@@ -87,7 +88,7 @@ export function registerWorksHandlers(): void {
       data: {
         title: string
         type: 'novel' | 'short'
-        genre: string
+        genre: Genre
         seriesId?: string
         goalChars?: number
         deadline?: string
@@ -151,15 +152,15 @@ export function registerWorksHandlers(): void {
   // Update work metadata
   safeHandle(
     IPC.WORKS_UPDATE,
-    async (_e, id: string, data: Partial<{ title: string; genre: string; status: string; seriesId: string | null; goalChars: number; deadline: string; tags: string[]; coverImage: string | null }>) => {
+    async (_e, id: string, data: Partial<{ title: string; genre: Genre; status: WorkStatus; seriesId: string | null; goalChars: number | null; deadline: string | null; tags: string[]; coverImage: string | null }>) => {
       const updateData: {
         updatedAt: string
         title?: string
-        genre?: string
-        status?: string
+        genre?: Genre
+        status?: WorkStatus
         seriesId?: string | null
-        goalChars?: number
-        deadline?: string
+        goalChars?: number | null
+        deadline?: string | null
         tags?: string
         coverImage?: string | null
       } = { updatedAt: now() }

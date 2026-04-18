@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC } from '../shared/ipc-channels'
+import type { Genre, WorkStatus, CharacterRole, WorldNoteCategory } from '../shared/types'
 
 const api = {
   works: {
@@ -8,7 +9,7 @@ const api = {
     create: (data: {
       title: string
       type: 'novel' | 'short'
-      genre: string
+      genre: Genre
       seriesId?: string
       goalChars?: number
       deadline?: string
@@ -17,11 +18,11 @@ const api = {
     }) => ipcRenderer.invoke(IPC.WORKS_CREATE, data),
     update: (id: string, data: Partial<{
       title: string
-      genre: string
-      status: string
+      genre: Genre
+      status: WorkStatus
       seriesId: string | null
-      goalChars: number
-      deadline: string
+      goalChars: number | null
+      deadline: string | null
       tags: string[]
       coverImage: string | null
     }>) => ipcRenderer.invoke(IPC.WORKS_UPDATE, id, data),
@@ -129,10 +130,10 @@ const api = {
     create: (data: {
       workId: string
       name: string
-      role: string
+      role: CharacterRole
       description?: string
     }) => ipcRenderer.invoke(IPC.CHARACTERS_CREATE, data),
-    update: (id: string, data: Partial<{ name: string; role: string; description: string }>) =>
+    update: (id: string, data: Partial<{ name: string; role: CharacterRole; description: string }>) =>
       ipcRenderer.invoke(IPC.CHARACTERS_UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.CHARACTERS_DELETE, id),
     reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.CHARACTERS_REORDER, orderedIds),
@@ -141,11 +142,11 @@ const api = {
     getByWork: (workId: string) => ipcRenderer.invoke(IPC.WORLD_NOTES_GET_BY_WORK, workId),
     create: (data: {
       workId: string
-      category: string
+      category: WorldNoteCategory
       title: string
       content?: string
     }) => ipcRenderer.invoke(IPC.WORLD_NOTES_CREATE, data),
-    update: (id: string, data: Partial<{ category: string; title: string; content: string }>) =>
+    update: (id: string, data: Partial<{ category: WorldNoteCategory; title: string; content: string }>) =>
       ipcRenderer.invoke(IPC.WORLD_NOTES_UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.WORLD_NOTES_DELETE, id),
     reorder: (orderedIds: string[]) => ipcRenderer.invoke(IPC.WORLD_NOTES_REORDER, orderedIds),
@@ -211,5 +212,5 @@ if (process.contextIsolated) {
     // contextBridge failed
   }
 } else {
-  ;(window as Record<string, unknown>).api = api
+  ;(window as unknown as Record<string, unknown>).api = api
 }

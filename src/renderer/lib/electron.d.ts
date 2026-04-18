@@ -1,4 +1,4 @@
-import type { Work, Chapter, Series, AppSettings, WritingLog, Goal, Character, CharacterRole, WorldNote, WorldNoteCategory, PlotEvent } from '../../shared/types'
+import type { Work, Chapter, Series, AppSettings, WritingLog, Goal, Character, CharacterRole, WorldNote, WorldNoteCategory, PlotEvent, Genre, WorkStatus } from '../../shared/types'
 
 interface WorksAPI {
   getAll(): Promise<{
@@ -9,7 +9,7 @@ interface WorksAPI {
   create(data: {
     title: string
     type: 'novel' | 'short'
-    genre: string
+    genre: Genre
     seriesId?: string
     goalChars?: number
     deadline?: string
@@ -20,11 +20,11 @@ interface WorksAPI {
     id: string,
     data: Partial<{
       title: string
-      genre: string
-      status: string
+      genre: Genre
+      status: WorkStatus
       seriesId: string | null
-      goalChars: number
-      deadline: string
+      goalChars: number | null
+      deadline: string | null
       tags: string[]
       coverImage: string | null
     }>
@@ -187,6 +187,11 @@ interface TrashAPI {
 export type { SpellCorrection } from '../../shared/types'
 import type { SpellCorrection } from '../../shared/types'
 
+export interface SpellCheckProgress {
+  current: number
+  total: number
+}
+
 interface AIAPI {
   storeKey(keyName: string, plainKey: string): Promise<{ success: boolean; error?: string }>
   getKey(keyName: string): Promise<{ exists: boolean; masked: string; error?: string }>
@@ -201,11 +206,12 @@ interface AIAPI {
     model: string,
     keyName: string
   ): Promise<{ success: boolean; corrections?: SpellCorrection[]; error?: string }>
+  onSpellCheckProgress(callback: (progress: SpellCheckProgress) => void): () => void
   generateImage(
     prompt: string,
     keyName: string,
     options?: { size?: string; quality?: string; style?: string }
-  ): Promise<{ success: boolean; url?: string; error?: string }>
+  ): Promise<{ success: boolean; url?: string; b64?: string; error?: string }>
 }
 
 interface AnalyticsAPI {
@@ -269,6 +275,7 @@ interface DatabaseAPI {
 interface SystemAPI {
   selectDirectory(): Promise<string | null>
   getAppVersion(): Promise<string>
+  getDefaultPaths(): Promise<{ backup: string; save: string; export: string }>
   print(): Promise<{ success: boolean; error?: string }>
   openExternal(url: string): Promise<{ success: boolean; error?: string }>
 }
@@ -283,7 +290,7 @@ interface CharactersAPI {
   }): Promise<{ id: string }>
   update(
     id: string,
-    data: Partial<{ name: string; role: string; description: string }>
+    data: Partial<{ name: string; role: CharacterRole; description: string }>
   ): Promise<{ success: boolean }>
   delete(id: string): Promise<{ success: boolean }>
   reorder(orderedIds: string[]): Promise<{ success: boolean }>
@@ -299,7 +306,7 @@ interface WorldNotesAPI {
   }): Promise<{ id: string }>
   update(
     id: string,
-    data: Partial<{ category: string; title: string; content: string }>
+    data: Partial<{ category: WorldNoteCategory; title: string; content: string }>
   ): Promise<{ success: boolean }>
   delete(id: string): Promise<{ success: boolean }>
   reorder(orderedIds: string[]): Promise<{ success: boolean }>

@@ -18,7 +18,7 @@ export function registerSettingsHandlers(): void {
     const result: Record<string, unknown> = { ...DEFAULT_SETTINGS }
     for (const [key, value] of Object.entries(stored)) {
       if (key in DEFAULT_SETTINGS) {
-        const defaultVal = (DEFAULT_SETTINGS as Record<string, unknown>)[key]
+        const defaultVal = (DEFAULT_SETTINGS as unknown as Record<string, unknown>)[key]
         if (typeof defaultVal === 'number') {
           result[key] = Number(value)
         } else if (typeof defaultVal === 'boolean') {

@@ -29,6 +29,7 @@ export interface Work {
   updatedAt: string
   chapters?: Chapter[]
   charCount?: number // computed from chapters or content
+  charCountNoSpaces?: number
 }
 
 export interface Chapter {
@@ -40,6 +41,7 @@ export interface Chapter {
   createdAt: string
   updatedAt: string
   charCount?: number // computed from content
+  charCountNoSpaces?: number
 }
 
 export interface WritingLog {

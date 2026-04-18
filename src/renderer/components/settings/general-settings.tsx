@@ -13,6 +13,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useSettingsStore } from "@/stores/useSettingsStore"
+import type { AppSettings } from "../../../shared/types"
+
+type SetSetting = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => Promise<void>
 
 const ACCENT_COLORS = [
   { id: "amber", label: "앰버", color: "hsl(30 40% 64%)" },
@@ -466,7 +469,7 @@ function GitSaveSection({
   gitRepoPath: string
   gitRemoteUrl: string
   gitAutoPush: boolean
-  setSetting: (key: string, value: unknown) => void
+  setSetting: SetSetting
   defaultSavePath: string
 }) {
   const [gitInstalled, setGitInstalled] = useState<boolean | null>(null)

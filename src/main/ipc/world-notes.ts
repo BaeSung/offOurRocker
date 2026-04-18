@@ -4,6 +4,7 @@ import { IPC } from '../../shared/ipc-channels'
 import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
 import { now, getNextSortOrder, reorderByIds, safeHandle } from './utils'
+import type { WorldNoteCategory } from '../../shared/types'
 
 export function registerWorldNotesHandlers(): void {
   const db = getDb()
@@ -58,7 +59,7 @@ export function registerWorldNotesHandlers(): void {
     async (
       _e,
       id: string,
-      data: Partial<{ category: string; title: string; content: string }>
+      data: Partial<{ category: WorldNoteCategory; title: string; content: string }>
     ) => {
       db.update(schema.worldNotes)
         .set({ ...data, updatedAt: now() })
