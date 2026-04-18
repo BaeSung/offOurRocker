@@ -1,13 +1,15 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { CheckCheck } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { TipTapEditor } from '@/components/editor/tiptap-editor'
+import type { HighlightTerm } from '@/components/editor/reference-highlight'
 import { SpellCheckPanel } from '@/components/spell-check-panel'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useAppStore } from '@/stores/useAppStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { cn } from '@/lib/utils'
 import type { Editor } from '@tiptap/react'
+import type { Character, WorldNote } from '../../shared/types'
 
 interface EditorContentProps {
   focusMode: boolean
@@ -135,6 +137,65 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
   const lineHeight = useSettingsStore((s) => s.lineHeight)
   const editorWidth = useSettingsStore((s) => s.editorWidth)
   const indent = useSettingsStore((s) => s.indent)
+  const referenceHighlight = useSettingsStore((s) => s.referenceHighlight)
+
+  // Load world notes + characters for the active work to feed the highlight plugin
+  const [characters, setCharacters] = useState<Character[]>([])
+  const [worldNotes, setWorldNotes] = useState<WorldNote[]>([])
+
+  useEffect(() => {
+    const workId = activeDocument?.workId
+    if (!workId || !referenceHighlight) {
+      setCharacters([])
+      setWorldNotes([])
+      return
+    }
+    let cancelled = false
+    Promise.all([
+      window.api.characters.getByWork(workId),
+      window.api.worldNotes.getByWork(workId),
+    ])
+      .then(([chars, notes]) => {
+        if (cancelled) return
+        setCharacters(chars)
+        setWorldNotes(notes)
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCharacters([])
+          setWorldNotes([])
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [activeDocument?.workId, referenceHighlight])
+
+  const highlightTerms = useMemo<HighlightTerm[]>(() => {
+    if (!referenceHighlight) return []
+    const terms: HighlightTerm[] = []
+    for (const c of characters) {
+      const name = c.name?.trim()
+      if (!name) continue
+      terms.push({
+        id: `char-${c.id}`,
+        text: name,
+        kind: 'character',
+        preview: [c.role, c.description].filter(Boolean).join(' · '),
+      })
+    }
+    for (const w of worldNotes) {
+      const title = w.title?.trim()
+      if (!title) continue
+      terms.push({
+        id: `world-${w.id}`,
+        text: title,
+        kind: 'world',
+        preview: [w.category, w.content].filter(Boolean).join(' · '),
+      })
+    }
+    return terms
+  }, [referenceHighlight, characters, worldNotes])
 
   // Load content when active document changes
   useEffect(() => {
@@ -209,6 +270,8 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
           lineHeight={lineHeight}
           fontFamily={fontFamily}
           indent={indent}
+          highlightEnabled={referenceHighlight}
+          highlightTerms={highlightTerms}
           onReady={handleEditorReady}
         />
       </div>

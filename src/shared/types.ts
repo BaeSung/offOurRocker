@@ -129,6 +129,7 @@ export interface AppSettings {
   focusDarkness: number
   typingSound: boolean
   soundType: string
+  referenceHighlight: boolean
 
   // Export
   defaultExportFormat: 'markdown' | 'txt' | 'html' | 'epub'
@@ -185,6 +186,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   focusDarkness: 80,
   typingSound: false,
   soundType: 'typewriter',
+  referenceHighlight: false,
 
   defaultExportFormat: 'markdown',
   exportFrontmatter: true,

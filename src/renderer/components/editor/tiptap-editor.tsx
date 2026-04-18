@@ -9,6 +9,11 @@ import Image from '@tiptap/extension-image'
 import { Trash2, AlignLeft, AlignCenter, AlignRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEditorStore } from '@/stores/useEditorStore'
+import {
+  ReferenceHighlight,
+  referenceHighlightKey,
+  type HighlightTerm,
+} from './reference-highlight'
 
 interface TipTapEditorProps {
   initialContent?: string
@@ -18,6 +23,8 @@ interface TipTapEditorProps {
   lineHeight?: number
   fontFamily?: string
   indent?: boolean
+  highlightEnabled?: boolean
+  highlightTerms?: HighlightTerm[]
   onReady?: (editor: ReturnType<typeof useEditor>) => void
 }
 
@@ -29,6 +36,8 @@ export function TipTapEditor({
   lineHeight = 1.9,
   fontFamily = 'Noto Serif KR',
   indent = false,
+  highlightEnabled = false,
+  highlightTerms = [],
   onReady,
 }: TipTapEditorProps) {
   const { markDirty, setCharCount, setCursor, setContent } = useEditorStore()
@@ -56,6 +65,10 @@ export function TipTapEditor({
         HTMLAttributes: {
           class: 'tiptap-image',
         },
+      }),
+      ReferenceHighlight.configure({
+        enabled: highlightEnabled,
+        terms: highlightTerms,
       }),
     ],
     content: initialContent,
@@ -140,6 +153,16 @@ export function TipTapEditor({
       onReady(editor)
     }
   }, [editor, onReady])
+
+  // Push highlight config changes into the plugin without reinitializing the editor
+  useEffect(() => {
+    if (!editor) return
+    const tr = editor.state.tr.setMeta(referenceHighlightKey, {
+      enabled: highlightEnabled,
+      terms: highlightTerms,
+    })
+    editor.view.dispatch(tr)
+  }, [editor, highlightEnabled, highlightTerms])
 
   if (!editor) return null
 
@@ -226,10 +249,31 @@ export function TipTapEditor({
           height: 0;
           text-indent: 0;
         }
+        .tiptap-editor .ProseMirror .reference-highlight {
+          border-radius: 2px;
+          padding: 0 1px;
+          cursor: help;
+          transition: background-color 0.15s;
+        }
+        .tiptap-editor .ProseMirror .reference-highlight-world {
+          background-color: rgba(59, 130, 246, 0.18);
+          box-shadow: inset 0 -2px 0 rgba(59, 130, 246, 0.55);
+        }
+        .tiptap-editor .ProseMirror .reference-highlight-world:hover {
+          background-color: rgba(59, 130, 246, 0.32);
+        }
+        .tiptap-editor .ProseMirror .reference-highlight-character {
+          background-color: rgba(168, 85, 247, 0.18);
+          box-shadow: inset 0 -2px 0 rgba(168, 85, 247, 0.55);
+        }
+        .tiptap-editor .ProseMirror .reference-highlight-character:hover {
+          background-color: rgba(168, 85, 247, 0.32);
+        }
       `}</style>
       <div className="tiptap-editor relative">
         <EditorContent editor={editor} />
         <ImageBubbleMenu editor={editor} />
+        <ReferenceHoverTooltip enabled={highlightEnabled} />
       </div>
     </div>
   )
@@ -351,6 +395,81 @@ function ImageBubbleMenu({ editor }: { editor: NonNullable<ReturnType<typeof use
       >
         <Trash2 className="h-3 w-3" />
       </button>
+    </div>
+  )
+}
+
+function ReferenceHoverTooltip({ enabled }: { enabled: boolean }) {
+  const [state, setState] = useState<{
+    top: number
+    left: number
+    kind: string
+    text: string
+    preview: string
+  } | null>(null)
+
+  useEffect(() => {
+    if (!enabled) {
+      setState(null)
+      return
+    }
+
+    const onOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      const el = target.closest?.('.reference-highlight') as HTMLElement | null
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      setState({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        kind: el.getAttribute('data-ref-kind') || '',
+        text: el.textContent || '',
+        preview: el.getAttribute('data-ref-preview') || '',
+      })
+    }
+    const onOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+      const el = target.closest?.('.reference-highlight')
+      if (!el) return
+      const related = e.relatedTarget as HTMLElement | null
+      if (related && related.closest?.('.reference-highlight') === el) return
+      setState(null)
+    }
+
+    document.addEventListener('mouseover', onOver)
+    document.addEventListener('mouseout', onOut)
+    return () => {
+      document.removeEventListener('mouseover', onOver)
+      document.removeEventListener('mouseout', onOut)
+    }
+  }, [enabled])
+
+  if (!state) return null
+
+  const kindLabel = state.kind === 'character' ? '인물' : '세계관'
+  const kindClass =
+    state.kind === 'character'
+      ? 'border-purple-500/40 bg-purple-500/10 text-purple-300'
+      : 'border-blue-500/40 bg-blue-500/10 text-blue-300'
+
+  return (
+    <div
+      className="pointer-events-none fixed z-[200] max-w-[320px] rounded-md border border-border bg-popover p-2 shadow-lg"
+      style={{ top: state.top, left: state.left }}
+    >
+      <div className="mb-1 flex items-center gap-2">
+        <span className={cn('rounded border px-1.5 py-0.5 text-[10px] font-medium', kindClass)}>
+          {kindLabel}
+        </span>
+        <span className="text-xs font-medium text-foreground">{state.text}</span>
+      </div>
+      {state.preview && (
+        <p className="whitespace-pre-wrap text-[11px] leading-relaxed text-muted-foreground">
+          {state.preview.length > 200 ? state.preview.slice(0, 200) + '…' : state.preview}
+        </p>
+      )}
     </div>
   )
 }

@@ -19,8 +19,10 @@ import {
   FileText,
   BookMarked,
   BookOpen,
+  Highlighter,
   X,
 } from 'lucide-react'
+import { useSettingsStore } from '@/stores/useSettingsStore'
 import { cn } from '@/lib/utils'
 import { STATUS_CONFIG } from '../../../shared/types'
 import type { WorkStatus } from '../../../shared/types'
@@ -148,6 +150,19 @@ function StatusBadge({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+function ReferenceHighlightToggle() {
+  const enabled = useSettingsStore((s) => s.referenceHighlight)
+  const setSetting = useSettingsStore((s) => s.setSetting)
+  return (
+    <ToolbarButton
+      icon={Highlighter}
+      label={enabled ? '참조 표시 끄기' : '세계관·인물 표시'}
+      active={enabled}
+      onClick={() => setSetting('referenceHighlight', !enabled)}
+    />
   )
 }
 
@@ -347,6 +362,7 @@ export function EditorToolbar({
       </div>
 
       <div className="flex items-center gap-0.5">
+        <ReferenceHighlightToggle />
         <SpellCheckButton editor={editor} />
         <ToolbarButton
           icon={Maximize}
