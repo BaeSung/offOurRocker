@@ -139,6 +139,26 @@ function createTables(): void {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS revisions (
+      id TEXT PRIMARY KEY,
+      work_id TEXT NOT NULL REFERENCES works(id) ON DELETE CASCADE,
+      round_number INTEGER NOT NULL,
+      label TEXT,
+      note TEXT,
+      total_char_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS revision_chapters (
+      id TEXT PRIMARY KEY,
+      revision_id TEXT NOT NULL REFERENCES revisions(id) ON DELETE CASCADE,
+      chapter_id TEXT,
+      chapter_title TEXT NOT NULL,
+      chapter_sort_order INTEGER NOT NULL DEFAULT 0,
+      content TEXT NOT NULL,
+      char_count INTEGER NOT NULL DEFAULT 0
+    );
   `)
 }
 
@@ -183,6 +203,8 @@ function runMigrations(): void {
     CREATE INDEX IF NOT EXISTS idx_works_deleted ON works(deleted);
     CREATE INDEX IF NOT EXISTS idx_works_series_id ON works(series_id);
     CREATE INDEX IF NOT EXISTS idx_mind_maps_work_id ON mind_maps(work_id);
+    CREATE INDEX IF NOT EXISTS idx_revisions_work_id ON revisions(work_id);
+    CREATE INDEX IF NOT EXISTS idx_revision_chapters_revision_id ON revision_chapters(revision_id);
   `)
 }
 

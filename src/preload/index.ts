@@ -91,6 +91,16 @@ const api = {
     restore: (versionId: string) => ipcRenderer.invoke(IPC.VERSIONS_RESTORE, versionId),
     delete: (versionId: string) => ipcRenderer.invoke(IPC.VERSIONS_DELETE, versionId),
   },
+  revisions: {
+    list: (workId: string) => ipcRenderer.invoke(IPC.REVISIONS_LIST, workId),
+    create: (workId: string, options?: { label?: string; note?: string }) =>
+      ipcRenderer.invoke(IPC.REVISIONS_CREATE, workId, options),
+    update: (revisionId: string, data: { label?: string | null; note?: string | null }) =>
+      ipcRenderer.invoke(IPC.REVISIONS_UPDATE, revisionId, data),
+    delete: (revisionId: string) => ipcRenderer.invoke(IPC.REVISIONS_DELETE, revisionId),
+    diff: (workId: string, fromId: string | null, toId: string | null) =>
+      ipcRenderer.invoke(IPC.REVISIONS_DIFF, workId, fromId, toId),
+  },
   trash: {
     list: () => ipcRenderer.invoke(IPC.TRASH_LIST),
     restore: (workId: string) => ipcRenderer.invoke(IPC.TRASH_RESTORE, workId),

@@ -126,6 +126,48 @@ interface VersionsAPI {
   delete(versionId: string): Promise<{ success: boolean }>
 }
 
+export interface Revision {
+  id: string
+  workId: string
+  roundNumber: number
+  label: string | null
+  note: string | null
+  totalCharCount: number
+  createdAt: string
+}
+
+export interface RevisionDiffChapter {
+  chapterId: string | null
+  chapterTitle: string
+  sortOrder: number
+  fromContent: string | null
+  toContent: string | null
+  fromCharCount: number
+  toCharCount: number
+  changed: boolean
+}
+
+export interface RevisionDiffResult {
+  success: boolean
+  from: { id: string; roundNumber: number; label: string | null; createdAt: string } | null
+  to: { id: string; roundNumber: number; label: string | null; createdAt: string } | null
+  chapters: RevisionDiffChapter[]
+}
+
+interface RevisionsAPI {
+  list(workId: string): Promise<Revision[]>
+  create(
+    workId: string,
+    options?: { label?: string; note?: string }
+  ): Promise<{ success: boolean; id?: string; roundNumber?: number; error?: string }>
+  update(
+    revisionId: string,
+    data: { label?: string | null; note?: string | null }
+  ): Promise<{ success: boolean }>
+  delete(revisionId: string): Promise<{ success: boolean }>
+  diff(workId: string, fromId: string | null, toId: string | null): Promise<RevisionDiffResult>
+}
+
 export interface TrashItem {
   id: string
   title: string
@@ -275,6 +317,7 @@ interface ElectronAPI {
   export: ExportAPI
   backup: BackupAPI
   versions: VersionsAPI
+  revisions: RevisionsAPI
   trash: TrashAPI
   ai: AIAPI
   analytics: AnalyticsAPI

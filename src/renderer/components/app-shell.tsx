@@ -16,6 +16,7 @@ import { TrashPage } from '@/components/trash-page'
 import { PlotTimelinePage } from '@/components/plot-timeline-page'
 import { MindMapPage } from '@/components/mind-map-page'
 import { AllWorksPage } from '@/components/all-works-page'
+import { RevisionComparePage } from '@/components/revision-compare-page'
 import {
   Tooltip,
   TooltipContent,
@@ -126,6 +127,7 @@ export function AppShell() {
             {view === 'trash' && <TrashPage />}
             {view === 'plotTimeline' && <PlotTimelinePage />}
             {view === 'mindMap' && <MindMapPage />}
+            {view === 'revisionCompare' && <RevisionComparePage />}
             {view === 'settings' && (
               <SettingsPage onClose={() => setView('editor')} />
             )}

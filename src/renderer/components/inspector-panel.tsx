@@ -6,6 +6,7 @@ import { useWorkStore } from '@/stores/useWorkStore'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { GENRE_CONFIG, STATUS_CONFIG } from '../../shared/types'
+import { RevisionsSection } from '@/components/revisions-section'
 
 interface InspectorPanelProps {
   open: boolean
@@ -89,7 +90,7 @@ export function InspectorPanel({ open, onClose }: InspectorPanelProps) {
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
-      <div className="flex-1 px-3 py-2">
+      <div className="flex-1 overflow-y-auto px-3 py-2">
         <p className="mb-3 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
           작품 정보
         </p>
@@ -102,6 +103,7 @@ export function InspectorPanel({ open, onClose }: InspectorPanelProps) {
         <InspectorRow icon={BarChart3} label="글자수" value={charDisplay} />
         <Separator className="bg-border/50" />
         <InspectorRow icon={Clock} label="최근 수정" value={updatedAt} />
+        {activeWork?.id && <RevisionsSection workId={activeWork.id} />}
       </div>
     </aside>
   )

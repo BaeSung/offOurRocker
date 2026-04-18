@@ -59,6 +59,13 @@ export const IPC = {
   VERSIONS_RESTORE: 'versions:restore',
   VERSIONS_DELETE: 'versions:delete',
 
+  // Revisions (탈고 회차)
+  REVISIONS_LIST: 'revisions:list',
+  REVISIONS_CREATE: 'revisions:create',
+  REVISIONS_DELETE: 'revisions:delete',
+  REVISIONS_UPDATE: 'revisions:update',
+  REVISIONS_DIFF: 'revisions:diff',
+
   // Trash
   TRASH_LIST: 'trash:list',
   TRASH_RESTORE: 'trash:restore',

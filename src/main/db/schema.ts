@@ -101,6 +101,26 @@ export const mindMaps = sqliteTable('mind_maps', {
   updatedAt: text('updated_at').notNull()
 })
 
+export const revisions = sqliteTable('revisions', {
+  id: text('id').primaryKey(),
+  workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),
+  roundNumber: integer('round_number').notNull(),
+  label: text('label'),
+  note: text('note'),
+  totalCharCount: integer('total_char_count').notNull().default(0),
+  createdAt: text('created_at').notNull()
+})
+
+export const revisionChapters = sqliteTable('revision_chapters', {
+  id: text('id').primaryKey(),
+  revisionId: text('revision_id').notNull().references(() => revisions.id, { onDelete: 'cascade' }),
+  chapterId: text('chapter_id'),
+  chapterTitle: text('chapter_title').notNull(),
+  chapterSortOrder: integer('chapter_sort_order').notNull().default(0),
+  content: text('content').notNull(),
+  charCount: integer('char_count').notNull().default(0)
+})
+
 export const worldNotes = sqliteTable('world_notes', {
   id: text('id').primaryKey(),
   workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),

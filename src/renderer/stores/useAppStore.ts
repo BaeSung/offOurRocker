@@ -1,10 +1,16 @@
 import { create } from 'zustand'
 
-export type AppView = 'dashboard' | 'editor' | 'settings' | 'trash' | 'plotTimeline' | 'mindMap' | 'allWorks'
+export type AppView = 'dashboard' | 'editor' | 'settings' | 'trash' | 'plotTimeline' | 'mindMap' | 'allWorks' | 'revisionCompare'
 
 interface ActiveDocument {
   workId: string
   chapterId: string | null // null for short stories
+}
+
+export interface RevisionCompareContext {
+  workId: string
+  fromId: string | null
+  toId: string | null
 }
 
 interface AppState {
@@ -15,6 +21,7 @@ interface AppState {
   workModalOpen: boolean
   seriesModalOpen: boolean
   searchModalOpen: boolean
+  revisionCompare: RevisionCompareContext | null
 
   setView: (view: AppView) => void
   toggleSidebar: () => void
@@ -26,6 +33,8 @@ interface AppState {
   setWorkModalOpen: (open: boolean) => void
   setSeriesModalOpen: (open: boolean) => void
   setSearchModalOpen: (open: boolean) => void
+  openRevisionCompare: (workId: string, fromId: string | null, toId: string | null) => void
+  closeRevisionCompare: () => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -36,6 +45,7 @@ export const useAppStore = create<AppState>((set) => ({
   workModalOpen: false,
   seriesModalOpen: false,
   searchModalOpen: false,
+  revisionCompare: null,
 
   setView: (view) => set({ view }),
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
@@ -48,4 +58,7 @@ export const useAppStore = create<AppState>((set) => ({
   setWorkModalOpen: (open) => set({ workModalOpen: open }),
   setSeriesModalOpen: (open) => set({ seriesModalOpen: open }),
   setSearchModalOpen: (open) => set({ searchModalOpen: open }),
+  openRevisionCompare: (workId, fromId, toId) =>
+    set({ view: 'revisionCompare', revisionCompare: { workId, fromId, toId } }),
+  closeRevisionCompare: () => set({ view: 'editor', revisionCompare: null }),
 }))

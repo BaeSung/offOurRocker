@@ -9,6 +9,7 @@ import { registerSearchHandlers } from './search'
 import { registerExportHandlers } from './export'
 import { registerAiHandlers } from './ai'
 import { registerVersionsHandlers } from './versions'
+import { registerRevisionsHandlers } from './revisions'
 import { registerTrashHandlers } from './trash'
 import { registerCharactersHandlers } from './characters'
 import { registerWorldNotesHandlers } from './world-notes'
@@ -30,6 +31,7 @@ export function registerAllIpcHandlers(): void {
   registerExportHandlers()
   registerAiHandlers()
   registerVersionsHandlers()
+  registerRevisionsHandlers()
   registerTrashHandlers()
   registerCharactersHandlers()
   registerWorldNotesHandlers()
