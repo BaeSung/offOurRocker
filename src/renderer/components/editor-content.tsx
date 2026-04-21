@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { TipTapEditor } from '@/components/editor/tiptap-editor'
 import type { HighlightTerm } from '@/components/editor/reference-highlight'
 import { SpellCheckPanel } from '@/components/spell-check-panel'
+import { useAutoSpacing } from '@/components/editor/use-auto-spacing'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useAppStore } from '@/stores/useAppStore'
 import { useSettingsStore } from '@/stores/useSettingsStore'
@@ -19,6 +20,7 @@ interface EditorContentProps {
 export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
   const [loadedContent, setLoadedContent] = useState<string>('')
   const [loading, setLoading] = useState(false)
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
   const activeDocument = useAppStore((s) => s.activeDocument)
   const { reset } = useEditorStore()
 
@@ -233,9 +235,26 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
   const handleEditorReady = useCallback(
     (editor: Editor) => {
       if (editorRef) editorRef.current = editor
+      setEditorInstance(editor)
     },
     [editorRef]
   )
+
+  const autoSpacing = useSettingsStore((s) => s.autoSpacing)
+  const spacingModel = useSettingsStore((s) => s.spacingModel)
+  const defaultSpacingModel =
+    aiProvider === 'anthropic'
+      ? 'claude-haiku-4-5-20251001'
+      : aiProvider === 'openai'
+        ? 'gpt-4o-mini'
+        : ''
+
+  useAutoSpacing(editorInstance, {
+    enabled: autoSpacing && aiProvider !== 'none' && !focusMode,
+    provider: aiProvider,
+    model: spacingModel || defaultSpacingModel,
+    keyName: aiProvider === 'none' ? '' : aiProvider,
+  })
 
   if (!activeDocument) {
     return (

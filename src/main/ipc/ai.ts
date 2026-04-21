@@ -2,7 +2,12 @@ import { BrowserWindow } from 'electron'
 import { IPC } from '../../shared/ipc-channels'
 import { storeApiKey, getApiKey, deleteApiKey } from '../utils/crypto'
 import { safeHandle } from './utils'
-import type { SpellCorrection } from '../../shared/types'
+import type { SpellCorrection, BetaReadReport, BetaReadEvidence } from '../../shared/types'
+import { MAX_AI_INPUT_CHARS } from '../../shared/types'
+
+function overLimitError(label: string, actual: number): string {
+  return `${label}이(가) ${MAX_AI_INPUT_CHARS.toLocaleString()}자를 초과했습니다 (${actual.toLocaleString()}자). 범위를 줄여 다시 시도하세요.`
+}
 
 /* ── Types ── */
 
@@ -19,20 +24,39 @@ interface ImageGenerateResult {
   error?: string
 }
 
+interface BetaReadResult {
+  success: boolean
+  report?: BetaReadReport
+  error?: string
+}
+
+interface LLMCallOptions {
+  maxTokens?: number
+  temperature?: number
+}
+
 /* ── Helpers ── */
 
 async function callOpenAI(
   apiKey: string,
   model: string,
-  messages: { role: string; content: string }[]
+  messages: { role: string; content: string }[],
+  options: LLMCallOptions = {}
 ): Promise<string> {
+  const body: Record<string, unknown> = {
+    model,
+    messages,
+    temperature: options.temperature ?? 0,
+  }
+  if (options.maxTokens) body.max_tokens = options.maxTokens
+
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({ model, messages, temperature: 0 }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
@@ -49,7 +73,8 @@ async function callOpenAI(
 async function callAnthropic(
   apiKey: string,
   model: string,
-  messages: { role: string; content: string }[]
+  messages: { role: string; content: string }[],
+  options: LLMCallOptions = {}
 ): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -60,8 +85,8 @@ async function callAnthropic(
     },
     body: JSON.stringify({
       model,
-      max_tokens: 4096,
-      temperature: 0,
+      max_tokens: options.maxTokens ?? 4096,
+      temperature: options.temperature ?? 0,
       system: messages.find((m) => m.role === 'system')?.content,
       messages: messages
         .filter((m) => m.role !== 'system')
@@ -85,7 +110,8 @@ async function callLLM(
   apiKey: string,
   model: string,
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  options: LLMCallOptions = {}
 ): Promise<string> {
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -93,9 +119,46 @@ async function callLLM(
   ]
 
   if (provider === 'openai') {
-    return callOpenAI(apiKey, model, messages)
+    return callOpenAI(apiKey, model, messages, options)
   } else {
-    return callAnthropic(apiKey, model, messages)
+    return callAnthropic(apiKey, model, messages, options)
+  }
+}
+
+function extractJsonObject(raw: string): unknown {
+  let s = raw.trim()
+  s = s.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
+  const match = s.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error('응답에서 JSON 객체를 찾을 수 없습니다.')
+  return JSON.parse(match[0])
+}
+
+function normalizeBetaReadReport(raw: unknown): BetaReadReport {
+  const o = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const asStringArray = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []
+  const asEvidenceArray = (v: unknown): BetaReadEvidence[] => {
+    if (!Array.isArray(v)) return []
+    const out: BetaReadEvidence[] = []
+    for (const item of v) {
+      if (!item || typeof item !== 'object') continue
+      const r = item as Record<string, unknown>
+      const point = typeof r.point === 'string' ? r.point : null
+      if (!point) continue
+      const evidence = typeof r.evidence === 'string' ? r.evidence : undefined
+      out.push(evidence === undefined ? { point } : { point, evidence })
+    }
+    return out
+  }
+
+  return {
+    overall: typeof o.overall === 'string' ? o.overall : '',
+    structure: asEvidenceArray(o.structure),
+    characters: asEvidenceArray(o.characters),
+    prose: asEvidenceArray(o.prose),
+    pacing: asStringArray(o.pacing),
+    strengths: asStringArray(o.strengths),
+    questions: asStringArray(o.questions),
   }
 }
 
@@ -165,6 +228,9 @@ export function registerAiHandlers(): void {
     ): Promise<SpellCheckResult> => {
       const apiKey = getApiKey(keyName)
       if (!apiKey) return { success: false, error: 'API key not found' }
+      if (text.length > MAX_AI_INPUT_CHARS) {
+        return { success: false, error: overLimitError('원고', text.length) }
+      }
 
       const systemPrompt = `당신은 한국어 맞춤법·문법 교정 전문가입니다. 국립국어원 표준어 규정과 한글 맞춤법 통일안을 기준으로 꼼꼼하게 검사하세요.
 
@@ -250,6 +316,148 @@ export function registerAiHandlers(): void {
       }
 
       return { success: true, corrections: allCorrections }
+    }
+  )
+
+  safeHandle(
+    IPC.AI_SPACING_CHECK,
+    async (
+      _e,
+      text: string,
+      provider: 'openai' | 'anthropic',
+      model: string,
+      keyName: string
+    ): Promise<{ success: boolean; corrected?: string; error?: string }> => {
+      const apiKey = getApiKey(keyName)
+      if (!apiKey) return { success: false, error: 'API key not found' }
+      if (text.length > MAX_AI_INPUT_CHARS) {
+        return { success: false, error: overLimitError('문단', text.length) }
+      }
+
+      if (!text || text.trim().length < 2) {
+        return { success: true, corrected: text }
+      }
+
+      const systemPrompt = `당신은 한국어 띄어쓰기 전용 교정기입니다. 입력 문자열의 띄어쓰기만 국립국어원 규정에 맞게 교정해서 반환합니다.
+
+## 절대 규칙
+- 오직 공백(스페이스) 문자만 추가하거나 제거하세요.
+- 어떤 글자도 추가·삭제·변경하지 마세요. 맞춤법 오류도 고치지 마세요.
+- 구두점, 줄바꿈, 대문자/소문자, 숫자, 특수문자는 원본 그대로 유지하세요.
+- 의도적 구어체·방언·의성어·의태어도 공백만 보고 판단하세요.
+- 결과 텍스트에서 공백을 모두 제거했을 때 원본 텍스트에서 공백을 모두 제거한 것과 완벽히 동일해야 합니다.
+
+## 출력 형식
+교정된 문자열만 출력하세요. 설명, 코드 펜스, 마크다운, 따옴표로 감싸기 금지.
+
+## 예시
+입력: "한참동안 가만히 앉아있었다."
+출력: 한참 동안 가만히 앉아 있었다.
+
+입력: "그는 교실밖으로 나가버렸다."
+출력: 그는 교실 밖으로 나가 버렸다.
+
+입력: "나는 학교에 갔다."
+출력: 나는 학교에 갔다.`
+
+      const raw = await callLLM(provider, apiKey, model, systemPrompt, text, {
+        maxTokens: Math.max(256, Math.ceil(text.length * 1.5) + 64),
+        temperature: 0,
+      })
+
+      let corrected = raw.trim()
+      // Strip accidental code fences or surrounding quotes
+      corrected = corrected.replace(/^```(?:text)?\s*/i, '').replace(/```\s*$/i, '')
+      if (
+        (corrected.startsWith('"') && corrected.endsWith('"')) ||
+        (corrected.startsWith("'") && corrected.endsWith("'"))
+      ) {
+        corrected = corrected.slice(1, -1)
+      }
+
+      const stripWs = (s: string) => s.replace(/\s+/g, '')
+      if (stripWs(corrected) !== stripWs(text)) {
+        return {
+          success: false,
+          error: 'LLM 응답이 공백 외 문자를 변경했습니다. 폐기됩니다.',
+        }
+      }
+
+      return { success: true, corrected }
+    }
+  )
+
+  safeHandle(
+    IPC.AI_BETA_READ,
+    async (
+      _e,
+      text: string,
+      provider: 'openai' | 'anthropic',
+      model: string,
+      keyName: string,
+      context?: { workTitle?: string; chapterTitle?: string; genre?: string }
+    ): Promise<BetaReadResult> => {
+      const apiKey = getApiKey(keyName)
+      if (!apiKey) return { success: false, error: 'API key not found' }
+      if (text.length > MAX_AI_INPUT_CHARS) {
+        return { success: false, error: overLimitError('원고', text.length) }
+      }
+
+      const systemPrompt = `당신은 한국 문학에 정통한 베테랑 베타리더입니다. 작가의 원고를 정독한 뒤 구체적이고 건설적인 피드백을 JSON으로 반환합니다.
+
+## 평가 축
+1. 구조·플롯: 갈등 설정, 긴장의 축적, 복선, 장면의 인과, 결말의 타당성
+2. 캐릭터: 동기의 일관성, 입체감, 대사의 개성, 인물 간 관계의 역학
+3. 문체: 문장의 리듬, 어휘 선택, 시점·화법, 묘사의 밀도
+4. 페이싱: 장면별 정보 밀도, 독자 피로도, 빠르거나 느린 구간
+5. 강점: 원고가 특히 잘 해낸 지점
+6. 질문: 의도인지 실수인지 불분명한 지점 — 작가에게 묻고 싶은 것
+
+## 태도
+- 추상적 평가 금지. "캐릭터가 평면적" 대신 "3문단 민지의 반응이 앞에서 쌓아둔 신중한 성격과 어긋난다"처럼 쓰세요.
+- 가능하면 원고에서 직접 짧게 인용하세요 (evidence 필드).
+- 상업성·흥행 예측은 배제. 작품의 완성도에만 집중.
+- 막연한 격려(더 감정을 담으세요, 더 생생하게 등)는 쓰지 마세요. 관찰과 구체적 지적만.
+- 작가에게 도움이 되는 방향으로 솔직하게. 문제점을 덮지 마세요.
+
+## 응답 규칙
+- 반드시 아래 JSON 구조 하나만 출력. 설명·머리말·코드 펜스·마크다운 금지.
+- 각 배열은 관찰할 게 있으면 3~7개, 없으면 빈 배열 [].
+- evidence는 선택 항목이지만 가능하면 꼭 포함하세요.
+
+## 출력 스키마
+{
+  "overall": "한 문단 분량의 전반 인상과 핵심 지점 1~2가지 요약",
+  "structure": [{"point":"지적 요지","evidence":"짧은 인용 또는 위치"}],
+  "characters": [{"point":"인물명을 포함한 지적","evidence":"근거"}],
+  "prose": [{"point":"문체 관찰","evidence":"짧은 인용"}],
+  "pacing": ["페이싱 관찰 한 문장", "..."],
+  "strengths": ["잘한 지점 한 문장", "..."],
+  "questions": ["작가에게 묻고 싶은 것 한 문장", "..."]
+}`
+
+      const contextHeader = [
+        context?.workTitle ? `작품: ${context.workTitle}` : null,
+        context?.chapterTitle ? `회차: ${context.chapterTitle}` : null,
+        context?.genre ? `장르: ${context.genre}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n')
+
+      const userPrompt = `${contextHeader ? `${contextHeader}\n\n---\n\n` : ''}다음 원고를 위 기준으로 읽고 JSON으로 피드백하세요.\n\n${text}`
+
+      try {
+        const raw = await callLLM(provider, apiKey, model, systemPrompt, userPrompt, {
+          maxTokens: 8192,
+          temperature: 0.4,
+        })
+        const parsed = extractJsonObject(raw)
+        const report = normalizeBetaReadReport(parsed)
+        return { success: true, report }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err)
+        return { success: false, error: message }
+      }
     }
   )
 

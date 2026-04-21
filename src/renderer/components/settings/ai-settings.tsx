@@ -164,6 +164,8 @@ export function AISettings() {
   const {
     aiProvider,
     aiModel,
+    betaReadModel,
+    spacingModel,
     aiImageShareKey,
     aiImageSize,
     aiImageQuality,
@@ -403,6 +405,99 @@ export function AISettings() {
             </div>
           </div>
         )}
+      </section>
+
+      <Separator className="bg-border/60" />
+
+      {/* Beta reading model */}
+      <section>
+        <h3 className="text-sm font-semibold text-foreground">베타리딩 모델</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          AI 베타리딩에서 사용할 모델입니다. 맞춤법보다 고급 모델을 쓰는 걸 권장합니다. 비워두면 위 LLM 모델이 사용됩니다.
+        </p>
+        <div className="mt-4 flex flex-col gap-2">
+          <input
+            value={betaReadModel}
+            onChange={(e) => setSetting('betaReadModel', e.target.value)}
+            placeholder={
+              aiProvider === 'anthropic'
+                ? 'claude-opus-4-7'
+                : aiProvider === 'openai'
+                  ? 'gpt-4o'
+                  : '모델 ID'
+            }
+            className="h-9 w-80 rounded-md border border-border bg-secondary/60 px-3 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {aiProvider !== 'none' && (
+            <div className="flex flex-wrap gap-1.5">
+              {(aiProvider === 'anthropic'
+                ? [
+                    { label: 'Opus 4.7', value: 'claude-opus-4-7' },
+                    { label: 'Sonnet 4.6', value: 'claude-sonnet-4-6' },
+                    { label: 'Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
+                  ]
+                : [
+                    { label: 'GPT-4o', value: 'gpt-4o' },
+                    { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
+                  ]
+              ).map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setSetting('betaReadModel', p.value)}
+                  className="rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <Separator className="bg-border/60" />
+
+      {/* Spacing model */}
+      <section>
+        <h3 className="text-sm font-semibold text-foreground">띄어쓰기 모델</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          자동 띄어쓰기 교정과 수동 교정 버튼에서 사용할 모델입니다. 싸고 빠른 모델을 권장합니다. 비워두면 기본 모델(Haiku / GPT-4o mini)이 사용됩니다.
+        </p>
+        <div className="mt-4 flex flex-col gap-2">
+          <input
+            value={spacingModel}
+            onChange={(e) => setSetting('spacingModel', e.target.value)}
+            placeholder={
+              aiProvider === 'anthropic'
+                ? 'claude-haiku-4-5-20251001'
+                : aiProvider === 'openai'
+                  ? 'gpt-4o-mini'
+                  : '모델 ID'
+            }
+            className="h-9 w-80 rounded-md border border-border bg-secondary/60 px-3 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {aiProvider !== 'none' && (
+            <div className="flex flex-wrap gap-1.5">
+              {(aiProvider === 'anthropic'
+                ? [
+                    { label: 'Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
+                    { label: 'Sonnet 4.6', value: 'claude-sonnet-4-6' },
+                  ]
+                : [
+                    { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
+                    { label: 'GPT-4o', value: 'gpt-4o' },
+                  ]
+              ).map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setSetting('spacingModel', p.value)}
+                  className="rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       <Separator className="bg-border/60" />

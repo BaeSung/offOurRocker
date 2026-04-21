@@ -117,6 +117,15 @@ const api = {
       ipcRenderer.invoke(IPC.AI_TEST_CONNECTION, provider, keyName),
     spellCheck: (text: string, provider: 'openai' | 'anthropic', model: string, keyName: string) =>
       ipcRenderer.invoke(IPC.AI_SPELL_CHECK, text, provider, model, keyName),
+    betaRead: (
+      text: string,
+      provider: 'openai' | 'anthropic',
+      model: string,
+      keyName: string,
+      context?: { workTitle?: string; chapterTitle?: string; genre?: string }
+    ) => ipcRenderer.invoke(IPC.AI_BETA_READ, text, provider, model, keyName, context),
+    checkSpacing: (text: string, provider: 'openai' | 'anthropic', model: string, keyName: string) =>
+      ipcRenderer.invoke(IPC.AI_SPACING_CHECK, text, provider, model, keyName),
     onSpellCheckProgress: (callback: (progress: { current: number; total: number }) => void) => {
       const handler = (_e: Electron.IpcRendererEvent, progress: { current: number; total: number }) => callback(progress)
       ipcRenderer.on(IPC.AI_SPELL_CHECK_PROGRESS, handler)

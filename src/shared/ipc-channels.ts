@@ -79,6 +79,8 @@ export const IPC = {
   AI_TEST_CONNECTION: 'ai:testConnection',
   AI_SPELL_CHECK: 'ai:spellCheck',
   AI_SPELL_CHECK_PROGRESS: 'ai:spellCheckProgress',
+  AI_BETA_READ: 'ai:betaRead',
+  AI_SPACING_CHECK: 'ai:spacingCheck',
   AI_GENERATE_IMAGE: 'ai:generateImage',
 
   // Characters

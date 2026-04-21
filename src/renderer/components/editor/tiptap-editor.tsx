@@ -14,6 +14,7 @@ import {
   referenceHighlightKey,
   type HighlightTerm,
 } from './reference-highlight'
+import { FindReplace } from './find-replace'
 
 interface TipTapEditorProps {
   initialContent?: string
@@ -70,6 +71,7 @@ export function TipTapEditor({
         enabled: highlightEnabled,
         terms: highlightTerms,
       }),
+      FindReplace,
     ],
     content: initialContent,
     onUpdate: ({ editor }) => {
@@ -268,6 +270,14 @@ export function TipTapEditor({
         }
         .tiptap-editor .ProseMirror .reference-highlight-character:hover {
           background-color: rgba(168, 85, 247, 0.32);
+        }
+        .tiptap-editor .ProseMirror .find-match {
+          background-color: rgba(250, 204, 21, 0.28);
+          border-radius: 2px;
+        }
+        .tiptap-editor .ProseMirror .find-match-active {
+          background-color: rgba(251, 146, 60, 0.55);
+          box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.9);
         }
       `}</style>
       <div className="tiptap-editor relative">

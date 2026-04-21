@@ -143,6 +143,9 @@ export interface AppSettings {
   // AI
   aiProvider: 'openai' | 'anthropic' | 'none'
   aiModel: string
+  betaReadModel: string
+  spacingModel: string
+  autoSpacing: boolean
   aiImageShareKey: boolean
   aiImageSize: string
   aiImageQuality: string
@@ -198,6 +201,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
   aiProvider: 'none',
   aiModel: '',
+  betaReadModel: '',
+  spacingModel: '',
+  autoSpacing: false,
   aiImageShareKey: true,
   aiImageSize: '1024x1024',
   aiImageQuality: 'standard',
@@ -211,6 +217,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shortcuts: {
     save: 'Ctrl+S',
     search: 'Ctrl+K',
+    find: 'Ctrl+F',
+    replace: 'Ctrl+H',
     focus: 'Ctrl+Shift+F',
     preview: 'Ctrl+Shift+P',
     settings: 'Ctrl+,',
@@ -244,6 +252,24 @@ export interface SpellCorrection {
   original: string
   corrected: string
   explanation: string
+}
+
+/** Maximum characters that can be sent to any AI endpoint in a single request. */
+export const MAX_AI_INPUT_CHARS = 25000
+
+export interface BetaReadEvidence {
+  point: string
+  evidence?: string
+}
+
+export interface BetaReadReport {
+  overall: string
+  structure: BetaReadEvidence[]
+  characters: BetaReadEvidence[]
+  prose: BetaReadEvidence[]
+  pacing: string[]
+  strengths: string[]
+  questions: string[]
 }
 
 /* ── Config maps (shared between main & renderer) ── */

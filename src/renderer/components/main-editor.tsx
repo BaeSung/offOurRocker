@@ -13,6 +13,8 @@ import { EditorStatusBar, FocusStatusBar } from '@/components/editor-status-bar'
 import { PreviewMode } from '@/components/preview-mode'
 import { VersionHistoryPanel } from '@/components/version-history-panel'
 import { ReferencePanel } from '@/components/reference-panel'
+import { FindReplaceBar } from '@/components/find-replace-bar'
+import { BetaReadPanel } from '@/components/beta-read-panel'
 
 import type { WorkStatus } from '../../shared/types'
 import type { Editor } from '@tiptap/react'
@@ -28,6 +30,10 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
   const [miniToolbarVisible, setMiniToolbarVisible] = useState(false)
   const [versionHistoryOpen, setVersionHistoryOpen] = useState(false)
   const [referencePanelOpen, setReferencePanelOpen] = useState(false)
+  const [betaReadOpen, setBetaReadOpen] = useState(false)
+  const [findOpen, setFindOpen] = useState(false)
+  const [findMode, setFindMode] = useState<'find' | 'replace'>('find')
+  const [findFocusNonce, setFindFocusNonce] = useState(0)
   const editorRef = useRef<Editor | null>(null)
 
   const activeDocument = useAppStore((s) => s.activeDocument)
@@ -61,6 +67,8 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
   const shortcuts = useSettingsStore((s) => s.shortcuts)
 
   useEffect(() => {
+    const findCombo = shortcuts.find || 'Ctrl+F'
+    const replaceCombo = shortcuts.replace || 'Ctrl+H'
     const handler = (e: KeyboardEvent) => {
       if (matchesShortcut(e, shortcuts.focus)) {
         e.preventDefault()
@@ -76,6 +84,18 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
       if (matchesShortcut(e, shortcuts.save)) {
         e.preventDefault()
         manualSave()
+      }
+      if (mode === 'normal' && matchesShortcut(e, findCombo)) {
+        e.preventDefault()
+        setFindMode('find')
+        setFindOpen(true)
+        setFindFocusNonce((n) => n + 1)
+      }
+      if (mode === 'normal' && matchesShortcut(e, replaceCombo)) {
+        e.preventDefault()
+        setFindMode('replace')
+        setFindOpen(true)
+        setFindFocusNonce((n) => n + 1)
       }
     }
     window.addEventListener('keydown', handler)
@@ -172,12 +192,20 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
 
   const handleVersionHistoryToggle = useCallback(() => {
     setReferencePanelOpen(false)
+    setBetaReadOpen(false)
     setVersionHistoryOpen((prev) => !prev)
   }, [])
 
   const handleReferencePanelToggle = useCallback(() => {
     setVersionHistoryOpen(false)
+    setBetaReadOpen(false)
     setReferencePanelOpen((prev) => !prev)
+  }, [])
+
+  const handleBetaReadToggle = useCallback(() => {
+    setVersionHistoryOpen(false)
+    setReferencePanelOpen(false)
+    setBetaReadOpen((prev) => !prev)
   }, [])
 
   const handleContentRestored = useCallback(async () => {
@@ -259,7 +287,7 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
       className="flex flex-1 overflow-hidden"
       style={{ background: 'hsl(var(--background))' }}
     >
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="relative flex flex-1 flex-col overflow-hidden">
         <EditorToolbar
           mode={mode}
           onModeChange={handleModeChange}
@@ -277,9 +305,18 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
           versionHistoryOpen={versionHistoryOpen}
           onReferencePanelToggle={handleReferencePanelToggle}
           referencePanelOpen={referencePanelOpen}
+          onBetaReadToggle={handleBetaReadToggle}
+          betaReadOpen={betaReadOpen}
         />
         <EditorContent focusMode={false} editorRef={editorRef} />
         <EditorStatusBar />
+        <FindReplaceBar
+          editor={editorRef.current}
+          open={findOpen}
+          mode={findMode}
+          focusNonce={findFocusNonce}
+          onClose={() => setFindOpen(false)}
+        />
       </div>
       <VersionHistoryPanel
         open={versionHistoryOpen}
@@ -291,6 +328,11 @@ export function MainEditor({ sidebarCollapsed }: MainEditorProps) {
         open={referencePanelOpen}
         onClose={() => setReferencePanelOpen(false)}
         workId={activeDocument?.workId ?? null}
+      />
+      <BetaReadPanel
+        open={betaReadOpen}
+        onClose={() => setBetaReadOpen(false)}
+        editor={editorRef.current}
       />
     </main>
   )

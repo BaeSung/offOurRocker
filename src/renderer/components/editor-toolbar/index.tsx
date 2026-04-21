@@ -19,6 +19,7 @@ import {
   FileText,
   BookMarked,
   BookOpen,
+  BookOpenCheck,
   Highlighter,
   X,
 } from 'lucide-react'
@@ -43,6 +44,7 @@ import { toast } from '@/hooks/use-toast'
 import { ToolbarButton } from './toolbar-button'
 import { InlineEdit } from './inline-edit'
 import { SpellCheckButton } from './spell-check-button'
+import { SpacingButton } from './spacing-button'
 import { ImageInsertButton } from './image-insert-button'
 
 type EditorMode = 'normal' | 'focus' | 'preview'
@@ -70,6 +72,8 @@ interface EditorToolbarProps {
   versionHistoryOpen?: boolean
   onReferencePanelToggle?: () => void
   referencePanelOpen?: boolean
+  onBetaReadToggle?: () => void
+  betaReadOpen?: boolean
 }
 
 function HeadingDropdown({ editor }: { editor?: Editor | null }) {
@@ -293,6 +297,8 @@ export function EditorToolbar({
   versionHistoryOpen,
   onReferencePanelToggle,
   referencePanelOpen,
+  onBetaReadToggle,
+  betaReadOpen,
 }: EditorToolbarProps) {
   return (
     <div className="flex h-11 shrink-0 items-center overflow-x-auto scrollbar-none border-b border-border/50 px-4 print-hide">
@@ -364,6 +370,13 @@ export function EditorToolbar({
       <div className="flex shrink-0 items-center gap-0.5">
         <ReferenceHighlightToggle />
         <SpellCheckButton editor={editor} />
+        <SpacingButton editor={editor} />
+        <ToolbarButton
+          icon={BookOpenCheck}
+          label="AI 베타리딩"
+          active={betaReadOpen}
+          onClick={onBetaReadToggle}
+        />
         <ToolbarButton
           icon={Maximize}
           label="집중 모드"

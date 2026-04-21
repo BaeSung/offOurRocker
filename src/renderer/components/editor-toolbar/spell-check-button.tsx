@@ -3,6 +3,7 @@ import { CheckCheck } from 'lucide-react'
 import type { Editor } from '@tiptap/react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { SpellCheckPanel } from '@/components/spell-check-panel'
+import { MAX_AI_INPUT_CHARS } from '../../../shared/types'
 import { ToolbarButton } from './toolbar-button'
 
 export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
@@ -31,6 +32,14 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
 
     if (!text || text.trim().length < 5) {
       setError('검사할 텍스트가 충분하지 않습니다.')
+      setPanelOpen(true)
+      return
+    }
+
+    if (text.length > MAX_AI_INPUT_CHARS) {
+      setError(
+        `검사할 텍스트가 ${MAX_AI_INPUT_CHARS.toLocaleString()}자를 초과합니다 (${text.length.toLocaleString()}자). 범위를 나눠 선택해 주세요.`
+      )
       setPanelOpen(true)
       return
     }

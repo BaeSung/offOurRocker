@@ -184,8 +184,8 @@ interface TrashAPI {
   empty(): Promise<{ success: boolean; count?: number }>
 }
 
-export type { SpellCorrection } from '../../shared/types'
-import type { SpellCorrection } from '../../shared/types'
+export type { SpellCorrection, BetaReadReport } from '../../shared/types'
+import type { SpellCorrection, BetaReadReport } from '../../shared/types'
 
 export interface SpellCheckProgress {
   current: number
@@ -207,6 +207,19 @@ interface AIAPI {
     keyName: string
   ): Promise<{ success: boolean; corrections?: SpellCorrection[]; error?: string }>
   onSpellCheckProgress(callback: (progress: SpellCheckProgress) => void): () => void
+  betaRead(
+    text: string,
+    provider: 'openai' | 'anthropic',
+    model: string,
+    keyName: string,
+    context?: { workTitle?: string; chapterTitle?: string; genre?: string }
+  ): Promise<{ success: boolean; report?: BetaReadReport; error?: string }>
+  checkSpacing(
+    text: string,
+    provider: 'openai' | 'anthropic',
+    model: string,
+    keyName: string
+  ): Promise<{ success: boolean; corrected?: string; error?: string }>
   generateImage(
     prompt: string,
     keyName: string,

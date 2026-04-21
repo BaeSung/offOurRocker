@@ -11,7 +11,9 @@ interface ShortcutDef {
 const SHORTCUT_DEFS: ShortcutDef[] = [
   { id: 'new', label: '새 작품' },
   { id: 'save', label: '저장' },
-  { id: 'search', label: '검색' },
+  { id: 'search', label: '전체 검색' },
+  { id: 'find', label: '에디터 내 찾기' },
+  { id: 'replace', label: '에디터 내 바꾸기' },
   { id: 'focus', label: '집중 모드' },
   { id: 'preview', label: '미리보기' },
   { id: 'bold', label: '굵게' },

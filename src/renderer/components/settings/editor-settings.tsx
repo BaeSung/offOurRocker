@@ -63,6 +63,8 @@ export function EditorSettings() {
     editorWidth,
     typingSound,
     soundType,
+    autoSpacing,
+    aiProvider,
     setSetting,
   } = useSettingsStore()
 
@@ -256,6 +258,23 @@ export function EditorSettings() {
             <Switch
               checked={autoEllipsis}
               onCheckedChange={(v) => setSetting('autoEllipsis', v)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-xs text-secondary-foreground">
+                자동 띄어쓰기 교정
+              </Label>
+              <p className="text-[10px] text-muted-foreground">
+                타이핑 3초 후 현재 문단을 AI가 조용히 교정합니다. 공백 외 글자는 절대 바꾸지 않습니다.
+                {aiProvider === 'none' && ' (AI 설정 필요)'}
+              </p>
+            </div>
+            <Switch
+              checked={autoSpacing}
+              disabled={aiProvider === 'none'}
+              onCheckedChange={(v) => setSetting('autoSpacing', v)}
             />
           </div>
         </div>
