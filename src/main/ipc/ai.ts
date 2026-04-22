@@ -366,20 +366,33 @@ export function registerAiHandlers(): void {
       })
 
       let corrected = raw.trim()
-      // Strip accidental code fences or surrounding quotes
+      // Strip accidental code fences
       corrected = corrected.replace(/^```(?:text)?\s*/i, '').replace(/```\s*$/i, '')
-      if (
-        (corrected.startsWith('"') && corrected.endsWith('"')) ||
-        (corrected.startsWith("'") && corrected.endsWith("'"))
-      ) {
+      // Only strip surrounding quotes if the original didn't have them
+      const trimmedOrig = text.trim()
+      const wrappedInDouble =
+        corrected.startsWith('"') &&
+        corrected.endsWith('"') &&
+        !(trimmedOrig.startsWith('"') && trimmedOrig.endsWith('"'))
+      const wrappedInSingle =
+        corrected.startsWith("'") &&
+        corrected.endsWith("'") &&
+        !(trimmedOrig.startsWith("'") && trimmedOrig.endsWith("'"))
+      if (wrappedInDouble || wrappedInSingle) {
         corrected = corrected.slice(1, -1)
       }
 
       const stripWs = (s: string) => s.replace(/\s+/g, '')
       if (stripWs(corrected) !== stripWs(text)) {
+        const origNoWs = stripWs(text)
+        const corrNoWs = stripWs(corrected)
+        const hint =
+          corrNoWs.length !== origNoWs.length
+            ? `글자 수 ${origNoWs.length}→${corrNoWs.length}`
+            : '문장부호·특수문자 변경 추정'
         return {
           success: false,
-          error: 'LLM 응답이 공백 외 문자를 변경했습니다. 폐기됩니다.',
+          error: `LLM 응답이 공백 외 문자를 변경했습니다 (${hint}). 폐기됩니다.`,
         }
       }
 
