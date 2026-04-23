@@ -36,6 +36,8 @@ mac:
   hardenedRuntime: true
   gatekeeperAssess: false
   identity: null
+  extendInfo:
+    NSAppSleepDisabled: true
 dmg:
   artifactName: "${productName}-${version}-${arch}.${ext}"
 appx:

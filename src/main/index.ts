@@ -24,7 +24,8 @@ function createWindow(): void {
     ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset' } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      backgroundThrottling: false
     }
   })
 
