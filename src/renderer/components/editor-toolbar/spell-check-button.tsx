@@ -25,7 +25,7 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
 
   const runSpellCheck = useCallback(async (text: string) => {
     if (aiProvider === 'none') {
-      setError('AI 설정에서 제공자를 선택하고 API 키를 등록하세요.')
+      setError('AI 설정에서 Claude API 키를 등록하세요.')
       setPanelOpen(true)
       return
     }
@@ -44,7 +44,7 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
       return
     }
 
-    const model = aiModel || (aiProvider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-5-20250929')
+    const model = aiModel || 'claude-sonnet-4-6'
 
     setPanelOpen(true)
     setLoading(true)
@@ -53,7 +53,7 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
     setProgress(null)
 
     try {
-      const result = await window.api.ai.spellCheck(text, aiProvider, model, aiProvider)
+      const result = await window.api.ai.spellCheck(text, model, 'anthropic')
       if (result.success && result.corrections) {
         setCorrections(result.corrections)
       } else {

@@ -87,23 +87,11 @@ function StringList({ items }: { items: string[] }) {
   )
 }
 
-const PROVIDER_PRESETS: Record<'openai' | 'anthropic', { label: string; value: string }[]> = {
-  anthropic: [
-    { label: 'Opus 4.7', value: 'claude-opus-4-7' },
-    { label: 'Sonnet 4.6', value: 'claude-sonnet-4-6' },
-    { label: 'Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
-  ],
-  openai: [
-    { label: 'GPT-4o', value: 'gpt-4o' },
-    { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
-  ],
-}
-
-function defaultModelFor(provider: 'openai' | 'anthropic' | 'none'): string {
-  if (provider === 'anthropic') return 'claude-opus-4-7'
-  if (provider === 'openai') return 'gpt-4o'
-  return ''
-}
+const MODEL_PRESETS: { label: string; value: string }[] = [
+  { label: 'Opus 4.7', value: 'claude-opus-4-7' },
+  { label: 'Sonnet 4.6', value: 'claude-sonnet-4-6' },
+  { label: 'Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
+]
 
 export function BetaReadPanel({ open, onClose, editor }: BetaReadPanelProps) {
   const activeDocument = useAppStore((s) => s.activeDocument)
@@ -138,8 +126,7 @@ export function BetaReadPanel({ open, onClose, editor }: BetaReadPanelProps) {
     setError('')
   }, [activeDocument?.workId, activeDocument?.chapterId])
 
-  const effectiveModel =
-    betaReadModel || aiModel || defaultModelFor(aiProvider)
+  const effectiveModel = betaReadModel || aiModel || 'claude-opus-4-7'
 
   const currentText = useCallback(() => {
     if (!editor) return ''
@@ -149,7 +136,7 @@ export function BetaReadPanel({ open, onClose, editor }: BetaReadPanelProps) {
   const runReview = useCallback(async () => {
     if (!editor) return
     if (aiProvider === 'none') {
-      setError('AI 설정에서 제공자를 선택하고 API 키를 등록하세요.')
+      setError('AI 설정에서 Claude API 키를 등록하세요.')
       return
     }
 
@@ -176,9 +163,8 @@ export function BetaReadPanel({ open, onClose, editor }: BetaReadPanelProps) {
     try {
       const result = await window.api.ai.betaRead(
         text,
-        aiProvider,
         effectiveModel,
-        aiProvider,
+        'anthropic',
         {
           workTitle: activeWork?.title,
           chapterTitle: activeChapter?.title,
@@ -211,7 +197,7 @@ export function BetaReadPanel({ open, onClose, editor }: BetaReadPanelProps) {
 
   if (!open) return null
 
-  const presets = aiProvider !== 'none' ? PROVIDER_PRESETS[aiProvider] : []
+  const presets = aiProvider !== 'none' ? MODEL_PRESETS : []
   const genreLabel = activeWork?.genre ? GENRE_CONFIG[activeWork.genre as Genre]?.label : null
 
   const textLength = currentText().length

@@ -124,42 +124,6 @@ function ConnectionTestButton({
   )
 }
 
-function ProviderTab({
-  label,
-  active,
-  onClick,
-  disabled,
-  badge,
-}: {
-  label: string
-  active: boolean
-  onClick: () => void
-  disabled?: boolean
-  badge?: string
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={
-        "relative flex h-9 items-center gap-2 rounded-md px-4 text-xs font-medium transition-all duration-150 " +
-        (disabled
-          ? "cursor-not-allowed opacity-40"
-          : active
-            ? "bg-primary text-primary-foreground"
-            : "text-secondary-foreground hover:bg-secondary/80")
-      }
-    >
-      {label}
-      {badge && (
-        <span className="rounded-full bg-muted-foreground/20 px-2 py-0.5 text-[9px] text-muted-foreground">
-          {badge}
-        </span>
-      )}
-    </button>
-  )
-}
-
 export function AISettings() {
   const {
     aiProvider,
@@ -170,62 +134,61 @@ export function AISettings() {
     setSetting,
   } = useSettingsStore()
 
-  // Local state for key input (only while typing a new key)
-  const [openaiKey, setOpenaiKey] = useState("")
   const [anthropicKey, setAnthropicKey] = useState("")
   const [imageKey, setImageKey] = useState("")
 
-  // Masked versions of stored keys
-  const [openaiMasked, setOpenaiMasked] = useState("")
   const [anthropicMasked, setAnthropicMasked] = useState("")
   const [imageMasked, setImageMasked] = useState("")
 
-  const [openaiStatus, setOpenaiStatus] = useState<ConnectionStatus>("idle")
   const [anthropicStatus, setAnthropicStatus] = useState<ConnectionStatus>("idle")
   const [errorMsg, setErrorMsg] = useState("")
-
-  const activeTab = aiProvider === 'none' ? 'openai' : aiProvider
 
   // Load stored key masks on mount
   useEffect(() => {
     const loadKeys = async () => {
       try {
-        const [oai, ant, img, legacyImg] = await Promise.all([
-          window.api.ai.getKey('openai'),
+        const [ant, img, legacyImg, legacyOai] = await Promise.all([
           window.api.ai.getKey('anthropic'),
           window.api.ai.getKey('google_image'),
           window.api.ai.getKey('openai_image'),
+          window.api.ai.getKey('openai'),
         ])
-        if (oai.exists) setOpenaiMasked(oai.masked)
         if (ant.exists) setAnthropicMasked(ant.masked)
         if (img.exists) setImageMasked(img.masked)
         if (legacyImg.exists && !img.exists) {
           toast({
             description:
-              '삽화 생성이 Gemini (Nano Banana)로 변경되었습니다. Google AI Studio에서 발급한 API 키를 새로 등록하세요. 기존 OpenAI 이미지 키는 더 이상 사용되지 않습니다.',
+              '삽화 생성이 Gemini (Nano Banana)로 변경되었습니다. Google AI Studio에서 발급한 API 키를 새로 등록하세요.',
           })
           window.api.ai.deleteKey('openai_image').catch(() => {})
+        }
+        if (legacyOai.exists) {
+          toast({
+            description:
+              'OpenAI(GPT) 지원이 중단되었습니다. LLM은 Anthropic Claude만 사용합니다.',
+          })
+          window.api.ai.deleteKey('openai').catch(() => {})
+          if ((aiProvider as string) !== 'anthropic') {
+            setSetting('aiProvider', ant.exists ? 'anthropic' : 'none')
+          }
         }
       } catch {
         // load failed
       }
     }
     loadKeys()
-  }, [])
+  }, [aiProvider, setSetting])
 
   const handleSaveKey = useCallback(
     async (keyName: string, key: string) => {
       if (!key.trim()) return
       try {
         await window.api.ai.storeKey(keyName, key.trim())
-        // Refresh masked display
         const info = await window.api.ai.getKey(keyName)
-        if (keyName === 'openai') {
-          setOpenaiMasked(info.masked)
-          setOpenaiKey("")
-        } else if (keyName === 'anthropic') {
+        if (keyName === 'anthropic') {
           setAnthropicMasked(info.masked)
           setAnthropicKey("")
+          setSetting('aiProvider', 'anthropic')
         } else if (keyName === 'google_image') {
           setImageMasked(info.masked)
           setImageKey("")
@@ -234,66 +197,50 @@ export function AISettings() {
         // store failed
       }
     },
-    []
+    [setSetting]
   )
 
   const handleDeleteKey = useCallback(async (keyName: string) => {
     try {
       await window.api.ai.deleteKey(keyName)
-      if (keyName === 'openai') { setOpenaiMasked(""); setOpenaiKey("") }
-      else if (keyName === 'anthropic') { setAnthropicMasked(""); setAnthropicKey("") }
-      else if (keyName === 'google_image') { setImageMasked(""); setImageKey("") }
+      if (keyName === 'anthropic') {
+        setAnthropicMasked("")
+        setAnthropicKey("")
+        setSetting('aiProvider', 'none')
+      } else if (keyName === 'google_image') {
+        setImageMasked("")
+        setImageKey("")
+      }
     } catch {
       // delete failed
     }
-  }, [])
+  }, [setSetting])
 
-  const handleTest = useCallback(
-    async (target: "openai" | "anthropic") => {
-      const setStatus = target === "openai" ? setOpenaiStatus : setAnthropicStatus
-      const key = target === "openai" ? openaiKey : anthropicKey
-      const masked = target === "openai" ? openaiMasked : anthropicMasked
+  const handleTestAnthropic = useCallback(async () => {
+    if (anthropicKey.trim()) {
+      await handleSaveKey('anthropic', anthropicKey)
+    }
+    if (!anthropicKey.trim() && !anthropicMasked) return
 
-      // If user typed a new key, save it first
-      if (key.trim()) {
-        await handleSaveKey(target, key)
+    setAnthropicStatus("loading")
+    setErrorMsg("")
+
+    try {
+      const result = await window.api.ai.testConnection('anthropic')
+      if (result.success) {
+        setAnthropicStatus("success")
+      } else {
+        setAnthropicStatus("error")
+        setErrorMsg(result.error || "연결 실패")
       }
-
-      // Check that a key exists (either just saved or previously stored)
-      if (!key.trim() && !masked) return
-
-      setStatus("loading")
-      setErrorMsg("")
-
-      try {
-        const result = await window.api.ai.testConnection(target, target)
-        if (result.success) {
-          setStatus("success")
-        } else {
-          setStatus("error")
-          setErrorMsg(result.error || "연결 실패")
-        }
-      } catch (err: unknown) {
-        setStatus("error")
-        setErrorMsg(err instanceof Error ? err.message : "연결 실패")
-      }
-    },
-    [openaiKey, anthropicKey, openaiMasked, anthropicMasked, handleSaveKey]
-  )
-
-  const handleProviderChange = (provider: 'openai' | 'anthropic') => {
-    setSetting('aiProvider', provider)
-  }
+    } catch (err: unknown) {
+      setAnthropicStatus("error")
+      setErrorMsg(err instanceof Error ? err.message : "연결 실패")
+    }
+  }, [anthropicKey, anthropicMasked, handleSaveKey])
 
   const handleModelChange = (model: string) => {
     setSetting('aiModel', model)
-  }
-
-  // Auto-save key when user leaves the input (blur)
-  const handleKeyBlur = (keyName: string, key: string) => {
-    if (key.trim()) {
-      handleSaveKey(keyName, key)
-    }
   }
 
   return (
@@ -304,105 +251,48 @@ export function AISettings() {
           LLM (맞춤법/교정)
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          AI를 활용한 맞춤법 검사 및 문장 교정 기능입니다. API 키가 필요합니다.
+          Anthropic Claude를 사용합니다. API 키가 필요합니다.
         </p>
 
-        {/* Provider tabs */}
-        <div className="mt-4 flex gap-1 rounded-lg bg-secondary/40 p-1">
-          <ProviderTab
-            label="OpenAI (GPT)"
-            active={activeTab === "openai"}
-            onClick={() => handleProviderChange("openai")}
+        <div className="mt-4 flex flex-col gap-4">
+          <div>
+            <Label className="text-xs text-secondary-foreground">
+              API 키
+            </Label>
+            <div className="mt-1.5">
+              <APIKeyField
+                value={anthropicKey}
+                onChange={setAnthropicKey}
+                placeholder="sk-ant-..."
+                masked={anthropicMasked}
+                onClear={() => handleDeleteKey('anthropic')}
+              />
+            </div>
+          </div>
+          <ConnectionTestButton
+            status={anthropicStatus}
+            onTest={handleTestAnthropic}
+            disabled={!anthropicKey && !anthropicMasked}
+            errorMsg={errorMsg}
           />
-          <ProviderTab
-            label="Anthropic (Claude)"
-            active={activeTab === "anthropic"}
-            onClick={() => handleProviderChange("anthropic")}
-          />
+          <div className="w-56">
+            <Label className="text-xs text-secondary-foreground">모델</Label>
+            <Select
+              value={aiModel || "claude-sonnet-4-6"}
+              onValueChange={handleModelChange}
+            >
+              <SelectTrigger className="mt-1.5 h-9 bg-secondary/60 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="claude-sonnet-4-6">claude-sonnet-4-6</SelectItem>
+                <SelectItem value="claude-haiku-4-5-20251001">
+                  claude-haiku-4-5-20251001
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-
-        {/* OpenAI */}
-        {activeTab === "openai" && (
-          <div className="mt-4 flex flex-col gap-4">
-            <div>
-              <Label className="text-xs text-secondary-foreground">
-                API 키
-              </Label>
-              <div className="mt-1.5">
-                <APIKeyField
-                  value={openaiKey}
-                  onChange={setOpenaiKey}
-                  placeholder="sk-..."
-                  masked={openaiMasked}
-                  onClear={() => handleDeleteKey('openai')}
-                />
-              </div>
-            </div>
-            <ConnectionTestButton
-              status={openaiStatus}
-              onTest={() => handleTest("openai")}
-              disabled={!openaiKey && !openaiMasked}
-              errorMsg={errorMsg}
-            />
-            <div className="w-48">
-              <Label className="text-xs text-secondary-foreground">모델</Label>
-              <Select value={aiModel || "gpt-4o"} onValueChange={handleModelChange}>
-                <SelectTrigger className="mt-1.5 h-9 bg-secondary/60 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-                  <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-
-        {/* Anthropic */}
-        {activeTab === "anthropic" && (
-          <div className="mt-4 flex flex-col gap-4">
-            <div>
-              <Label className="text-xs text-secondary-foreground">
-                API 키
-              </Label>
-              <div className="mt-1.5">
-                <APIKeyField
-                  value={anthropicKey}
-                  onChange={setAnthropicKey}
-                  placeholder="sk-ant-..."
-                  masked={anthropicMasked}
-                  onClear={() => handleDeleteKey('anthropic')}
-                />
-              </div>
-            </div>
-            <ConnectionTestButton
-              status={anthropicStatus}
-              onTest={() => handleTest("anthropic")}
-              disabled={!anthropicKey && !anthropicMasked}
-              errorMsg={errorMsg}
-            />
-            <div className="w-56">
-              <Label className="text-xs text-secondary-foreground">모델</Label>
-              <Select
-                value={aiModel || "claude-sonnet-4-20250514"}
-                onValueChange={handleModelChange}
-              >
-                <SelectTrigger className="mt-1.5 h-9 bg-secondary/60 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="claude-sonnet-4-20250514">
-                    claude-sonnet-4-20250514
-                  </SelectItem>
-                  <SelectItem value="claude-haiku-4-5-20251001">
-                    claude-haiku-4-5-20251001
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
       </section>
 
       <Separator className="bg-border/60" />
@@ -417,38 +307,24 @@ export function AISettings() {
           <input
             value={betaReadModel}
             onChange={(e) => setSetting('betaReadModel', e.target.value)}
-            placeholder={
-              aiProvider === 'anthropic'
-                ? 'claude-opus-4-7'
-                : aiProvider === 'openai'
-                  ? 'gpt-4o'
-                  : '모델 ID'
-            }
+            placeholder="claude-opus-4-7"
             className="h-9 w-80 rounded-md border border-border bg-secondary/60 px-3 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
-          {aiProvider !== 'none' && (
-            <div className="flex flex-wrap gap-1.5">
-              {(aiProvider === 'anthropic'
-                ? [
-                    { label: 'Opus 4.7', value: 'claude-opus-4-7' },
-                    { label: 'Sonnet 4.6', value: 'claude-sonnet-4-6' },
-                    { label: 'Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
-                  ]
-                : [
-                    { label: 'GPT-4o', value: 'gpt-4o' },
-                    { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
-                  ]
-              ).map((p) => (
-                <button
-                  key={p.value}
-                  onClick={() => setSetting('betaReadModel', p.value)}
-                  className="rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { label: 'Opus 4.7', value: 'claude-opus-4-7' },
+              { label: 'Sonnet 4.6', value: 'claude-sonnet-4-6' },
+              { label: 'Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
+            ].map((p) => (
+              <button
+                key={p.value}
+                onClick={() => setSetting('betaReadModel', p.value)}
+                className="rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -458,43 +334,29 @@ export function AISettings() {
       <section>
         <h3 className="text-sm font-semibold text-foreground">띄어쓰기 모델</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          자동 띄어쓰기 교정과 수동 교정 버튼에서 사용할 모델입니다. 싸고 빠른 모델을 권장합니다. 비워두면 기본 모델(Haiku / GPT-4o mini)이 사용됩니다.
+          자동 띄어쓰기 교정과 수동 교정 버튼에서 사용할 모델입니다. 싸고 빠른 모델을 권장합니다. 비워두면 Haiku 4.5가 사용됩니다.
         </p>
         <div className="mt-4 flex flex-col gap-2">
           <input
             value={spacingModel}
             onChange={(e) => setSetting('spacingModel', e.target.value)}
-            placeholder={
-              aiProvider === 'anthropic'
-                ? 'claude-haiku-4-5-20251001'
-                : aiProvider === 'openai'
-                  ? 'gpt-4o-mini'
-                  : '모델 ID'
-            }
+            placeholder="claude-haiku-4-5-20251001"
             className="h-9 w-80 rounded-md border border-border bg-secondary/60 px-3 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           />
-          {aiProvider !== 'none' && (
-            <div className="flex flex-wrap gap-1.5">
-              {(aiProvider === 'anthropic'
-                ? [
-                    { label: 'Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
-                    { label: 'Sonnet 4.6', value: 'claude-sonnet-4-6' },
-                  ]
-                : [
-                    { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
-                    { label: 'GPT-4o', value: 'gpt-4o' },
-                  ]
-              ).map((p) => (
-                <button
-                  key={p.value}
-                  onClick={() => setSetting('spacingModel', p.value)}
-                  className="rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { label: 'Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
+              { label: 'Sonnet 4.6', value: 'claude-sonnet-4-6' },
+            ].map((p) => (
+              <button
+                key={p.value}
+                onClick={() => setSetting('spacingModel', p.value)}
+                className="rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 

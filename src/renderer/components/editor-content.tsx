@@ -81,7 +81,7 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
       return
     }
 
-    const model = aiModel || (aiProvider === 'openai' ? 'gpt-4o' : 'claude-sonnet-4-5-20250929')
+    const model = aiModel || 'claude-sonnet-4-6'
 
     setCtxMenu(null)
     setCtxSpellOpen(true)
@@ -91,7 +91,7 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
     setCtxProgress(null)
 
     try {
-      const result = await window.api.ai.spellCheck(selectedText, aiProvider, model, aiProvider)
+      const result = await window.api.ai.spellCheck(selectedText, model, 'anthropic')
       if (result.success && result.corrections) {
         setCtxCorrections(result.corrections)
       } else {
@@ -242,18 +242,11 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
 
   const autoSpacing = useSettingsStore((s) => s.autoSpacing)
   const spacingModel = useSettingsStore((s) => s.spacingModel)
-  const defaultSpacingModel =
-    aiProvider === 'anthropic'
-      ? 'claude-haiku-4-5-20251001'
-      : aiProvider === 'openai'
-        ? 'gpt-4o-mini'
-        : ''
 
   useAutoSpacing(editorInstance, {
-    enabled: autoSpacing && aiProvider !== 'none' && !focusMode,
-    provider: aiProvider,
-    model: spacingModel || defaultSpacingModel,
-    keyName: aiProvider === 'none' ? '' : aiProvider,
+    enabled: autoSpacing && aiProvider === 'anthropic' && !focusMode,
+    model: spacingModel || 'claude-haiku-4-5-20251001',
+    keyName: 'anthropic',
   })
 
   if (!activeDocument) {

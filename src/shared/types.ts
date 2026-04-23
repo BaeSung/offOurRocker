@@ -141,7 +141,7 @@ export interface AppSettings {
   exportDirectory: string
 
   // AI
-  aiProvider: 'openai' | 'anthropic' | 'none'
+  aiProvider: 'anthropic' | 'none'
   aiModel: string
   betaReadModel: string
   spacingModel: string

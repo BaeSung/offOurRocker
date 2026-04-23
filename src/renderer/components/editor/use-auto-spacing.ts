@@ -4,7 +4,6 @@ import { MAX_AI_INPUT_CHARS } from '../../../shared/types'
 
 interface UseAutoSpacingOptions {
   enabled: boolean
-  provider: 'openai' | 'anthropic' | 'none'
   model: string
   keyName: string
   debounceMs?: number
@@ -91,7 +90,6 @@ export function useAutoSpacing(editor: Editor | null, options: UseAutoSpacingOpt
   useEffect(() => {
     if (!editor) return
     if (!options.enabled) return
-    if (options.provider === 'none') return
     if (!options.model) return
 
     const debounceMs = options.debounceMs ?? 3000
@@ -119,7 +117,6 @@ export function useAutoSpacing(editor: Editor | null, options: UseAutoSpacingOpt
       try {
         const result = await window.api.ai.checkSpacing(
           origText,
-          options.provider as 'openai' | 'anthropic',
           options.model,
           options.keyName
         )
@@ -158,5 +155,5 @@ export function useAutoSpacing(editor: Editor | null, options: UseAutoSpacingOpt
         timerRef.current = null
       }
     }
-  }, [editor, options.enabled, options.provider, options.model, options.keyName, options.debounceMs])
+  }, [editor, options.enabled, options.model, options.keyName, options.debounceMs])
 }

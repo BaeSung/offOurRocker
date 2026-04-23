@@ -197,26 +197,22 @@ interface AIAPI {
   getKey(keyName: string): Promise<{ exists: boolean; masked: string; error?: string }>
   deleteKey(keyName: string): Promise<{ success: boolean; error?: string }>
   testConnection(
-    provider: 'openai' | 'anthropic',
     keyName: string
   ): Promise<{ success: boolean; error?: string }>
   spellCheck(
     text: string,
-    provider: 'openai' | 'anthropic',
     model: string,
     keyName: string
   ): Promise<{ success: boolean; corrections?: SpellCorrection[]; error?: string }>
   onSpellCheckProgress(callback: (progress: SpellCheckProgress) => void): () => void
   betaRead(
     text: string,
-    provider: 'openai' | 'anthropic',
     model: string,
     keyName: string,
     context?: { workTitle?: string; chapterTitle?: string; genre?: string }
   ): Promise<{ success: boolean; report?: BetaReadReport; error?: string }>
   checkSpacing(
     text: string,
-    provider: 'openai' | 'anthropic',
     model: string,
     keyName: string
   ): Promise<{ success: boolean; corrected?: string; error?: string }>

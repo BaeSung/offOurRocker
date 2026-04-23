@@ -16,25 +16,15 @@ export function SpacingButton({ editor }: { editor?: Editor | null }) {
   const aiProvider = useSettingsStore((s) => s.aiProvider)
   const spacingModel = useSettingsStore((s) => s.spacingModel)
 
-  const effectiveModel =
-    spacingModel ||
-    (aiProvider === 'anthropic'
-      ? 'claude-haiku-4-5-20251001'
-      : aiProvider === 'openai'
-        ? 'gpt-4o-mini'
-        : '')
+  const effectiveModel = spacingModel || 'claude-haiku-4-5-20251001'
 
   const handleClick = useCallback(async () => {
     if (!editor) return
     if (aiProvider === 'none') {
       toast({
-        description: 'AI 설정에서 제공자를 선택하세요.',
+        description: 'AI 설정에서 Claude API 키를 등록하세요.',
         variant: 'destructive',
       })
-      return
-    }
-    if (!effectiveModel) {
-      toast({ description: '띄어쓰기 모델이 설정되지 않았습니다.', variant: 'destructive' })
       return
     }
 
@@ -64,9 +54,8 @@ export function SpacingButton({ editor }: { editor?: Editor | null }) {
     try {
       const result = await window.api.ai.checkSpacing(
         origText,
-        aiProvider as 'openai' | 'anthropic',
         effectiveModel,
-        aiProvider
+        'anthropic'
       )
       if (!result.success || !result.corrected) {
         toast({

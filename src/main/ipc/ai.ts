@@ -37,43 +37,11 @@ interface LLMCallOptions {
 
 /* ── Helpers ── */
 
-async function callOpenAI(
+async function callLLM(
   apiKey: string,
   model: string,
-  messages: { role: string; content: string }[],
-  options: LLMCallOptions = {}
-): Promise<string> {
-  const body: Record<string, unknown> = {
-    model,
-    messages,
-    temperature: options.temperature ?? 0,
-  }
-  if (options.maxTokens) body.max_tokens = options.maxTokens
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`OpenAI API error ${res.status}: ${body}`)
-  }
-
-  const data = await res.json()
-  const content = data?.choices?.[0]?.message?.content
-  if (!content) throw new Error('Unexpected OpenAI response format')
-  return content
-}
-
-async function callAnthropic(
-  apiKey: string,
-  model: string,
-  messages: { role: string; content: string }[],
+  systemPrompt: string,
+  userPrompt: string,
   options: LLMCallOptions = {}
 ): Promise<string> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -87,10 +55,8 @@ async function callAnthropic(
       model,
       max_tokens: options.maxTokens ?? 4096,
       temperature: options.temperature ?? 0,
-      system: messages.find((m) => m.role === 'system')?.content,
-      messages: messages
-        .filter((m) => m.role !== 'system')
-        .map((m) => ({ role: m.role, content: m.content })),
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
     }),
   })
 
@@ -103,26 +69,6 @@ async function callAnthropic(
   const text = data?.content?.[0]?.text
   if (!text) throw new Error('Unexpected Anthropic response format')
   return text
-}
-
-async function callLLM(
-  provider: 'openai' | 'anthropic',
-  apiKey: string,
-  model: string,
-  systemPrompt: string,
-  userPrompt: string,
-  options: LLMCallOptions = {}
-): Promise<string> {
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: userPrompt },
-  ]
-
-  if (provider === 'openai') {
-    return callOpenAI(apiKey, model, messages, options)
-  } else {
-    return callAnthropic(apiKey, model, messages, options)
-  }
 }
 
 function extractJsonObject(raw: string): unknown {
@@ -185,44 +131,32 @@ export function registerAiHandlers(): void {
     return { success: true }
   })
 
-  safeHandle(
-    IPC.AI_TEST_CONNECTION,
-    async (_e, provider: 'openai' | 'anthropic', keyName: string) => {
-      const apiKey = getApiKey(keyName)
-      if (!apiKey) return { success: false, error: 'API key not found' }
+  safeHandle(IPC.AI_TEST_CONNECTION, async (_e, keyName: string) => {
+    const apiKey = getApiKey(keyName)
+    if (!apiKey) return { success: false, error: 'API key not found' }
 
-      if (provider === 'openai') {
-        const res = await fetch('https://api.openai.com/v1/models', {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return { success: true }
-      } else {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-          },
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 1,
-            messages: [{ role: 'user', content: 'hi' }],
-          }),
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return { success: true }
-      }
-    }
-  )
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'hi' }],
+      }),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return { success: true }
+  })
 
   safeHandle(
     IPC.AI_SPELL_CHECK,
     async (
       _e,
       text: string,
-      provider: 'openai' | 'anthropic',
       model: string,
       keyName: string
     ): Promise<SpellCheckResult> => {
@@ -300,7 +234,7 @@ export function registerAiHandlers(): void {
           total: chunks.length,
         })
 
-        const result = await callLLM(provider, apiKey, model, systemPrompt, chunks[i])
+        const result = await callLLM(apiKey, model, systemPrompt, chunks[i])
 
         let jsonStr = result.trim()
         jsonStr = jsonStr.replace(/```(?:json)?\s*/g, '').replace(/```/g, '')
@@ -324,7 +258,6 @@ export function registerAiHandlers(): void {
     async (
       _e,
       text: string,
-      provider: 'openai' | 'anthropic',
       model: string,
       keyName: string
     ): Promise<{ success: boolean; corrected?: string; error?: string }> => {
@@ -360,7 +293,7 @@ export function registerAiHandlers(): void {
 입력: "나는 학교에 갔다."
 출력: 나는 학교에 갔다.`
 
-      const raw = await callLLM(provider, apiKey, model, systemPrompt, text, {
+      const raw = await callLLM(apiKey, model, systemPrompt, text, {
         maxTokens: Math.max(256, Math.ceil(text.length * 1.5) + 64),
         temperature: 0,
       })
@@ -419,7 +352,6 @@ export function registerAiHandlers(): void {
     async (
       _e,
       text: string,
-      provider: 'openai' | 'anthropic',
       model: string,
       keyName: string,
       context?: { workTitle?: string; chapterTitle?: string; genre?: string }
@@ -474,7 +406,7 @@ export function registerAiHandlers(): void {
       const userPrompt = `${contextHeader ? `${contextHeader}\n\n---\n\n` : ''}다음 원고를 위 기준으로 읽고 JSON으로 피드백하세요.\n\n${text}`
 
       try {
-        const raw = await callLLM(provider, apiKey, model, systemPrompt, userPrompt, {
+        const raw = await callLLM(apiKey, model, systemPrompt, userPrompt, {
           maxTokens: 8192,
           temperature: 0.4,
         })
