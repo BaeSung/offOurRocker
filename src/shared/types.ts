@@ -146,10 +146,7 @@ export interface AppSettings {
   betaReadModel: string
   spacingModel: string
   autoSpacing: boolean
-  aiImageShareKey: boolean
   aiImageSize: string
-  aiImageQuality: string
-  aiImageStyle: string
 
   // Git
   gitSaveEnabled: boolean
@@ -204,10 +201,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   betaReadModel: '',
   spacingModel: '',
   autoSpacing: false,
-  aiImageShareKey: true,
   aiImageSize: '1024x1024',
-  aiImageQuality: 'standard',
-  aiImageStyle: 'natural',
 
   gitSaveEnabled: false,
   gitRepoPath: '',

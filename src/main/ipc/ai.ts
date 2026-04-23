@@ -383,20 +383,34 @@ export function registerAiHandlers(): void {
       }
 
       const stripWs = (s: string) => s.replace(/\s+/g, '')
-      if (stripWs(corrected) !== stripWs(text)) {
-        const origNoWs = stripWs(text)
-        const corrNoWs = stripWs(corrected)
-        const hint =
-          corrNoWs.length !== origNoWs.length
-            ? `글자 수 ${origNoWs.length}→${corrNoWs.length}`
-            : '문장부호·특수문자 변경 추정'
-        return {
-          success: false,
-          error: `LLM 응답이 공백 외 문자를 변경했습니다 (${hint}). 폐기됩니다.`,
-        }
+      const origNoWs = stripWs(text)
+      const corrNoWs = stripWs(corrected)
+
+      if (origNoWs === corrNoWs) {
+        return { success: true, corrected }
       }
 
-      return { success: true, corrected }
+      // Lenient reconciliation: same non-whitespace char count → overlay original's
+      // characters at LLM's spacing positions. Preserves punctuation/content exactly
+      // while adopting the LLM's spacing judgment.
+      if (origNoWs.length === corrNoWs.length) {
+        const origChars = [...text].filter((c) => !/\s/.test(c))
+        let idx = 0
+        let rebuilt = ''
+        for (const c of corrected) {
+          if (/\s/.test(c)) {
+            rebuilt += c
+          } else {
+            rebuilt += origChars[idx++]
+          }
+        }
+        return { success: true, corrected: rebuilt }
+      }
+
+      return {
+        success: false,
+        error: `LLM 응답이 글자 수를 변경했습니다 (${origNoWs.length}→${corrNoWs.length}). 폐기됩니다.`,
+      }
     }
   )
 
@@ -480,36 +494,43 @@ export function registerAiHandlers(): void {
       _e,
       prompt: string,
       keyName: string,
-      options?: { size?: string; quality?: string; style?: string }
+      options?: { size?: string }
     ): Promise<ImageGenerateResult> => {
       const apiKey = getApiKey(keyName)
       if (!apiKey) return { success: false, error: 'API key not found' }
 
-      const res = await fetch('https://api.openai.com/v1/images/generations', {
+      const aspectRatio =
+        options?.size === '1792x1024'
+          ? '16:9'
+          : options?.size === '1024x1792'
+            ? '9:16'
+            : '1:1'
+      const promptWithAspect = `${prompt}\n\nAspect ratio: ${aspectRatio}.`
+
+      const model = 'gemini-2.5-flash-image'
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
+
+      const res = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt,
-          n: 1,
-          size: options?.size || '1024x1024',
-          quality: options?.quality || 'standard',
-          style: options?.style || 'natural',
-          response_format: 'b64_json',
+          contents: [{ parts: [{ text: promptWithAspect }] }],
+          generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
         }),
       })
 
       if (!res.ok) {
         const body = await res.text()
-        throw new Error(`DALL-E API error ${res.status}: ${body}`)
+        throw new Error(`Gemini image API error ${res.status}: ${body}`)
       }
 
       const data = await res.json()
-      const b64 = data?.data?.[0]?.b64_json
-      if (!b64) throw new Error('Unexpected DALL-E response format')
+      const parts = data?.candidates?.[0]?.content?.parts ?? []
+      const imagePart = parts.find(
+        (p: { inlineData?: { data?: string } }) => p?.inlineData?.data
+      )
+      const b64 = imagePart?.inlineData?.data
+      if (!b64) throw new Error('Gemini 응답에 이미지가 없습니다.')
       return { success: true, b64 }
     }
   )

@@ -12,37 +12,30 @@ export function ImageInsertButton({ editor }: { editor?: Editor | null }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [error, setError] = useState('')
 
-  const { aiProvider, aiImageShareKey, aiImageSize, aiImageQuality, aiImageStyle } = useSettingsStore()
+  const { aiImageSize } = useSettingsStore()
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) return
-    if (aiProvider === 'none') {
-      setError('AI 설정에서 제공자를 선택하고 API 키를 등록하세요.')
-      return
-    }
 
     setLoading(true)
     setError('')
     setImageUrl(null)
 
     try {
-      const keyName = aiImageShareKey ? 'openai' : 'openai_image'
-      const result = await window.api.ai.generateImage(prompt.trim(), keyName, {
+      const result = await window.api.ai.generateImage(prompt.trim(), 'google_image', {
         size: aiImageSize,
-        quality: aiImageQuality,
-        style: aiImageStyle,
       })
       if (result.success && result.b64) {
         setImageUrl(`data:image/png;base64,${result.b64}`)
       } else {
-        setError(result.error || '이미지 생성에 실패했습니다.')
+        setError(result.error || '이미지 생성에 실패했습니다. Gemini API 키를 확인하세요.')
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '이미지 생성에 실패했습니다.')
     } finally {
       setLoading(false)
     }
-  }, [prompt, aiProvider, aiImageShareKey, aiImageSize, aiImageQuality, aiImageStyle])
+  }, [prompt, aiImageSize])
 
   const handleInsert = () => {
     if (!editor || !imageUrl) return

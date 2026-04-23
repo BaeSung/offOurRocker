@@ -123,12 +123,15 @@ export function useAutoSpacing(editor: Editor | null, options: UseAutoSpacingOpt
           options.model,
           options.keyName
         )
-        lastCheckedRef.current = origText
         if (!result.success || !result.corrected) return
-        if (result.corrected === origText) return
+        if (result.corrected === origText) {
+          lastCheckedRef.current = origText
+          return
+        }
         if (stripWs(result.corrected) !== stripWs(origText)) return
         const applied = applyCorrection(editor, origText, result.corrected)
         if (applied) lastCheckedRef.current = result.corrected
+        else lastCheckedRef.current = origText
       } catch {
         // swallow network/API errors silently
       } finally {

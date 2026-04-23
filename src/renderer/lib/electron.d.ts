@@ -223,7 +223,7 @@ interface AIAPI {
   generateImage(
     prompt: string,
     keyName: string,
-    options?: { size?: string; quality?: string; style?: string }
+    options?: { size?: string }
   ): Promise<{ success: boolean; url?: string; b64?: string; error?: string }>
 }
 

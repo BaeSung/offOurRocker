@@ -131,7 +131,7 @@ const api = {
       ipcRenderer.on(IPC.AI_SPELL_CHECK_PROGRESS, handler)
       return () => { ipcRenderer.removeListener(IPC.AI_SPELL_CHECK_PROGRESS, handler) }
     },
-    generateImage: (prompt: string, keyName: string, options?: { size?: string; quality?: string; style?: string }) =>
+    generateImage: (prompt: string, keyName: string, options?: { size?: string }) =>
       ipcRenderer.invoke(IPC.AI_GENERATE_IMAGE, prompt, keyName, options),
   },
   characters: {

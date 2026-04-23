@@ -66,7 +66,6 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export function CoverArea({ work, onCoverChange }: { work: Work & { charCount: number; charCountNoSpaces?: number }; onCoverChange: (coverImage: string | null) => void }) {
-  const { aiProvider, aiImageShareKey } = useSettingsStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const [aiMode, setAiMode] = useState(false)
   const [prompt, setPrompt] = useState('')
@@ -113,17 +112,12 @@ export function CoverArea({ work, onCoverChange }: { work: Work & { charCount: n
 
   const handleAiGenerate = async () => {
     if (!prompt.trim()) return
-    if (aiProvider === 'none') {
-      toast({ description: 'AI 설정에서 제공자를 선택하고 API 키를 등록하세요.', variant: 'destructive' })
-      return
-    }
     setGenerating(true)
-    const keyName = aiImageShareKey ? 'openai' : 'openai_image'
     try {
       const result = await window.api.ai.generateImage(
         `Book cover art: ${prompt.trim()}. Vertical book cover composition, artistic, no text.`,
-        keyName,
-        { size: '1024x1792', quality: 'standard', style: 'vivid' }
+        'google_image',
+        { size: '1024x1792' }
       )
       if (!result.success || !result.b64) {
         toast({ description: result.error || 'AI 표지 생성 실패', variant: 'destructive' })

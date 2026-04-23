@@ -10,7 +10,6 @@ import {
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
@@ -19,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useSettingsStore } from "@/stores/useSettingsStore"
+import { toast } from "@/hooks/use-toast"
 
 type ConnectionStatus = "idle" | "loading" | "success" | "error"
 
@@ -166,10 +166,7 @@ export function AISettings() {
     aiModel,
     betaReadModel,
     spacingModel,
-    aiImageShareKey,
     aiImageSize,
-    aiImageQuality,
-    aiImageStyle,
     setSetting,
   } = useSettingsStore()
 
@@ -193,14 +190,22 @@ export function AISettings() {
   useEffect(() => {
     const loadKeys = async () => {
       try {
-        const [oai, ant, img] = await Promise.all([
+        const [oai, ant, img, legacyImg] = await Promise.all([
           window.api.ai.getKey('openai'),
           window.api.ai.getKey('anthropic'),
+          window.api.ai.getKey('google_image'),
           window.api.ai.getKey('openai_image'),
         ])
         if (oai.exists) setOpenaiMasked(oai.masked)
         if (ant.exists) setAnthropicMasked(ant.masked)
         if (img.exists) setImageMasked(img.masked)
+        if (legacyImg.exists && !img.exists) {
+          toast({
+            description:
+              '삽화 생성이 Gemini (Nano Banana)로 변경되었습니다. Google AI Studio에서 발급한 API 키를 새로 등록하세요. 기존 OpenAI 이미지 키는 더 이상 사용되지 않습니다.',
+          })
+          window.api.ai.deleteKey('openai_image').catch(() => {})
+        }
       } catch {
         // load failed
       }
@@ -221,7 +226,7 @@ export function AISettings() {
         } else if (keyName === 'anthropic') {
           setAnthropicMasked(info.masked)
           setAnthropicKey("")
-        } else if (keyName === 'openai_image') {
+        } else if (keyName === 'google_image') {
           setImageMasked(info.masked)
           setImageKey("")
         }
@@ -237,7 +242,7 @@ export function AISettings() {
       await window.api.ai.deleteKey(keyName)
       if (keyName === 'openai') { setOpenaiMasked(""); setOpenaiKey("") }
       else if (keyName === 'anthropic') { setAnthropicMasked(""); setAnthropicKey("") }
-      else if (keyName === 'openai_image') { setImageMasked(""); setImageKey("") }
+      else if (keyName === 'google_image') { setImageMasked(""); setImageKey("") }
     } catch {
       // delete failed
     }
@@ -313,13 +318,6 @@ export function AISettings() {
             label="Anthropic (Claude)"
             active={activeTab === "anthropic"}
             onClick={() => handleProviderChange("anthropic")}
-          />
-          <ProviderTab
-            label="네이버"
-            active={false}
-            onClick={() => {}}
-            disabled
-            badge="준비 중"
           />
         </div>
 
@@ -508,53 +506,36 @@ export function AISettings() {
           삽화 생성 (AI 이미지)
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          AI를 활용한 삽화 생성 기능입니다. 현재 DALL-E만 지원합니다.
+          Google Gemini 2.5 Flash Image (Nano Banana)를 사용합니다. Google AI Studio에서 발급한 API 키가 필요합니다.
         </p>
         <div className="mt-4 flex flex-col gap-4">
-          {/* Shared key checkbox */}
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="share-key"
-              checked={aiImageShareKey}
-              onCheckedChange={(v) => setSetting('aiImageShareKey', v === true)}
-            />
-            <Label
-              htmlFor="share-key"
-              className="text-xs text-secondary-foreground"
-            >
-              LLM과 동일한 키 사용
+          <div>
+            <Label className="text-xs text-secondary-foreground">
+              API 키
             </Label>
+            <div className="mt-1.5">
+              <APIKeyField
+                value={imageKey}
+                onChange={setImageKey}
+                placeholder="AIza..."
+                masked={imageMasked}
+                onClear={() => handleDeleteKey('google_image')}
+              />
+            </div>
+            {imageKey && (
+              <button
+                onClick={() => handleSaveKey('google_image', imageKey)}
+                className="mt-2 h-7 rounded-md border border-primary/40 px-3 text-xs text-primary transition-colors hover:bg-primary/10"
+              >
+                키 저장
+              </button>
+            )}
           </div>
 
-          {!aiImageShareKey && (
-            <div>
-              <Label className="text-xs text-secondary-foreground">
-                API 키
-              </Label>
-              <div className="mt-1.5">
-                <APIKeyField
-                  value={imageKey}
-                  onChange={setImageKey}
-                  placeholder="sk-..."
-                  masked={imageMasked}
-                  onClear={() => handleDeleteKey('openai_image')}
-                />
-              </div>
-              {imageKey && (
-                <button
-                  onClick={() => handleSaveKey('openai_image', imageKey)}
-                  className="mt-2 h-7 rounded-md border border-primary/40 px-3 text-xs text-primary transition-colors hover:bg-primary/10"
-                >
-                  키 저장
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Image size */}
+          {/* Image aspect ratio */}
           <div>
             <Label className="mb-2 block text-xs text-secondary-foreground">
-              이미지 크기
+              화면비
             </Label>
             <RadioGroup
               value={aiImageSize}
@@ -562,9 +543,9 @@ export function AISettings() {
               className="flex gap-3"
             >
               {[
-                { value: "1024x1024", label: "1024x1024", aspect: "1/1" },
-                { value: "1792x1024", label: "1792x1024", aspect: "16/9" },
-                { value: "1024x1792", label: "1024x1792", aspect: "9/16" },
+                { value: "1024x1024", label: "1:1", aspect: "1/1" },
+                { value: "1792x1024", label: "16:9", aspect: "16/9" },
+                { value: "1024x1792", label: "9:16", aspect: "9/16" },
               ].map((opt) => (
                 <label
                   key={opt.value}
@@ -590,56 +571,6 @@ export function AISettings() {
                   </div>
                 </label>
               ))}
-            </RadioGroup>
-          </div>
-
-          {/* Image quality */}
-          <div>
-            <Label className="mb-2 block text-xs text-secondary-foreground">
-              이미지 품질
-            </Label>
-            <RadioGroup
-              value={aiImageQuality}
-              onValueChange={(v) => setSetting('aiImageQuality', v)}
-              className="flex gap-4"
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="standard" id="q-standard" />
-                <Label htmlFor="q-standard" className="text-xs text-foreground">
-                  Standard
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="hd" id="q-hd" />
-                <Label htmlFor="q-hd" className="text-xs text-foreground">
-                  HD
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Image style */}
-          <div>
-            <Label className="mb-2 block text-xs text-secondary-foreground">
-              이미지 스타일
-            </Label>
-            <RadioGroup
-              value={aiImageStyle}
-              onValueChange={(v) => setSetting('aiImageStyle', v)}
-              className="flex gap-4"
-            >
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="natural" id="s-natural" />
-                <Label htmlFor="s-natural" className="text-xs text-foreground">
-                  Natural
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="vivid" id="s-vivid" />
-                <Label htmlFor="s-vivid" className="text-xs text-foreground">
-                  Vivid
-                </Label>
-              </div>
             </RadioGroup>
           </div>
         </div>
