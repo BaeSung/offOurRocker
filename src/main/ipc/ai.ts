@@ -44,6 +44,17 @@ async function callLLM(
   userPrompt: string,
   options: LLMCallOptions = {}
 ): Promise<string> {
+  const supportsTemperature = !/^claude-opus-4-7/.test(model)
+  const body: Record<string, unknown> = {
+    model,
+    max_tokens: options.maxTokens ?? 4096,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }],
+  }
+  if (supportsTemperature) {
+    body.temperature = options.temperature ?? 0
+  }
+
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -51,13 +62,7 @@ async function callLLM(
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({
-      model,
-      max_tokens: options.maxTokens ?? 4096,
-      temperature: options.temperature ?? 0,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
