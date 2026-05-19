@@ -1,6 +1,5 @@
 import { useEffect, useCallback } from 'react'
 import { PanelRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { matchesShortcut } from '../../shared/types'
 import { useAppStore } from '@/stores/useAppStore'
 import { useWorkStore } from '@/stores/useWorkStore'
@@ -98,28 +97,34 @@ export function AppShell() {
           onNewSeries={() => setSeriesModalOpen(true)}
         />
         <div className="relative flex flex-1 flex-col overflow-hidden">
-          {/* Thin top bar for inspector toggle */}
-          <div className={cn('flex h-9 shrink-0 items-center justify-end border-b border-border bg-card/50 px-3 print-hide', view !== 'editor' && 'hidden')}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setInspectorOpen(!inspectorOpen)}
-                  className={
-                    'flex h-6 w-6 items-center justify-center rounded-md transition-colors duration-150 ' +
-                    (inspectorOpen
-                      ? 'bg-secondary text-foreground'
-                      : 'text-muted-foreground hover:bg-secondary hover:text-foreground')
-                  }
-                  aria-label={inspectorOpen ? '인스펙터 닫기' : '인스펙터 열기'}
-                >
-                  <PanelRight className="h-3.5 w-3.5" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-xs">
-                {inspectorOpen ? '인스펙터 닫기' : '인스펙터 열기'}
-                <span className="ml-2 text-muted-foreground">{'⌘\\'}</span>
-              </TooltipContent>
-            </Tooltip>
+          {/* Top bar — 윈도우 드래그 핸들 영역. 인스펙터 토글은 에디터 뷰에서만 노출 */}
+          <div
+            className="flex h-9 shrink-0 items-center justify-end border-b border-border bg-card/50 px-3 print-hide"
+            style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+          >
+            {view === 'editor' && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setInspectorOpen(!inspectorOpen)}
+                    style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+                    className={
+                      'flex h-6 w-6 items-center justify-center rounded-md transition-colors duration-150 ' +
+                      (inspectorOpen
+                        ? 'bg-secondary text-foreground'
+                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground')
+                    }
+                    aria-label={inspectorOpen ? '인스펙터 닫기' : '인스펙터 열기'}
+                  >
+                    <PanelRight className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  {inspectorOpen ? '인스펙터 닫기' : '인스펙터 열기'}
+                  <span className="ml-2 text-muted-foreground">{'⌘\\'}</span>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
           <div className="flex flex-1 overflow-hidden">
             {view === 'dashboard' && <DashboardPage />}

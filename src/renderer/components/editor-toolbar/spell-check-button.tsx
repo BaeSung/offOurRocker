@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { CheckCheck } from 'lucide-react'
 import type { Editor } from '@tiptap/react'
 import { useSettingsStore } from '@/stores/useSettingsStore'
@@ -12,6 +12,8 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
   const [corrections, setCorrections] = useState<{ original: string; corrected: string; explanation: string }[]>([])
   const [error, setError] = useState('')
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null)
+
+  const anchorRef = useRef<HTMLDivElement>(null)
 
   const { aiProvider, aiModel } = useSettingsStore()
 
@@ -116,7 +118,7 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
   }
 
   return (
-    <div className="relative">
+    <div ref={anchorRef} className="relative">
       <ToolbarButton
         icon={CheckCheck}
         label="맞춤법 검사"
@@ -132,6 +134,7 @@ export function SpellCheckButton({ editor }: { editor?: Editor | null }) {
         onApply={handleApply}
         onApplyAll={handleApplyAll}
         progress={progress}
+        anchorRef={anchorRef}
       />
     </div>
   )

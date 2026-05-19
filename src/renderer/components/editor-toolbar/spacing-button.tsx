@@ -6,7 +6,6 @@ import { toast } from '@/hooks/use-toast'
 import {
   applySpacingOpsAt,
   spacingDiff,
-  stripWs,
 } from '@/components/editor/use-auto-spacing'
 import { MAX_AI_INPUT_CHARS } from '../../../shared/types'
 import { ToolbarButton } from './toolbar-button'
@@ -66,13 +65,6 @@ export function SpacingButton({ editor }: { editor?: Editor | null }) {
       }
       if (result.corrected === origText) {
         toast({ description: '교정할 띄어쓰기가 없습니다.' })
-        return
-      }
-      if (stripWs(result.corrected) !== stripWs(origText)) {
-        toast({
-          description: '응답이 공백 외 문자를 변경해 폐기됐습니다.',
-          variant: 'destructive',
-        })
         return
       }
       // Verify block still has the same text

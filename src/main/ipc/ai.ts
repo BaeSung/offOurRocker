@@ -276,27 +276,28 @@ export function registerAiHandlers(): void {
         return { success: true, corrected: text }
       }
 
-      const systemPrompt = `당신은 한국어 띄어쓰기 전용 교정기입니다. 입력 문자열의 띄어쓰기만 국립국어원 규정에 맞게 교정해서 반환합니다.
+      const systemPrompt = `당신은 한국어 띄어쓰기 전용 교정기입니다. 입력 텍스트의 띄어쓰기만 국립국어원 규정에 맞게 교정합니다.
 
 ## 절대 규칙
-- 오직 공백(스페이스) 문자만 추가하거나 제거하세요.
-- 어떤 글자도 추가·삭제·변경하지 마세요. 맞춤법 오류도 고치지 마세요.
-- 구두점, 줄바꿈, 대문자/소문자, 숫자, 특수문자는 원본 그대로 유지하세요.
-- 의도적 구어체·방언·의성어·의태어도 공백만 보고 판단하세요.
-- 결과 텍스트에서 공백을 모두 제거했을 때 원본 텍스트에서 공백을 모두 제거한 것과 완벽히 동일해야 합니다.
+- 오직 스페이스(공백) 문자만 추가·삭제하세요.
+- 글자(한글·한자·영문·숫자), 구두점, 특수문자, 줄바꿈은 절대 추가·삭제·변경하지 마세요.
+- 맞춤법·오타도 고치지 마세요. 의도적 구어체·방언·의성어·의태어도 그대로 두세요.
+- 공백을 모두 제거한 결과가 원본의 공백을 모두 제거한 것과 한 글자도 다르지 않아야 합니다.
 
 ## 출력 형식
-교정된 문자열만 출력하세요. 설명, 코드 펜스, 마크다운, 따옴표로 감싸기 금지.
+- 결과를 반드시 <output>...</output> 태그로 감싸 출력하세요.
+- 태그 안에는 교정된 본문만 넣으세요 (설명·접두사·따옴표·코드펜스 금지).
+- 변경할 부분이 없으면 원본을 그대로 태그에 넣어 출력하세요.
 
 ## 예시
-입력: "한참동안 가만히 앉아있었다."
-출력: 한참 동안 가만히 앉아 있었다.
+입력: 한참동안 가만히 앉아있었다.
+응답: <output>한참 동안 가만히 앉아 있었다.</output>
 
-입력: "그는 교실밖으로 나가버렸다."
-출력: 그는 교실 밖으로 나가 버렸다.
+입력: 그는 교실밖으로 나가버렸다.
+응답: <output>그는 교실 밖으로 나가 버렸다.</output>
 
-입력: "나는 학교에 갔다."
-출력: 나는 학교에 갔다.`
+입력: 나는 학교에 갔다.
+응답: <output>나는 학교에 갔다.</output>`
 
       const raw = await callLLM(apiKey, model, systemPrompt, text, {
         maxTokens: Math.max(256, Math.ceil(text.length * 1.5) + 64),
@@ -304,8 +305,19 @@ export function registerAiHandlers(): void {
       })
 
       let corrected = raw.trim()
-      // Strip accidental code fences
+      // Extract from <output>...</output> if present
+      const tagMatch = corrected.match(/<output>([\s\S]*?)<\/output>/i)
+      if (tagMatch) {
+        corrected = tagMatch[1]
+      }
+      // Strip code fences
       corrected = corrected.replace(/^```(?:text)?\s*/i, '').replace(/```\s*$/i, '')
+      // Strip common artifact prefixes ("출력:", "결과:", "교정:" 등)
+      corrected = corrected.replace(
+        /^(출력|결과|교정(?:\s*결과)?|수정|답|응답)\s*[:：]\s*/i,
+        ''
+      )
+      corrected = corrected.trim()
       // Only strip surrounding quotes if the original didn't have them
       const trimmedOrig = text.trim()
       const wrappedInDouble =
@@ -320,29 +332,37 @@ export function registerAiHandlers(): void {
         corrected = corrected.slice(1, -1)
       }
 
-      const stripWs = (s: string) => s.replace(/\s+/g, '')
+      const stripWs = (s: string): string => s.replace(/\s+/g, '')
       const origNoWs = stripWs(text)
       const corrNoWs = stripWs(corrected)
 
-      if (origNoWs === corrNoWs) {
-        return { success: true, corrected }
-      }
-
-      // Lenient reconciliation: same non-whitespace char count → overlay original's
-      // characters at LLM's spacing positions. Preserves punctuation/content exactly
-      // while adopting the LLM's spacing judgment.
-      if (origNoWs.length === corrNoWs.length) {
-        const origChars = [...text].filter((c) => !/\s/.test(c))
+      // 핵심: 원본 글자를 그대로 사용하고 LLM의 공백 결정만 채택한다.
+      // Unicode 정규화 차이, 보이지 않는 문자(ZWJ 등), 사소한 LLM 오타까지 흡수.
+      const overlay = (corr: string, origChars: string[]): string => {
         let idx = 0
-        let rebuilt = ''
-        for (const c of corrected) {
+        let out = ''
+        for (const c of corr) {
           if (/\s/.test(c)) {
-            rebuilt += c
+            out += c
           } else {
-            rebuilt += origChars[idx++]
+            if (idx >= origChars.length) return ''
+            out += origChars[idx++]
           }
         }
-        return { success: true, corrected: rebuilt }
+        if (idx !== origChars.length) return ''
+        return out
+      }
+      const origChars = [...text].filter((c) => !/\s/.test(c))
+
+      if (origNoWs === corrNoWs) {
+        const rebuilt = overlay(corrected, origChars)
+        return { success: true, corrected: rebuilt || corrected }
+      }
+
+      // Lenient: 글자 수가 같으면 LLM의 공백 패턴을 채택하되 원본 글자로 재구성
+      if (origNoWs.length === corrNoWs.length) {
+        const rebuilt = overlay(corrected, origChars)
+        if (rebuilt) return { success: true, corrected: rebuilt }
       }
 
       return {

@@ -307,18 +307,17 @@ export function EditorContent({ focusMode, editorRef }: EditorContentProps) {
 
       {/* Floating spell check panel from context menu */}
       {ctxSpellOpen && (
-        <div className="fixed right-8 top-20 z-[100]">
-          <SpellCheckPanel
-            open={ctxSpellOpen}
-            onClose={() => setCtxSpellOpen(false)}
-            loading={ctxSpellLoading}
-            corrections={ctxCorrections}
-            error={ctxSpellError}
-            onApply={handleCtxApply}
-            onApplyAll={handleCtxApplyAll}
-            progress={ctxProgress}
-          />
-        </div>
+        <SpellCheckPanel
+          open={ctxSpellOpen}
+          onClose={() => setCtxSpellOpen(false)}
+          loading={ctxSpellLoading}
+          corrections={ctxCorrections}
+          error={ctxSpellError}
+          onApply={handleCtxApply}
+          onApplyAll={handleCtxApplyAll}
+          progress={ctxProgress}
+          fixedPosition={{ top: 80, right: 32 }}
+        />
       )}
     </ScrollArea>
   )

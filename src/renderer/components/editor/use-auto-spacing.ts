@@ -120,17 +120,27 @@ export function useAutoSpacing(editor: Editor | null, options: UseAutoSpacingOpt
           options.model,
           options.keyName
         )
-        if (!result.success || !result.corrected) return
+        if (!result.success || !result.corrected) {
+          // 같은 입력에 대한 무한 재시도 방지
+          lastCheckedRef.current = origText
+          if (result.error) console.warn('[auto-spacing] LLM 폐기:', result.error)
+          return
+        }
         if (result.corrected === origText) {
           lastCheckedRef.current = origText
           return
         }
-        if (stripWs(result.corrected) !== stripWs(origText)) return
+        if (stripWs(result.corrected) !== stripWs(origText)) {
+          lastCheckedRef.current = origText
+          console.warn('[auto-spacing] stripWs 불일치로 건너뜀')
+          return
+        }
         const applied = applyCorrection(editor, origText, result.corrected)
         if (applied) lastCheckedRef.current = result.corrected
         else lastCheckedRef.current = origText
-      } catch {
-        // swallow network/API errors silently
+      } catch (err) {
+        // 네트워크 오류는 일시적일 수 있으니 lastCheckedRef는 그대로 두고 다음 타이핑에 재시도
+        console.warn('[auto-spacing] 네트워크/API 오류:', err)
       } finally {
         runningRef.current = false
       }

@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react'
+import { useState, useLayoutEffect, useEffect, useRef, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 import { Loader2, CheckCircle2, X, ArrowRight, Flag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { SpellCorrection } from '../../shared/types'
@@ -12,6 +13,8 @@ interface SpellCheckPanelProps {
   onApply: (original: string, corrected: string) => void
   onApplyAll: () => void
   progress?: { current: number; total: number } | null
+  anchorRef?: RefObject<HTMLElement | null>
+  fixedPosition?: { top: number; right: number }
 }
 
 export function SpellCheckPanel({
@@ -23,10 +26,59 @@ export function SpellCheckPanel({
   onApply,
   onApplyAll,
   progress,
+  anchorRef,
+  fixedPosition,
 }: SpellCheckPanelProps) {
   const [applied, setApplied] = useState<Set<number>>(new Set())
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(
+    fixedPosition ?? null
+  )
+  const panelRef = useRef<HTMLDivElement | null>(null)
 
-  if (!open) return null
+  useLayoutEffect(() => {
+    if (!open) return
+    if (fixedPosition) {
+      setPos(fixedPosition)
+      return
+    }
+    const update = (): void => {
+      const anchor = anchorRef?.current
+      if (!anchor) return
+      const rect = anchor.getBoundingClientRect()
+      setPos({
+        top: rect.bottom + 4,
+        right: Math.max(8, window.innerWidth - rect.right),
+      })
+    }
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update, true)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update, true)
+    }
+  }, [open, anchorRef, fixedPosition])
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e: MouseEvent): void => {
+      const target = e.target as Node
+      if (panelRef.current?.contains(target)) return
+      if (anchorRef?.current?.contains(target)) return
+      onClose()
+    }
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open, onClose, anchorRef])
+
+  if (!open || !pos) return null
 
   const handleApply = (idx: number, original: string, corrected: string) => {
     onApply(original, corrected)
@@ -35,8 +87,12 @@ export function SpellCheckPanel({
 
   const unappliedCount = corrections.filter((_, i) => !applied.has(i)).length
 
-  return (
-    <div className="absolute right-0 top-full z-50 mt-1 w-80 rounded-lg border border-border bg-card shadow-xl">
+  return createPortal(
+    <div
+      ref={panelRef}
+      style={{ position: 'fixed', top: pos.top, right: pos.right }}
+      className="z-[100] w-80 rounded-lg border border-border bg-card shadow-xl"
+    >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <h3 className="text-xs font-semibold text-foreground">맞춤법 검사</h3>
@@ -152,6 +208,7 @@ export function SpellCheckPanel({
           </button>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   )
 }
