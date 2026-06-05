@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Series, Work, Chapter, Folder, Genre, WorkStatus } from '../../shared/types'
+import { useAppStore } from './useAppStore'
 
 type WorkWithChapters = Work & { chapters: Omit<Chapter, 'content'>[] }
 type SeriesWithWorks = Omit<Series, 'works'> & { works: WorkWithChapters[] }
@@ -72,6 +73,20 @@ function removeWorkFromTree(
   return { series, standaloneWorks }
 }
 
+/** Resolve the "current folder" — the folder of the work open in the editor.
+ * Used so a new standalone work lands under the folder the user is working in
+ * (falls back to undefined → backend default folder when nothing is open). */
+function currentFolderId(
+  state: Pick<WorkState, 'series' | 'standaloneWorks'>,
+  activeWorkId: string | undefined
+): string | undefined {
+  if (!activeWorkId) return undefined
+  const standalone = state.standaloneWorks.find((w) => w.id === activeWorkId)
+  if (standalone) return standalone.folderId ?? undefined
+  const owningSeries = state.series.find((s) => s.works.some((w) => w.id === activeWorkId))
+  return owningSeries?.folderId ?? undefined
+}
+
 /** Reload helper */
 async function reloadAll(): Promise<Pick<WorkState, 'folders' | 'series' | 'standaloneWorks'>> {
   const all = await window.api.works.getAll()
@@ -97,7 +112,12 @@ export const useWorkStore = create<WorkState>((set, get) => ({
 
   // Full reload needed (structural change)
   createWork: async (data) => {
-    const result = await window.api.works.create(data)
+    // Standalone works are filed under the current folder (the open work's
+    // folder); series works inherit their folder from the series.
+    const folderId = data.seriesId
+      ? undefined
+      : currentFolderId(get(), useAppStore.getState().activeDocument?.workId)
+    const result = await window.api.works.create(folderId ? { ...data, folderId } : data)
     set(await reloadAll())
     return result.id
   },
