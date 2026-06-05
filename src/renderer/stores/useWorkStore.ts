@@ -1,10 +1,12 @@
 import { create } from 'zustand'
-import type { Series, Work, Chapter, Genre, WorkStatus } from '../../shared/types'
+import type { Series, Work, Chapter, Folder, Genre, WorkStatus } from '../../shared/types'
+import { useAppStore } from './useAppStore'
 
 type WorkWithChapters = Work & { chapters: Omit<Chapter, 'content'>[] }
 type SeriesWithWorks = Omit<Series, 'works'> & { works: WorkWithChapters[] }
 
 interface WorkState {
+  folders: Folder[]
   series: SeriesWithWorks[]
   standaloneWorks: WorkWithChapters[]
   loading: boolean
@@ -31,9 +33,15 @@ interface WorkState {
 
   updateWorkCharCount: (workId: string, charCount: number, charCountNoSpaces: number) => void
 
-  createSeries: (data: { title: string; description?: string }) => Promise<string>
-  updateSeries: (id: string, data: Partial<{ title: string; description: string }>) => Promise<void>
+  createSeries: (data: { title: string; description?: string; folderId?: string }) => Promise<string>
+  updateSeries: (id: string, data: Partial<{ title: string; description: string; folderId: string | null }>) => Promise<void>
   deleteSeries: (id: string) => Promise<void>
+
+  createFolder: (data: { title: string }) => Promise<string>
+  renameFolder: (id: string, title: string) => Promise<void>
+  deleteFolder: (id: string) => Promise<{ success: boolean; error?: string }>
+  moveSeriesToFolder: (seriesId: string, folderId: string) => Promise<void>
+  moveWorkToFolder: (workId: string, folderId: string) => Promise<void>
 }
 
 /** Find and update a work within the tree (series + standalone) */
@@ -65,13 +73,28 @@ function removeWorkFromTree(
   return { series, standaloneWorks }
 }
 
+/** Resolve the "current folder" — the folder of the work open in the editor.
+ * Used so a new standalone work lands under the folder the user is working in
+ * (falls back to undefined → backend default folder when nothing is open). */
+function currentFolderId(
+  state: Pick<WorkState, 'series' | 'standaloneWorks'>,
+  activeWorkId: string | undefined
+): string | undefined {
+  if (!activeWorkId) return undefined
+  const standalone = state.standaloneWorks.find((w) => w.id === activeWorkId)
+  if (standalone) return standalone.folderId ?? undefined
+  const owningSeries = state.series.find((s) => s.works.some((w) => w.id === activeWorkId))
+  return owningSeries?.folderId ?? undefined
+}
+
 /** Reload helper */
-async function reloadAll(): Promise<Pick<WorkState, 'series' | 'standaloneWorks'>> {
+async function reloadAll(): Promise<Pick<WorkState, 'folders' | 'series' | 'standaloneWorks'>> {
   const all = await window.api.works.getAll()
-  return { series: all.series, standaloneWorks: all.standaloneWorks }
+  return { folders: all.folders, series: all.series, standaloneWorks: all.standaloneWorks }
 }
 
 export const useWorkStore = create<WorkState>((set, get) => ({
+  folders: [],
   series: [],
   standaloneWorks: [],
   loading: false,
@@ -89,7 +112,12 @@ export const useWorkStore = create<WorkState>((set, get) => ({
 
   // Full reload needed (structural change)
   createWork: async (data) => {
-    const result = await window.api.works.create(data)
+    // Standalone works are filed under the current folder (the open work's
+    // folder); series works inherit their folder from the series.
+    const folderId = data.seriesId
+      ? undefined
+      : currentFolderId(get(), useAppStore.getState().activeDocument?.workId)
+    const result = await window.api.works.create(folderId ? { ...data, folderId } : data)
     set(await reloadAll())
     return result.id
   },
@@ -218,5 +246,43 @@ export const useWorkStore = create<WorkState>((set, get) => ({
   deleteSeries: async (id) => {
     await window.api.series.delete(id)
     set(await reloadAll())
+  },
+
+  // Full reload needed (structural change)
+  createFolder: async (data) => {
+    const result = await window.api.folders.create(data)
+    set(await reloadAll())
+    return result.id
+  },
+
+  // Optimistic update (in-place folder rename)
+  renameFolder: async (id, title) => {
+    await window.api.folders.update(id, { title })
+    set((state) => ({
+      folders: state.folders.map((f) => (f.id === id ? { ...f, title } : f)),
+    }))
+  },
+
+  // Full reload needed (structural change - contents reassigned to fallback)
+  deleteFolder: async (id) => {
+    const result = await window.api.folders.delete(id)
+    if (result.success) set(await reloadAll())
+    return { success: result.success, error: result.error }
+  },
+
+  // Optimistic update (series moves to another folder)
+  moveSeriesToFolder: async (seriesId, folderId) => {
+    await window.api.series.update(seriesId, { folderId })
+    set((state) => ({
+      series: state.series.map((s) => (s.id === seriesId ? { ...s, folderId } : s)),
+    }))
+  },
+
+  // Optimistic update (standalone work moves to another folder)
+  moveWorkToFolder: async (workId, folderId) => {
+    await window.api.works.update(workId, { folderId })
+    set((state) =>
+      updateWorkInTree(state, workId, (w) => ({ ...w, folderId }))
+    )
   },
 }))

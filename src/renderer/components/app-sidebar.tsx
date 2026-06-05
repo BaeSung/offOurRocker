@@ -3,6 +3,7 @@ import {
   PanelLeftOpen,
   Plus,
   FolderPlus,
+  FolderTree,
   Settings,
   Trash2,
   LayoutDashboard,
@@ -36,6 +37,7 @@ interface AppSidebarProps {
   onEditorOpen?: () => void
   onNewWork?: () => void
   onNewSeries?: () => void
+  onNewFolder?: () => void
 }
 
 function SidebarButton({
@@ -103,7 +105,7 @@ function SidebarButton({
 
 const isMac = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform)
 
-export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive, onDashboardOpen, dashboardActive, onTrashOpen, trashActive, onPlotTimelineOpen, plotTimelineActive, onMindMapOpen, mindMapActive, onEditorOpen, onNewWork, onNewSeries }: AppSidebarProps) {
+export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive, onDashboardOpen, dashboardActive, onTrashOpen, trashActive, onPlotTimelineOpen, plotTimelineActive, onMindMapOpen, mindMapActive, onEditorOpen, onNewWork, onNewSeries, onNewFolder }: AppSidebarProps) {
   return (
       <aside
         className={cn(
@@ -189,6 +191,13 @@ export function AppSidebar({ collapsed, onToggle, onSettingsOpen, settingsActive
               collapsed={collapsed}
               variant="secondary"
               onClick={onNewSeries}
+            />
+            <SidebarButton
+              icon={FolderTree}
+              label="새 폴더"
+              collapsed={collapsed}
+              variant="ghost"
+              onClick={onNewFolder}
             />
           </div>
           <Separator className="bg-border" />

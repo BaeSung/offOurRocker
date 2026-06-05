@@ -1,6 +1,7 @@
 import { registerWorksHandlers } from './works'
 import { registerChaptersHandlers } from './chapters'
 import { registerSeriesHandlers } from './series'
+import { registerFoldersHandlers } from './folders'
 import { registerSettingsHandlers } from './settings'
 import { registerSystemHandlers } from './system'
 import { registerStatsHandlers } from './stats'
@@ -23,6 +24,7 @@ export function registerAllIpcHandlers(): void {
   registerWorksHandlers()
   registerChaptersHandlers()
   registerSeriesHandlers()
+  registerFoldersHandlers()
   registerSettingsHandlers()
   registerSystemHandlers()
   registerStatsHandlers()

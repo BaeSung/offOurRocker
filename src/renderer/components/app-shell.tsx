@@ -9,7 +9,7 @@ import { MainEditor } from '@/components/main-editor'
 import { InspectorPanel } from '@/components/inspector-panel'
 import { SettingsPage } from '@/components/settings-page'
 import { DashboardPage } from '@/components/dashboard-page'
-import { CreateWorkModal, CreateSeriesModal } from '@/components/creation-modals'
+import { CreateWorkModal, CreateSeriesModal, CreateFolderModal } from '@/components/creation-modals'
 import { SearchModal } from '@/components/search-modal'
 import { TrashPage } from '@/components/trash-page'
 import { PlotTimelinePage } from '@/components/plot-timeline-page'
@@ -30,6 +30,7 @@ export function AppShell() {
     inspectorOpen,
     workModalOpen,
     seriesModalOpen,
+    folderModalOpen,
     searchModalOpen,
     setView,
     toggleSidebar,
@@ -37,6 +38,7 @@ export function AppShell() {
     setInspectorOpen,
     setWorkModalOpen,
     setSeriesModalOpen,
+    setFolderModalOpen,
     setSearchModalOpen,
   } = useAppStore()
 
@@ -95,6 +97,7 @@ export function AppShell() {
           onEditorOpen={() => setView('editor')}
           onNewWork={() => setWorkModalOpen(true)}
           onNewSeries={() => setSeriesModalOpen(true)}
+          onNewFolder={() => setFolderModalOpen(true)}
         />
         <div className="relative flex flex-1 flex-col overflow-hidden">
           {/* Top bar — 윈도우 드래그 핸들 영역. 인스펙터 토글은 에디터 뷰에서만 노출 */}
@@ -157,6 +160,10 @@ export function AppShell() {
       <CreateSeriesModal
         open={seriesModalOpen}
         onClose={() => setSeriesModalOpen(false)}
+      />
+      <CreateFolderModal
+        open={folderModalOpen}
+        onClose={() => setFolderModalOpen(false)}
       />
       <SearchModal />
     </TooltipProvider>

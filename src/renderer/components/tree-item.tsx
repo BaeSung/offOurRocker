@@ -51,7 +51,7 @@ function formatCharCount(count: number): string {
   return `${count.toLocaleString()}자`
 }
 
-function InlineRenameInput({
+export function InlineRenameInput({
   value,
   onConfirm,
   onCancel,
@@ -112,10 +112,17 @@ function WorkContextMenu({
   const duplicateWork = useWorkStore((s) => s.duplicateWork)
   const updateWork = useWorkStore((s) => s.updateWork)
   const allSeries = useWorkStore((s) => s.series)
+  const folders = useWorkStore((s) => s.folders)
+  const moveWorkToFolder = useWorkStore((s) => s.moveWorkToFolder)
 
   const handleMoveToSeries = async (targetSeriesId: string | null) => {
     await updateWork(workId, { seriesId: targetSeriesId })
   }
+
+  // Folder move only applies to standalone works (series works inherit folder)
+  const work = useWorkStore((s) => s.standaloneWorks.find((w) => w.id === workId))
+  const currentFolderId = work?.folderId ?? null
+  const showFolderMove = !seriesId && folders.length > 1
 
   return (
     <ContextMenu>
@@ -142,7 +149,7 @@ function WorkContextMenu({
         {allSeries.length > 0 && (
           <ContextMenuSub>
             <ContextMenuSubTrigger className="text-xs text-popover-foreground focus:bg-secondary focus:text-foreground">
-              이동
+              시리즈로 이동
             </ContextMenuSubTrigger>
             <ContextMenuSubContent className="w-40 bg-popover border-border">
               {seriesId && (
@@ -162,6 +169,26 @@ function WorkContextMenu({
                     onClick={() => handleMoveToSeries(s.id)}
                   >
                     {s.title}
+                  </ContextMenuItem>
+                ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+        )}
+        {showFolderMove && (
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="text-xs text-popover-foreground focus:bg-secondary focus:text-foreground">
+              폴더로 이동
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="w-40 bg-popover border-border">
+              {folders
+                .filter((f) => f.id !== currentFolderId)
+                .map((f) => (
+                  <ContextMenuItem
+                    key={f.id}
+                    className="text-xs text-popover-foreground focus:bg-secondary focus:text-foreground"
+                    onClick={() => moveWorkToFolder(workId, f.id)}
+                  >
+                    {f.title}
                   </ContextMenuItem>
                 ))}
             </ContextMenuSubContent>
