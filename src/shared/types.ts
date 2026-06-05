@@ -4,8 +4,17 @@ export type WorkStatus = 'writing' | 'editing' | 'complete'
 export type WorkType = 'novel' | 'short'
 export type Genre = 'horror' | 'sf' | 'literary' | 'fantasy' | 'other'
 
+export interface Folder {
+  id: string
+  title: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Series {
   id: string
+  folderId: string | null
   title: string
   description: string | null
   createdAt: string
@@ -16,6 +25,7 @@ export interface Series {
 export interface Work {
   id: string
   seriesId: string | null
+  folderId: string | null
   title: string
   type: WorkType
   genre: Genre

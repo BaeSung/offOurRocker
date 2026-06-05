@@ -5,6 +5,7 @@ import { getDb } from '../db/connection'
 import * as schema from '../db/schema'
 import { now, localDateStr, charCountNoSpaces, getNextSortOrder, safeHandle, walCheckpoint, getSettingValue } from './utils'
 import { gitAutoCommit } from './git'
+import { getOrCreateDefaultFolderId } from './folders'
 import type { Genre, WorkStatus } from '../../shared/types'
 
 function safeParseTags(raw: string): string[] {
@@ -21,6 +22,11 @@ export function registerWorksHandlers(): void {
 
   // Get all works grouped by series
   safeHandle(IPC.WORKS_GET_ALL, async () => {
+    const allFolders = db
+      .select()
+      .from(schema.folders)
+      .orderBy(asc(schema.folders.sortOrder), asc(schema.folders.createdAt))
+      .all()
     const allSeries = db.select().from(schema.series).orderBy(asc(schema.series.title)).all()
     const allWorks = db
       .select()
@@ -64,7 +70,7 @@ export function registerWorksHandlers(): void {
         return { ...w, tags: safeParseTags(w.tags), chapters: workChapters, charCount, charCountNoSpaces }
       })
 
-    return { series: seriesResult, standaloneWorks }
+    return { folders: allFolders, series: seriesResult, standaloneWorks }
   })
 
   // Get single work by ID
@@ -90,6 +96,7 @@ export function registerWorksHandlers(): void {
         type: 'novel' | 'short'
         genre: Genre
         seriesId?: string
+        folderId?: string
         goalChars?: number
         deadline?: string
         tags?: string[]
@@ -99,11 +106,15 @@ export function registerWorksHandlers(): void {
       const ts = now()
       const workId = uuid()
       const sortOrder = getNextSortOrder(schema.works.sortOrder, schema.works)
+      // Standalone works live directly inside a top-level folder; works that
+      // belong to a series inherit their folder from the series.
+      const folderId = data.seriesId ? null : data.folderId || getOrCreateDefaultFolderId()
 
       db.insert(schema.works)
         .values({
           id: workId,
           seriesId: data.seriesId || null,
+          folderId,
           title: data.title,
           type: data.type,
           genre: data.genre,
@@ -152,13 +163,14 @@ export function registerWorksHandlers(): void {
   // Update work metadata
   safeHandle(
     IPC.WORKS_UPDATE,
-    async (_e, id: string, data: Partial<{ title: string; genre: Genre; status: WorkStatus; seriesId: string | null; goalChars: number | null; deadline: string | null; tags: string[]; coverImage: string | null }>) => {
+    async (_e, id: string, data: Partial<{ title: string; genre: Genre; status: WorkStatus; seriesId: string | null; folderId: string | null; goalChars: number | null; deadline: string | null; tags: string[]; coverImage: string | null }>) => {
       const updateData: {
         updatedAt: string
         title?: string
         genre?: Genre
         status?: WorkStatus
         seriesId?: string | null
+        folderId?: string | null
         goalChars?: number | null
         deadline?: string | null
         tags?: string
@@ -168,10 +180,36 @@ export function registerWorksHandlers(): void {
       if (data.genre !== undefined) updateData.genre = data.genre
       if (data.status !== undefined) updateData.status = data.status
       if (data.seriesId !== undefined) updateData.seriesId = data.seriesId
+      if (data.folderId !== undefined) updateData.folderId = data.folderId
       if (data.goalChars !== undefined) updateData.goalChars = data.goalChars
       if (data.deadline !== undefined) updateData.deadline = data.deadline
       if (data.tags !== undefined) updateData.tags = JSON.stringify(data.tags)
       if (data.coverImage !== undefined) updateData.coverImage = data.coverImage
+
+      // When a work is moved into a series, the series determines its folder.
+      // When detached to standalone without an explicit folder, keep it filed
+      // by inheriting the former series' folder (falling back to default).
+      if (data.seriesId !== undefined && data.folderId === undefined) {
+        if (data.seriesId) {
+          updateData.folderId = null
+        } else {
+          const prev = db
+            .select({ seriesId: schema.works.seriesId, folderId: schema.works.folderId })
+            .from(schema.works)
+            .where(eq(schema.works.id, id))
+            .get()
+          let target: string | null = prev?.folderId ?? null
+          if (!target && prev?.seriesId) {
+            const s = db
+              .select({ folderId: schema.series.folderId })
+              .from(schema.series)
+              .where(eq(schema.series.id, prev.seriesId))
+              .get()
+            target = s?.folderId ?? null
+          }
+          updateData.folderId = target || getOrCreateDefaultFolderId()
+        }
+      }
 
       db.update(schema.works).set(updateData).where(eq(schema.works.id, id)).run()
       return { success: true }

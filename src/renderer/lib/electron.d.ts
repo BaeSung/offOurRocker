@@ -1,7 +1,8 @@
-import type { Work, Chapter, Series, AppSettings, WritingLog, Goal, Character, CharacterRole, WorldNote, WorldNoteCategory, PlotEvent, Genre, WorkStatus } from '../../shared/types'
+import type { Work, Chapter, Series, Folder, AppSettings, WritingLog, Goal, Character, CharacterRole, WorldNote, WorldNoteCategory, PlotEvent, Genre, WorkStatus } from '../../shared/types'
 
 interface WorksAPI {
   getAll(): Promise<{
+    folders: Folder[]
     series: (Series & { works: (Work & { chapters: Omit<Chapter, 'content'>[] })[] })[]
     standaloneWorks: (Work & { chapters: Omit<Chapter, 'content'>[] })[]
   }>
@@ -11,6 +12,7 @@ interface WorksAPI {
     type: 'novel' | 'short'
     genre: Genre
     seriesId?: string
+    folderId?: string
     goalChars?: number
     deadline?: string
     tags?: string[]
@@ -23,6 +25,7 @@ interface WorksAPI {
       genre: Genre
       status: WorkStatus
       seriesId: string | null
+      folderId: string | null
       goalChars: number | null
       deadline: string | null
       tags: string[]
@@ -46,9 +49,16 @@ interface ChaptersAPI {
 
 interface SeriesAPI {
   getAll(): Promise<Series[]>
-  create(data: { title: string; description?: string }): Promise<{ id: string }>
-  update(id: string, data: Partial<{ title: string; description: string }>): Promise<{ success: boolean }>
+  create(data: { title: string; description?: string; folderId?: string }): Promise<{ id: string }>
+  update(id: string, data: Partial<{ title: string; description: string; folderId: string | null }>): Promise<{ success: boolean }>
   delete(id: string): Promise<{ success: boolean }>
+}
+
+interface FoldersAPI {
+  getAll(): Promise<Folder[]>
+  create(data: { title: string }): Promise<{ id: string }>
+  update(id: string, data: Partial<{ title: string }>): Promise<{ success: boolean }>
+  delete(id: string): Promise<{ success: boolean; error?: string; fallbackId?: string | null }>
 }
 
 interface SettingsAPI {
@@ -325,6 +335,7 @@ interface ElectronAPI {
   works: WorksAPI
   chapters: ChaptersAPI
   series: SeriesAPI
+  folders: FoldersAPI
   settings: SettingsAPI
   stats: StatsAPI
   writingLog: WritingLogAPI

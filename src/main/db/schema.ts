@@ -1,7 +1,16 @@
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
 
+export const folders = sqliteTable('folders', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+})
+
 export const series = sqliteTable('series', {
   id: text('id').primaryKey(),
+  folderId: text('folder_id').references(() => folders.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
   description: text('description'),
   createdAt: text('created_at').notNull(),
@@ -11,6 +20,7 @@ export const series = sqliteTable('series', {
 export const works = sqliteTable('works', {
   id: text('id').primaryKey(),
   seriesId: text('series_id').references(() => series.id, { onDelete: 'set null' }),
+  folderId: text('folder_id').references(() => folders.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
   type: text('type').notNull().$type<'novel' | 'short'>(),
   genre: text('genre').notNull().$type<'horror' | 'sf' | 'literary' | 'fantasy' | 'other'>(),

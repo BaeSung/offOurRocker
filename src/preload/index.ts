@@ -11,6 +11,7 @@ const api = {
       type: 'novel' | 'short'
       genre: Genre
       seriesId?: string
+      folderId?: string
       goalChars?: number
       deadline?: string
       tags?: string[]
@@ -21,6 +22,7 @@ const api = {
       genre: Genre
       status: WorkStatus
       seriesId: string | null
+      folderId: string | null
       goalChars: number | null
       deadline: string | null
       tags: string[]
@@ -44,10 +46,17 @@ const api = {
   },
   series: {
     getAll: () => ipcRenderer.invoke(IPC.SERIES_GET_ALL),
-    create: (data: { title: string; description?: string }) =>
+    create: (data: { title: string; description?: string; folderId?: string }) =>
       ipcRenderer.invoke(IPC.SERIES_CREATE, data),
-    update: (id: string, data: Partial<{ title: string; description: string }>) => ipcRenderer.invoke(IPC.SERIES_UPDATE, id, data),
+    update: (id: string, data: Partial<{ title: string; description: string; folderId: string | null }>) => ipcRenderer.invoke(IPC.SERIES_UPDATE, id, data),
     delete: (id: string) => ipcRenderer.invoke(IPC.SERIES_DELETE, id),
+  },
+  folders: {
+    getAll: () => ipcRenderer.invoke(IPC.FOLDERS_GET_ALL),
+    create: (data: { title: string }) => ipcRenderer.invoke(IPC.FOLDERS_CREATE, data),
+    update: (id: string, data: Partial<{ title: string }>) =>
+      ipcRenderer.invoke(IPC.FOLDERS_UPDATE, id, data),
+    delete: (id: string) => ipcRenderer.invoke(IPC.FOLDERS_DELETE, id),
   },
   settings: {
     getAll: () => ipcRenderer.invoke(IPC.SETTINGS_GET_ALL),

@@ -25,6 +25,12 @@ export const IPC = {
   SERIES_UPDATE: 'series:update',
   SERIES_DELETE: 'series:delete',
 
+  // Folders (최상위 디렉터리)
+  FOLDERS_GET_ALL: 'folders:getAll',
+  FOLDERS_CREATE: 'folders:create',
+  FOLDERS_UPDATE: 'folders:update',
+  FOLDERS_DELETE: 'folders:delete',
+
   // Settings
   SETTINGS_GET_ALL: 'settings:getAll',
   SETTINGS_SET: 'settings:set',

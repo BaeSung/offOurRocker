@@ -20,6 +20,7 @@ interface AppState {
   activeDocument: ActiveDocument | null
   workModalOpen: boolean
   seriesModalOpen: boolean
+  folderModalOpen: boolean
   searchModalOpen: boolean
   revisionCompare: RevisionCompareContext | null
 
@@ -32,6 +33,7 @@ interface AppState {
   clearActiveDocument: () => void
   setWorkModalOpen: (open: boolean) => void
   setSeriesModalOpen: (open: boolean) => void
+  setFolderModalOpen: (open: boolean) => void
   setSearchModalOpen: (open: boolean) => void
   openRevisionCompare: (workId: string, fromId: string | null, toId: string | null) => void
   closeRevisionCompare: () => void
@@ -44,6 +46,7 @@ export const useAppStore = create<AppState>((set) => ({
   activeDocument: null,
   workModalOpen: false,
   seriesModalOpen: false,
+  folderModalOpen: false,
   searchModalOpen: false,
   revisionCompare: null,
 
@@ -57,6 +60,7 @@ export const useAppStore = create<AppState>((set) => ({
   clearActiveDocument: () => set({ activeDocument: null }),
   setWorkModalOpen: (open) => set({ workModalOpen: open }),
   setSeriesModalOpen: (open) => set({ seriesModalOpen: open }),
+  setFolderModalOpen: (open) => set({ folderModalOpen: open }),
   setSearchModalOpen: (open) => set({ searchModalOpen: open }),
   openRevisionCompare: (workId, fromId, toId) =>
     set({ view: 'revisionCompare', revisionCompare: { workId, fromId, toId } }),
