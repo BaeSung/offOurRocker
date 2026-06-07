@@ -144,6 +144,14 @@ export function GeneralSettings() {
             bgBottom="linear-gradient(135deg, #1a1a2e 50%, #f0ede8 50%)"
             textColor="#888"
           />
+          <ThemeCard
+            label="터미널"
+            selected={theme === "terminal"}
+            onClick={() => setSetting('theme', 'terminal')}
+            bgTop="#04130a"
+            bgBottom="#0a2415"
+            textColor="#33ff66"
+          />
         </div>
       </section>
 

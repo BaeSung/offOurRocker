@@ -16,7 +16,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Apply theme class
   useEffect(() => {
     const root = document.documentElement
-    root.classList.remove('light', 'dark')
+    root.classList.remove('light', 'dark', 'terminal')
 
     if (theme === 'system') {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -28,15 +28,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Apply accent color CSS variables
   useEffect(() => {
-    const accent = ACCENT_HSL[accentColor] || ACCENT_HSL.amber
     const root = document.documentElement.style
+    const accentVars = ['--primary', '--accent', '--ring', '--sidebar-primary', '--sidebar-ring', '--chart-1']
+
+    // Terminal theme is monochrome green — clear inline accent overrides so the
+    // .terminal CSS palette drives every color.
+    if (theme === 'terminal') {
+      accentVars.forEach((v) => root.removeProperty(v))
+      return
+    }
+
+    const accent = ACCENT_HSL[accentColor] || ACCENT_HSL.amber
     root.setProperty('--primary', accent.primary)
     root.setProperty('--accent', accent.primary)
     root.setProperty('--ring', accent.ring)
     root.setProperty('--sidebar-primary', accent.primary)
     root.setProperty('--sidebar-ring', accent.ring)
     root.setProperty('--chart-1', accent.primary)
-  }, [accentColor])
+  }, [accentColor, theme])
 
   return <>{children}</>
 }

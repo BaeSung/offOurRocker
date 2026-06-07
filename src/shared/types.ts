@@ -111,7 +111,7 @@ export interface PlotEvent {
 
 export interface AppSettings {
   // General
-  theme: 'dark' | 'light' | 'system'
+  theme: 'dark' | 'light' | 'system' | 'terminal'
   accentColor: string
   language: string
   saveDirectory: string

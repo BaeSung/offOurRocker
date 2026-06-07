@@ -107,6 +107,46 @@
     --editor-surface: 40 15% 95%;
   }
 
+  /* ── Terminal (retro CRT phosphor) theme ── */
+  .terminal {
+    --background: 120 30% 4%;
+    --foreground: 120 90% 62%;
+    --card: 120 24% 6%;
+    --card-foreground: 120 90% 62%;
+    --popover: 120 24% 7%;
+    --popover-foreground: 120 90% 62%;
+    --primary: 120 90% 62%;
+    --primary-foreground: 120 30% 4%;
+    --secondary: 120 22% 11%;
+    --secondary-foreground: 120 80% 72%;
+    --muted: 120 18% 10%;
+    --muted-foreground: 120 35% 48%;
+    --accent: 120 90% 62%;
+    --accent-foreground: 120 30% 4%;
+    --destructive: 0 85% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 120 45% 18%;
+    --input: 120 45% 18%;
+    --ring: 120 90% 62%;
+    --chart-1: 120 90% 62%;
+    --chart-2: 90 70% 55%;
+    --chart-3: 150 70% 50%;
+    --chart-4: 60 80% 60%;
+    --chart-5: 170 70% 50%;
+    --radius: 0px;
+    --sidebar-background: 120 26% 5%;
+    --sidebar-foreground: 120 90% 62%;
+    --sidebar-primary: 120 90% 62%;
+    --sidebar-primary-foreground: 120 30% 4%;
+    --sidebar-accent: 120 22% 11%;
+    --sidebar-accent-foreground: 120 90% 62%;
+    --sidebar-border: 120 45% 18%;
+    --sidebar-ring: 120 90% 62%;
+    --editor-surface: 120 24% 6%;
+
+    font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'Menlo', 'Monaco', 'Consolas', 'D2Coding', 'Noto Sans KR', monospace;
+  }
+
   * {
     @apply border-border;
   }
@@ -160,6 +200,68 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* ── Terminal (retro CRT) screen effects ── */
+/* Phosphor text glow — subtle, cascades to all text */
+.terminal body {
+  text-shadow: 0 0 1px hsl(120 100% 60% / 0.45);
+}
+
+.terminal ::selection {
+  background: hsl(120 90% 62% / 0.3);
+  color: hsl(120 95% 85%);
+}
+
+/* Editor body uses the monospace terminal stack too, so manuscript text matches
+   the UI brightness/weight. More specific than tiptap-editor's inline font rule. */
+.terminal .tiptap-editor .ProseMirror {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'Menlo', 'Monaco', 'Consolas', 'D2Coding', 'Noto Sans KR', monospace !important;
+}
+
+/* The .terminal class lives on <html>; pseudo-elements cover the viewport.
+   pointer-events:none so the overlays never block interaction. */
+/* Vignette — darkens the screen edges like a curved CRT tube */
+.terminal::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483646;
+  background: radial-gradient(ellipse at center, transparent 55%, hsl(120 30% 1% / 0.55) 100%);
+}
+
+/* Scanlines — dark horizontal lines, with a slow flicker */
+.terminal::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483647;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    hsl(120 25% 1% / 0.25) 3px,
+    hsl(120 25% 1% / 0.25) 4px
+  );
+  mix-blend-mode: multiply;
+  filter: blur(0.6px);
+  animation: crtFlicker 4s infinite steps(60);
+}
+
+@keyframes crtFlicker {
+  0%, 100% { opacity: 0.7; }
+  48% { opacity: 0.7; }
+  50% { opacity: 0.6; }
+  52% { opacity: 0.7; }
+}
+
+/* Respect reduced-motion: keep scanlines, drop the flicker */
+@media (prefers-reduced-motion: reduce) {
+  .terminal::after {
+    animation: none;
   }
 }
 
